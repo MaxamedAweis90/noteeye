@@ -1,0 +1,248 @@
+###############################################################################
+# Noteeye API Test Suite (liteClient / REST Client)
+# File: /server/api-tests.http
+# Description: Test and verify all Express routes for Noteeye
+###############################################################################
+
+# =============================================================================
+# Global Variables
+# =============================================================================
+@baseUrl = http://localhost:5000/api
+@contentType = application/json
+
+# -----------------------------------------------------------------------------
+# Auth Token
+# -----------------------------------------------------------------------------
+# - Auto-capture: Captures the token automatically from the # @name register request
+# - Manual paste: Replace the value below with your JWT string: @authToken = eyJhbGciOi...
+@authToken = {{register.response.body.token}}
+
+# -----------------------------------------------------------------------------
+# Resource IDs for Testing
+# -----------------------------------------------------------------------------
+# Captured automatically from creation responses, or replace with valid ObjectIds:
+@folderId = {{createRootFolder.response.body.folder._id}}
+@noteId = {{createNote.response.body.item._id}}
+@checklistId = {{createChecklist.response.body.item._id}}
+@itemId = {{noteId}}
+
+
+### ===========================================================================
+### 1. HEALTH CHECK
+### ===========================================================================
+
+### Health check endpoint
+GET {{baseUrl}}/health
+
+
+### ===========================================================================
+### 2. AUTHENTICATION
+### ===========================================================================
+
+### Register new user (saves token from response)
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "tester@noteeye.local",
+  "password": "Password123!"
+}
+
+###
+
+### Login existing user
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "tester@noteeye.local",
+  "password": "Password123!"
+}
+
+
+### ===========================================================================
+### 3. FOLDERS
+### ===========================================================================
+
+### Create root folder
+# @name createRootFolder
+POST {{baseUrl}}/folders
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Work Projects",
+  "parentId": null
+}
+
+###
+
+### List all active folders
+GET {{baseUrl}}/folders
+Authorization: Bearer {{authToken}}
+
+###
+
+### List folders inside specific parent
+GET {{baseUrl}}/folders?parentId=root
+Authorization: Bearer {{authToken}}
+
+###
+
+### Rename folder
+PATCH {{baseUrl}}/folders/{{folderId}}
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Work Projects (Renamed)"
+}
+
+###
+
+### Soft-delete folder (moves folder & contents to trash)
+DELETE {{baseUrl}}/folders/{{folderId}}
+Authorization: Bearer {{authToken}}
+
+
+### ===========================================================================
+### 4. ITEMS (NOTES & CHECKLISTS)
+### ===========================================================================
+
+### Create Note (title, content, pastel color #FDE3C9)
+# @name createNote
+POST {{baseUrl}}/items
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Meeting Notes & Architecture",
+  "type": "note",
+  "content": "Discuss Drive layout, card pastel colors, and folder hierarchy.",
+  "color": "#FDE3C9",
+  "folderId": null
+}
+
+###
+
+### Create Checklist with items
+# @name createChecklist
+POST {{baseUrl}}/items
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Weekly Sprint Checklist",
+  "type": "checklist",
+  "checklistItems": [
+    {
+      "text": "Sample",
+      "isCompleted": false
+    },
+    {
+      "text": "Implement API tests",
+      "isCompleted": true
+    }
+  ],
+  "color": "#FDE3C9",
+  "folderId": null
+}
+
+###
+
+### List all items
+GET {{baseUrl}}/items
+Authorization: Bearer {{authToken}}
+
+###
+
+### Filter items by folderId
+GET {{baseUrl}}/items?folderId={{folderId}}
+Authorization: Bearer {{authToken}}
+
+###
+
+### Filter items by type (note or checklist)
+GET {{baseUrl}}/items?type=note
+Authorization: Bearer {{authToken}}
+
+###
+
+### Search items by title query
+GET {{baseUrl}}/items?q=Sample
+Authorization: Bearer {{authToken}}
+
+###
+
+### Filter items with combined query params (?folderId=, ?type=, ?q=)
+GET {{baseUrl}}/items?folderId=root&type=checklist&q=Weekly
+Authorization: Bearer {{authToken}}
+
+###
+
+### Get item by ID
+GET {{baseUrl}}/items/{{itemId}}
+Authorization: Bearer {{authToken}}
+
+###
+
+### Update item (update checkmark state or text)
+PUT {{baseUrl}}/items/{{itemId}}
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Weekly Sprint Checklist (Updated)",
+  "checklistItems": [
+    {
+      "text": "Sample (Updated)",
+      "isCompleted": true
+    },
+    {
+      "text": "Implement API tests - Completed",
+      "isCompleted": true
+    }
+  ],
+  "color": "#FDE3C9"
+}
+
+###
+
+### Soft-delete item (moves item to trash)
+DELETE {{baseUrl}}/items/{{itemId}}
+Authorization: Bearer {{authToken}}
+
+
+### ===========================================================================
+### 5. TRASH
+### ===========================================================================
+
+### List soft-deleted items and folders
+GET {{baseUrl}}/trash
+Authorization: Bearer {{authToken}}
+
+###
+
+### Restore item from trash
+POST {{baseUrl}}/trash/{{itemId}}/restore
+Authorization: Bearer {{authToken}}
+
+###
+
+### Permanently delete item
+DELETE {{baseUrl}}/trash/{{itemId}}/permanent
+Authorization: Bearer {{authToken}}
+
+###
+
+### Restore folder from trash (Optional)
+POST {{baseUrl}}/trash/{{folderId}}/restore
+Authorization: Bearer {{authToken}}
+
+###
+
+### Permanently delete folder (Optional)
+DELETE {{baseUrl}}/trash/{{folderId}}/permanent
+Authorization: Bearer {{authToken}}
