@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar } from './Navbar';
+import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
 import { NoteModal } from './NoteModal';
 import { CreateFolderModal } from './CreateFolderModal';
@@ -16,8 +16,8 @@ interface AppShellProps {
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   return (
     <div className="min-h-screen w-full bg-[#F8FAFD] text-[#1F1F1F] font-sans antialiased relative selection:bg-[#C2E7FF] selection:text-[#001D35]">
-      {/* 1. Outer App Shell: Top Header Bar (Fixed h-16, bg-#F8FAFD) */}
-      <Navbar />
+      {/* 1. Outer App Shell: Top Navigation Bar (Fixed h-16, bg-#F8FAFD) */}
+      <TopNav />
 
       {/* 2. Outer App Shell: Left Persistent Rail (Fixed top-16, w-64, seamless bg-#F8FAFD) */}
       <Sidebar />

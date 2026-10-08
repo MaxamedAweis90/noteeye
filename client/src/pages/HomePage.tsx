@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useMemo, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import {
   FolderPlus,
   Plus,
@@ -12,6 +12,7 @@ import { NoteCard } from '../components/NoteCard';
 
 export const HomePage: React.FC = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const isRecents = location.pathname === '/recents';
   const isFavorites = location.pathname === '/favorites';
 
@@ -22,6 +23,14 @@ export const HomePage: React.FC = () => {
   const searchQuery = useNoteStore((state) => state.searchQuery);
   const openNoteModal = useNoteStore((state) => state.openNoteModal);
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
+
+  // Synchronize URL query parameter ?q= with note store
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null && q !== undefined) {
+      useNoteStore.getState().setSearchQuery(q);
+    }
+  }, [searchParams]);
 
   // Active (non-deleted) folders and items
   const activeFolders = useMemo(() => {

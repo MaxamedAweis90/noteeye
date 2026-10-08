@@ -46,6 +46,14 @@ export const AppRouter: React.FC = () => {
           }
         />
         <Route
+          path="/search"
+          element={
+            <AppShell>
+              <HomePage />
+            </AppShell>
+          }
+        />
+        <Route
           path="/trash"
           element={
             <AppShell>
