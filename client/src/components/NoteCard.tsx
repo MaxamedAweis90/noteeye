@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
 import type { Item } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { cn } from '../utils/cn';
 
 interface NoteCardProps {
@@ -28,6 +29,12 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
 
+  const selectedItemId = useUIStore((state) => state.selectedItemId);
+  const setSelectedItem = useUIStore((state) => state.setSelectedItem);
+  const openContextMenu = useUIStore((state) => state.openContextMenu);
+
+  const isSelected = selectedItemId === item.id;
+
   // Format date nicely: e.g. "25 Apr 2026"
   const formattedDate = new Date(item.updatedAt || item.createdAt).toLocaleDateString(
     'en-GB',
@@ -43,13 +50,34 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const completedCount = checklistItems.filter((ci) => ci.isCompleted).length;
   const totalCount = checklistItems.length;
 
-  const handleCardClick = () => {
+  // Single-Click: Select item
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (readOnly) return;
+    setSelectedItem(item.id, isChecklist ? 'checklist' : 'note');
+  };
+
+  // Double-Click: Activate item (Open editor)
+  const handleCardDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (readOnly) return;
     if (onEdit) {
       onEdit();
     } else {
       navigate(`/notes/${item.id}`);
     }
+  };
+
+  // Right-Click Context Menu
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (readOnly) return;
+    setSelectedItem(item.id, isChecklist ? 'checklist' : 'note');
+    openContextMenu({ x: e.clientX, y: e.clientY }, 'item', {
+      id: item.id,
+      type: isChecklist ? 'checklist' : 'note',
+    });
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -82,11 +110,19 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
   return (
     <motion.div
+      data-card
       onClick={handleCardClick}
+      onDoubleClick={handleCardDoubleClick}
+      onContextMenu={handleContextMenu}
       whileHover={{ y: -4, transition: { duration: 0.18, ease: 'easeOut' } }}
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       style={{ backgroundColor: cardColor }}
-      className="group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] border border-black/[0.04] flex flex-col justify-between transition-shadow duration-200 cursor-pointer select-none overflow-hidden"
+      className={cn(
+        'group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none overflow-hidden',
+        isSelected
+          ? 'ring-2 ring-[#0B57D0]/50 shadow-md'
+          : 'shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)]'
+      )}
     >
       {/* 1. Top Header Area: Title & Date */}
       <div className="space-y-0.5 sm:space-y-1 min-w-0 shrink-0">

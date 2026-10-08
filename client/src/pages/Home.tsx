@@ -19,6 +19,7 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { FolderCard } from '../components/FolderCard';
 import { NoteCard } from '../components/NoteCard';
 import { GridSkeleton, NoteCardSkeleton } from '../components/skeletons';
+import { DetailsToggleButton } from '../components/DetailsToggleButton';
 
 export interface HomeProps {
   isLoading?: boolean;
@@ -212,6 +213,7 @@ export const Home: React.FC<HomeProps> = ({
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>New Note</span>
             </button>
+            <DetailsToggleButton />
           </div>
         </div>
       )}
@@ -257,16 +259,19 @@ export const Home: React.FC<HomeProps> = ({
             </p>
           </div>
 
-          {/* Quick Metric Pills */}
-          <div className="flex items-center gap-2 self-start md:self-auto bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-2xl shrink-0">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-xl shadow-2xs border border-slate-200/60 text-xs font-semibold text-[#1F1F1F]">
-              <FolderIcon className="w-3.5 h-3.5 text-amber-500" />
-              <span>{activeFolders.length} Folders</span>
+          {/* Quick Metric Pills & Details Toggle */}
+          <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-2xl">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-xl shadow-2xs border border-slate-200/60 text-xs font-semibold text-[#1F1F1F]">
+                <FolderIcon className="w-3.5 h-3.5 text-amber-500" />
+                <span>{activeFolders.length} Folders</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                <FileText className="w-3.5 h-3.5 text-blue-600" />
+                <span>{activeItems.length} Notes</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors">
-              <FileText className="w-3.5 h-3.5 text-blue-600" />
-              <span>{activeItems.length} Notes</span>
-            </div>
+            <DetailsToggleButton />
           </div>
         </header>
       )}

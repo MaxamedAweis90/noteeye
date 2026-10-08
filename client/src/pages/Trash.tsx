@@ -16,6 +16,7 @@ import {
 import { format } from 'date-fns';
 import { useNoteStore } from '../store/useNoteStore';
 import { GridSkeleton } from '../components/skeletons';
+import { DetailsToggleButton } from '../components/DetailsToggleButton';
 import type { Folder, Item } from '../types';
 import { cn } from '../utils/cn';
 
@@ -517,6 +518,9 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                 <List className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Details Toggle Button */}
+            <DetailsToggleButton />
 
             {/* Sort Order */}
             <button

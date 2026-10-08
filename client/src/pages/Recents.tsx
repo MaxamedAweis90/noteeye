@@ -25,6 +25,7 @@ import {
 import { useNoteStore } from '../store/useNoteStore';
 import { NoteCard } from '../components/NoteCard';
 import { NoteCardSkeleton } from '../components/skeletons';
+import { DetailsToggleButton } from '../components/DetailsToggleButton';
 import type { Item } from '../types';
 import { cn } from '../utils/cn';
 
@@ -387,6 +388,9 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
               <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
+
+          {/* Headline Google Drive Details Inspector Button */}
+          <DetailsToggleButton />
         </div>
       </div>
 

@@ -19,6 +19,7 @@ import { useNoteStore } from '../store/useNoteStore';
 import { NoteCard } from '../components/NoteCard';
 import { FolderCard } from '../components/FolderCard';
 import { GridSkeleton } from '../components/skeletons';
+import { DetailsToggleButton } from '../components/DetailsToggleButton';
 import type { Item, Folder } from '../types';
 import { cn } from '../utils/cn';
 
@@ -447,6 +448,9 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
               <List className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Details Toggle Button */}
+          <DetailsToggleButton />
 
           {/* Filter Pills (All, Folders, Notes) */}
           <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-full border border-black/[0.04] text-xs">

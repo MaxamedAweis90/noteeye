@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { MoreHorizontal, Trash2, Pencil, Star } from 'lucide-react';
 import type { Folder } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { cn } from '../utils/cn';
 
 interface FolderCardProps {
@@ -32,6 +33,12 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(folder.name);
 
+  const selectedItemId = useUIStore((state) => state.selectedItemId);
+  const setSelectedItem = useUIStore((state) => state.setSelectedItem);
+  const openContextMenu = useUIStore((state) => state.openContextMenu);
+
+  const isSelected = selectedItemId === folder.id;
+
   // Count active items inside this folder (excluding trash)
   const count = items.filter((i) => i.folderId === folder.id && !i.isDeleted).length;
 
@@ -53,14 +60,43 @@ export const FolderCard: React.FC<FolderCardProps> = ({
     }
   };
 
+  // Single-Click: Select folder
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isRenaming || readOnly) return;
+    setSelectedItem(folder.id, 'folder');
+  };
+
+  // Double-Click: Open folder
+  const handleCardDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isRenaming && !readOnly) onOpen();
+  };
+
+  // Right-Click Context Menu
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (readOnly) return;
+    setSelectedItem(folder.id, 'folder');
+    openContextMenu({ x: e.clientX, y: e.clientY }, 'item', {
+      id: folder.id,
+      type: 'folder',
+    });
+  };
+
   return (
     <motion.div
-      onClick={() => {
-        if (!isRenaming && !readOnly) onOpen();
-      }}
+      data-card
+      onClick={handleCardClick}
+      onDoubleClick={handleCardDoubleClick}
+      onContextMenu={handleContextMenu}
       whileHover={{ y: -4, transition: { duration: 0.18, ease: 'easeOut' } }}
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
-      className="group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 cursor-pointer transition-shadow duration-300 ease-out select-none"
+      className={cn(
+        'group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 cursor-pointer transition-all duration-300 ease-out select-none',
+        isSelected && 'ring-2 ring-[#0B57D0]/60 ring-offset-2 ring-offset-[#F8FAFD] shadow-lg'
+      )}
     >
       {/* 1. Back Folder Body with Smooth Top-Left Tab Flap */}
       <div className="absolute inset-0 pointer-events-none">

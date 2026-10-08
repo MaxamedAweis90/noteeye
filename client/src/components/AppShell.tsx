@@ -3,7 +3,10 @@ import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
 import { NoteModal } from './NoteModal';
 import { FolderModal, QuickEditModal, DeleteDialog } from './modals';
+import { ContextMenu } from './ContextMenu';
+import { DetailsPanel } from './DetailsPanel';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 
 interface AppShellProps {
   children?: React.ReactNode;
@@ -32,6 +35,41 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const deleteItem = useNoteStore((state) => state.deleteItem);
   const deleteFolder = useNoteStore((state) => state.deleteFolder);
 
+  const clearSelection = useUIStore((state) => state.clearSelection);
+  const openContextMenu = useUIStore((state) => state.openContextMenu);
+
+  // Deselect on empty canvas click
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('[data-card]') ||
+      target.closest('[data-details-panel]') ||
+      target.closest('[data-context-menu]') ||
+      target.closest('button') ||
+      target.closest('a') ||
+      target.closest('input') ||
+      target.closest('textarea')
+    ) {
+      return;
+    }
+    clearSelection();
+  };
+
+  // Canvas-level right click context menu (Empty space)
+  const handleCanvasContextMenu = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('[data-card]') ||
+      target.closest('[data-details-panel]') ||
+      target.closest('input') ||
+      target.closest('textarea')
+    ) {
+      return;
+    }
+    e.preventDefault();
+    openContextMenu({ x: e.clientX, y: e.clientY }, 'canvas');
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#F8FAFD] text-[#1F1F1F] font-sans antialiased relative selection:bg-[#C2E7FF] selection:text-[#001D35]">
       {/* 1. Outer App Shell: Top Navigation Bar (Fixed h-16, bg-#F8FAFD) */}
@@ -40,10 +78,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       {/* 2. Outer App Shell: Left Persistent Rail (Fixed top-16, w-64, seamless bg-#F8FAFD) */}
       <Sidebar />
 
-      {/* 3. Inner Floating Content Workspace (24px rounded white canvas) */}
+      {/* 3. Inner Floating Content Workspace (Google Drive Multi-Island Spatial Architecture) */}
       <div className="pl-0 md:pl-64">
-        <main className="pt-16 pr-0 md:pr-4 pb-4 min-h-screen bg-[#F8FAFD]">
-          <div className="bg-white md:rounded-tl-[24px] md:rounded-bl-xl md:rounded-r-xl rounded-none min-h-[calc(100vh-5rem)] p-4 sm:p-6 lg:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] flex flex-col flex-1 transition-all">
+        <main className="pt-16 pr-2 md:pr-4 pb-4 min-h-screen bg-[#F8FAFD] flex gap-3 lg:gap-4 items-start">
+          {/* Main Floating Content Workspace Island */}
+          <div
+            onClick={handleCanvasClick}
+            onContextMenu={handleCanvasContextMenu}
+            className="bg-white rounded-2xl md:rounded-[24px] min-h-[calc(100vh-5rem)] p-4 sm:p-6 lg:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] flex flex-col flex-1 transition-all min-w-0"
+          >
             {children ? (
               children
             ) : (
@@ -54,10 +97,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               </div>
             )}
           </div>
+
+          {/* Integrated Companion Details Panel Island */}
+          <DetailsPanel />
         </main>
       </div>
 
-      {/* Global Interactive Modals */}
+      {/* Global Interactive Modals & Menus */}
+      <ContextMenu />
       <NoteModal />
       <FolderModal
         isOpen={isFolderModalOpen}
