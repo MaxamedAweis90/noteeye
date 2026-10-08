@@ -2,7 +2,8 @@ import React from 'react';
 import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
 import { NoteModal } from './NoteModal';
-import { CreateFolderModal } from './CreateFolderModal';
+import { FolderModal, QuickEditModal, DeleteDialog } from './modals';
+import { useNoteStore } from '../store/useNoteStore';
 
 interface AppShellProps {
   children?: React.ReactNode;
@@ -14,6 +15,23 @@ interface AppShellProps {
  * Layer 2 (Inner): Crisp, elevated #FFFFFF Floating Content Workspace (rounded-tl-[24px] rounded-bl-xl rounded-r-xl)
  */
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
+  const isFolderModalOpen = useNoteStore((state) => state.isFolderModalOpen);
+  const closeFolderModal = useNoteStore((state) => state.closeFolderModal);
+  const editingFolder = useNoteStore((state) => state.editingFolder);
+  const addFolder = useNoteStore((state) => state.addFolder);
+  const renameFolder = useNoteStore((state) => state.renameFolder);
+  const currentFolderId = useNoteStore((state) => state.currentFolderId);
+
+  const isQuickEditModalOpen = useNoteStore((state) => state.isQuickEditModalOpen);
+  const closeQuickEditModal = useNoteStore((state) => state.closeQuickEditModal);
+  const quickEditItem = useNoteStore((state) => state.quickEditItem);
+  const updateItem = useNoteStore((state) => state.updateItem);
+
+  const deleteDialogData = useNoteStore((state) => state.deleteDialogData);
+  const closeDeleteDialog = useNoteStore((state) => state.closeDeleteDialog);
+  const deleteItem = useNoteStore((state) => state.deleteItem);
+  const deleteFolder = useNoteStore((state) => state.deleteFolder);
+
   return (
     <div className="min-h-screen w-full bg-[#F8FAFD] text-[#1F1F1F] font-sans antialiased relative selection:bg-[#C2E7FF] selection:text-[#001D35]">
       {/* 1. Outer App Shell: Top Navigation Bar (Fixed h-16, bg-#F8FAFD) */}
@@ -41,7 +59,44 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Global Interactive Modals */}
       <NoteModal />
-      <CreateFolderModal />
+      <FolderModal
+        isOpen={isFolderModalOpen}
+        onClose={closeFolderModal}
+        folder={editingFolder}
+        parentId={currentFolderId}
+        onSave={(name, folderId) => {
+          if (folderId) {
+            renameFolder(folderId, name);
+          } else {
+            addFolder(name, currentFolderId);
+          }
+        }}
+      />
+      <QuickEditModal
+        isOpen={isQuickEditModalOpen}
+        onClose={closeQuickEditModal}
+        item={quickEditItem}
+        onSave={(updates) => {
+          if (quickEditItem) {
+            updateItem(quickEditItem.id, updates);
+          }
+        }}
+      />
+      <DeleteDialog
+        isOpen={!!deleteDialogData?.isOpen}
+        onClose={closeDeleteDialog}
+        itemName={deleteDialogData?.name}
+        itemType={deleteDialogData?.type === 'folder' ? 'folder' : 'note'}
+        onConfirm={() => {
+          if (deleteDialogData) {
+            if (deleteDialogData.type === 'folder') {
+              deleteFolder(deleteDialogData.id);
+            } else {
+              deleteItem(deleteDialogData.id);
+            }
+          }
+        }}
+      />
     </div>
   );
 };

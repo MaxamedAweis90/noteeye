@@ -93,7 +93,7 @@ export const HomePage: React.FC = () => {
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
-            onClick={openFolderModal}
+            onClick={() => openFolderModal()}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[#1F1F1F] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
           >
             <FolderPlus className="w-3.5 h-3.5 text-amber-500" />

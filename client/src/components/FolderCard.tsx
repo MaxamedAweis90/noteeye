@@ -21,8 +21,9 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   readOnly = false,
 }) => {
   const items = useNoteStore((state) => state.items);
-  const deleteFolder = useNoteStore((state) => state.deleteFolder);
   const renameFolder = useNoteStore((state) => state.renameFolder);
+  const openFolderModal = useNoteStore((state) => state.openFolderModal);
+  const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -120,7 +121,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
                       type="button"
                       onClick={() => {
                         setIsMenuOpen(false);
-                        setIsRenaming(true);
+                        openFolderModal(folder);
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
                     >
@@ -131,7 +132,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
                       type="button"
                       onClick={() => {
                         setIsMenuOpen(false);
-                        deleteFolder(folder.id);
+                        openDeleteDialog(folder.id, folder.name, 'folder');
                       }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 hover:bg-rose-50 font-medium text-left cursor-pointer"
                     >

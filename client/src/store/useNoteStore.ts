@@ -10,9 +10,18 @@ interface NoteStoreState {
   currentFolderId: string | null; // null = root / all
   isNoteModalOpen: boolean;
   isFolderModalOpen: boolean;
+  editingFolder: Folder | null;
   editingItem: Item | null;
   noteModalType: ItemType;
   isMobileSidebarOpen: boolean;
+  isQuickEditModalOpen: boolean;
+  quickEditItem: Item | null;
+  deleteDialogData: {
+    isOpen: boolean;
+    id: string;
+    name: string;
+    type: 'item' | 'folder' | 'note' | 'checklist';
+  } | null;
 
   // Actions - Folders
   addFolder: (name: string, parentId?: string | null) => void;
@@ -44,8 +53,12 @@ interface NoteStoreState {
   setSearchQuery: (query: string) => void;
   openNoteModal: (type?: ItemType, itemToEdit?: Item | null) => void;
   closeNoteModal: () => void;
-  openFolderModal: () => void;
+  openFolderModal: (folderToEdit?: Folder | null) => void;
   closeFolderModal: () => void;
+  openQuickEditModal: (item: Item) => void;
+  closeQuickEditModal: () => void;
+  openDeleteDialog: (id: string, name: string, type?: 'item' | 'folder' | 'note' | 'checklist') => void;
+  closeDeleteDialog: () => void;
   toggleMobileSidebar: (open?: boolean) => void;
   resetToDefault: () => void;
 }
@@ -59,9 +72,13 @@ export const useNoteStore = create<NoteStoreState>()(
       currentFolderId: null,
       isNoteModalOpen: false,
       isFolderModalOpen: false,
+      editingFolder: null,
       editingItem: null,
       noteModalType: 'note',
       isMobileSidebarOpen: false,
+      isQuickEditModalOpen: false,
+      quickEditItem: null,
+      deleteDialogData: null,
 
       addFolder: (name, parentId = null) => {
         const trimmed = name.trim();
@@ -210,11 +227,20 @@ export const useNoteStore = create<NoteStoreState>()(
       },
 
       openNoteModal: (type = 'note', itemToEdit = null) => {
-        set({
-          isNoteModalOpen: true,
-          noteModalType: itemToEdit ? itemToEdit.type : type,
-          editingItem: itemToEdit,
-        });
+        if (itemToEdit) {
+          set({
+            isQuickEditModalOpen: true,
+            quickEditItem: itemToEdit,
+            isNoteModalOpen: false,
+            editingItem: null,
+          });
+        } else {
+          set({
+            isNoteModalOpen: true,
+            noteModalType: type,
+            editingItem: null,
+          });
+        }
       },
 
       closeNoteModal: () => {
@@ -224,12 +250,49 @@ export const useNoteStore = create<NoteStoreState>()(
         });
       },
 
-      openFolderModal: () => {
-        set({ isFolderModalOpen: true });
+      openFolderModal: (folderToEdit = null) => {
+        set({
+          isFolderModalOpen: true,
+          editingFolder: folderToEdit || null,
+        });
       },
 
       closeFolderModal: () => {
-        set({ isFolderModalOpen: false });
+        set({
+          isFolderModalOpen: false,
+          editingFolder: null,
+        });
+      },
+
+      openQuickEditModal: (item) => {
+        set({
+          isQuickEditModalOpen: true,
+          quickEditItem: item,
+        });
+      },
+
+      closeQuickEditModal: () => {
+        set({
+          isQuickEditModalOpen: false,
+          quickEditItem: null,
+        });
+      },
+
+      openDeleteDialog: (id, name, type = 'item') => {
+        set({
+          deleteDialogData: {
+            isOpen: true,
+            id,
+            name,
+            type,
+          },
+        });
+      },
+
+      closeDeleteDialog: () => {
+        set({
+          deleteDialogData: null,
+        });
       },
 
       toggleMobileSidebar: (open) => {

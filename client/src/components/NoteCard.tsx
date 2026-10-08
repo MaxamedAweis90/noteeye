@@ -21,7 +21,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   readOnly = false,
 }) => {
   const openNoteModal = useNoteStore((state) => state.openNoteModal);
-  const deleteItem = useNoteStore((state) => state.deleteItem);
+  const openQuickEditModal = useNoteStore((state) => state.openQuickEditModal);
+  const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleChecklistItem = useNoteStore((state) => state.toggleChecklistItem);
 
   // Format date nicely: e.g. "25 Apr 2026"
@@ -53,7 +54,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     if (onEdit) {
       onEdit();
     } else {
-      openNoteModal(item.type, item);
+      openQuickEditModal(item);
     }
   };
 
@@ -62,7 +63,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     if (onDelete) {
       onDelete();
     } else {
-      deleteItem(item.id);
+      openDeleteDialog(item.id, item.title, isChecklist ? 'checklist' : 'note');
     }
   };
 
