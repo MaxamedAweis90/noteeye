@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useLocation, useSearchParams, useParams, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import {
   ArrowRight,
   Clock,
@@ -178,7 +179,13 @@ export const Home: React.FC<HomeProps> = ({
   }
 
   return (
-    <div className="w-full space-y-8 flex-1">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98, y: 8 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full space-y-8 flex-1"
+    >
       {/* 1. TOP BREADCRUMB & CONTROLS (Rendered when inside a sub-folder or during search/filtering) */}
       {(!isRootDashboard || currentFolderId !== null) && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
@@ -421,7 +428,7 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         )}
       </section>
-    </div>
+    </motion.div>
   );
 };
 

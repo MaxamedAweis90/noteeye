@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
 import type { Item } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
@@ -25,7 +26,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
-  const toggleChecklistItem = useNoteStore((state) => state.toggleChecklistItem);
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
 
   // Format date nicely: e.g. "25 Apr 2026"
@@ -81,13 +81,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const cardColor = item.color || (isChecklist ? '#CEEBFD' : '#FDE3C9');
 
   return (
-    <div
+    <motion.div
       onClick={handleCardClick}
+      whileHover={{ y: -4, transition: { duration: 0.18, ease: 'easeOut' } }}
+      whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       style={{ backgroundColor: cardColor }}
-      className="group relative w-full max-w-[270px] aspect-[1.18/1] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none"
+      className="group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] border border-black/[0.04] flex flex-col justify-between transition-shadow duration-200 cursor-pointer select-none overflow-hidden"
     >
       {/* 1. Top Header Area: Title & Date */}
-      <div className="space-y-0.5 sm:space-y-1 min-w-0">
+      <div className="space-y-0.5 sm:space-y-1 min-w-0 shrink-0">
         <div className="flex items-start justify-between gap-1.5">
           <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
             {item.title}
@@ -113,22 +115,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             />
           </button>
         </div>
-        <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium">
+        <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium truncate">
           {formattedDate}
         </p>
 
-        {/* 2. Middle Content Preview */}
-        <div className="pt-1 sm:pt-2 overflow-hidden">
+        {/* 2. Middle Content Preview (Display-only, non-interactive) */}
+        <div className="pt-1 sm:pt-1.5 overflow-hidden flex-1 min-h-0">
           {isChecklist ? (
             <div className="space-y-1 sm:space-y-1.5">
-              {checklistItems.slice(0, 3).map((ci) => (
+              {checklistItems.slice(0, 2).map((ci) => (
                 <div
                   key={ci.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!readOnly) toggleChecklistItem(item.id, ci.id);
-                  }}
-                  className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-800 cursor-pointer hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-800 pointer-events-none select-none"
                 >
                   {ci.isCompleted ? (
                     <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#1F1F1F] text-white flex items-center justify-center shrink-0">
@@ -137,7 +135,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                       </svg>
                     </div>
                   ) : (
-                    <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-slate-500 shrink-0" />
+                    <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-slate-500/70 shrink-0" />
                   )}
                   <span className={`truncate text-[11px] sm:text-xs ${ci.isCompleted ? 'line-through text-slate-500' : 'text-slate-800'}`}>
                     {ci.text}
@@ -146,7 +144,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               ))}
             </div>
           ) : (
-            <p className="text-xs sm:text-sm text-slate-800/80 leading-relaxed line-clamp-2 sm:line-clamp-3">
+            <p className="text-xs sm:text-sm text-slate-800/80 leading-relaxed line-clamp-2">
               {item.content || <span className="italic text-slate-400">Empty note...</span>}
             </p>
           )}
@@ -154,7 +152,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       </div>
 
       {/* 3. Bottom Pinned Action Bar */}
-      <div className="pt-1.5 sm:pt-3 flex items-center justify-between mt-auto">
+      <div className="pt-1.5 sm:pt-2 flex items-center justify-between mt-auto shrink-0">
         <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-slate-700/65">
           {isChecklist ? (
             <>
@@ -198,6 +196,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };

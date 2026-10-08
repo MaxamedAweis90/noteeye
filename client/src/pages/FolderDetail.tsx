@@ -265,7 +265,13 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
   }
 
   return (
-    <div className="w-full space-y-6 sm:space-y-8 flex-1 animate-fade-in select-none relative">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98, y: 8 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full space-y-6 sm:space-y-8 flex-1 select-none relative"
+    >
       {/* 1. Breadcrumb Trail */}
       <nav
         aria-label="Breadcrumb"
@@ -539,7 +545,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
           </AnimatePresence>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

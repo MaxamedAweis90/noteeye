@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNoteStore } from '../store/useNoteStore';
-import { PASTEL_PALETTE, DEFAULT_PASTEL_COLOR } from '../types';
+import { DEFAULT_PASTEL_COLOR } from '../types';
 import type { ItemType, ChecklistItem } from '../types';
 import { cn } from '../utils/cn';
 
@@ -37,7 +37,7 @@ export const NoteEditor: React.FC = () => {
   const currentFolderId = useNoteStore((state) => state.currentFolderId);
   const addItem = useNoteStore((state) => state.addItem);
   const updateItem = useNoteStore((state) => state.updateItem);
-  const deleteItem = useNoteStore((state) => state.deleteItem);
+  const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
 
   const isNewRoute = id === 'new' || !id;
@@ -194,13 +194,26 @@ export const NoteEditor: React.FC = () => {
     navigate(-1);
   };
 
-  // Move to Trash Handler
+  // Move to Trash Handler — shows confirmation dialog
   const handleDeleteNote = () => {
     if (activeId) {
-      deleteItem(activeId);
+      openDeleteDialog(
+        activeId,
+        title.trim() || (type === 'checklist' ? 'Untitled Checklist' : 'Untitled Note'),
+        type === 'checklist' ? 'checklist' : 'note'
+      );
     }
-    navigate(-1);
   };
+
+  // If active note was moved to trash via confirmation dialog, navigate back
+  useEffect(() => {
+    if (activeId && !isNewRoute) {
+      const itemInStore = items.find((i) => i.id === activeId);
+      if (itemInStore && itemInStore.isDeleted) {
+        navigate(-1);
+      }
+    }
+  }, [items, activeId, isNewRoute, navigate]);
 
   // Star Toggle Handler
   const handleToggleStar = () => {
@@ -212,41 +225,10 @@ export const NoteEditor: React.FC = () => {
     triggerAutosave();
   };
 
-  // Color Change Handler
-  const handleColorChange = (hex: string) => {
-    setColor(hex);
-    triggerAutosave();
-  };
-
   // Folder Reassignment Handler
   const handleSelectFolder = (newFolderId: string | null) => {
     setFolderId(newFolderId);
     setIsFolderDropdownOpen(false);
-    triggerAutosave();
-  };
-
-  // Switch between Standard Note and Checklist modes
-  const handleTypeSwitch = (targetType: ItemType) => {
-    if (targetType === type) return;
-
-    if (targetType === 'checklist') {
-      // Convert content lines to checklist items
-      const lines = content.split('\n').filter((l) => l.trim().length > 0);
-      const newItems: ChecklistItem[] = lines.map((line, idx) => ({
-        id: `cl-${Date.now()}-${idx}`,
-        text: line.replace(/^[-*•]\s*/, '').trim(),
-        isCompleted: false,
-      }));
-      setChecklistItems(newItems.length > 0 ? newItems : [{ id: `cl-${Date.now()}`, text: '', isCompleted: false }]);
-      setType('checklist');
-    } else {
-      // Convert checklist items to text
-      const convertedText = checklistItems
-        .map((c) => (c.isCompleted ? `[x] ${c.text}` : `[ ] ${c.text}`))
-        .join('\n');
-      setContent(convertedText);
-      setType('note');
-    }
     triggerAutosave();
   };
 
@@ -366,79 +348,70 @@ export const NoteEditor: React.FC = () => {
   }
 
   return (
-    <div
-      style={{ backgroundColor: color }}
-      className="min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8 flex flex-col flex-1 rounded-[24px] transition-colors duration-300 relative selection:bg-black/10 select-none sm:select-text"
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98, y: 8 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full flex flex-col flex-1 bg-white relative select-none sm:select-text"
     >
       {/* 1. Top Navigation & Action Header */}
-      <header className="h-14 flex items-center justify-between gap-3 pb-4 mb-4 border-b border-black/[0.06] select-none">
+      <header className="h-14 flex items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 select-none">
         {/* Left: Back Pill + Folder Assignment + Auto-Save Status */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
             onClick={handleBack}
             aria-label="Back"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/70 hover:bg-white text-slate-700 hover:text-black flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 shrink-0"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200/70 text-slate-700 hover:text-black flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
 
-          {/* Folder Assignment Pill Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsFolderDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/70 hover:bg-white text-slate-700 text-xs font-medium border border-black/[0.04] transition-colors shadow-2xs cursor-pointer truncate max-w-[140px] sm:max-w-[200px]"
-            >
-              <FolderIcon className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-              <span className="truncate">
-                {currentFolder ? currentFolder.name : 'Unorganized'}
-              </span>
-              <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
-            </button>
+          {/* Folder Assignment Pill (Only rendered if assigned to a folder) */}
+          {currentFolder && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsFolderDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 hover:bg-purple-100/70 text-purple-800 text-xs font-medium border border-purple-200/60 transition-colors shadow-2xs cursor-pointer truncate max-w-[140px] sm:max-w-[200px]"
+              >
+                <FolderIcon className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                <span className="truncate">{currentFolder.name}</span>
+                <ChevronDown className="w-3 h-3 text-purple-400 shrink-0" />
+              </button>
 
-            {isFolderDropdownOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setIsFolderDropdownOpen(false)}
-                />
-                <div className="absolute left-0 top-9 z-40 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1 animate-fade-in text-xs max-h-56 overflow-y-auto">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectFolder(null)}
-                    className={cn(
-                      'w-full flex items-center gap-2 px-3.5 py-2 text-left cursor-pointer transition-colors',
-                      folderId === null
-                        ? 'bg-blue-50 text-[#0B57D0] font-semibold'
-                        : 'text-slate-700 hover:bg-slate-50'
-                    )}
-                  >
-                    <span>Unorganized (Root)</span>
-                  </button>
-                  {activeFolders.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => handleSelectFolder(f.id)}
-                      className={cn(
-                        'w-full flex items-center gap-2 px-3.5 py-2 text-left cursor-pointer transition-colors truncate',
-                        folderId === f.id
-                          ? 'bg-blue-50 text-[#0B57D0] font-semibold'
-                          : 'text-slate-700 hover:bg-slate-50'
-                      )}
-                    >
-                      <FolderIcon className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                      <span className="truncate">{f.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+              {isFolderDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setIsFolderDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 top-9 z-40 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1 animate-fade-in text-xs max-h-56 overflow-y-auto">
+                    {activeFolders.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => handleSelectFolder(f.id)}
+                        className={cn(
+                          'w-full flex items-center gap-2 px-3.5 py-2 text-left cursor-pointer transition-colors truncate',
+                          folderId === f.id
+                            ? 'bg-purple-50 text-purple-700 font-semibold'
+                            : 'text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        <FolderIcon className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                        <span className="truncate">{f.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Reassuring Auto-Save Status Pill */}
-          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-white/70 backdrop-blur-xs border border-black/[0.04] shadow-2xs transition-all text-xs">
+          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-slate-50 border border-slate-200/60 shadow-2xs transition-all text-xs">
             {saveStatus === 'saving' ? (
               <div className="flex items-center gap-1.5 text-amber-700 font-medium">
                 <span className="relative flex h-2 w-2">
@@ -462,37 +435,15 @@ export const NoteEditor: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Palette Swatches + Favorite + Trash */}
+        {/* Right: Star Favorite + Move to Trash */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Pastel Palette Swatches */}
-          <div className="flex items-center gap-1 sm:gap-1.5 bg-white/70 p-1 sm:p-1.5 rounded-full shadow-2xs border border-black/[0.04]">
-            {PASTEL_PALETTE.map((swatch) => (
-              <button
-                key={swatch.key}
-                type="button"
-                onClick={() => handleColorChange(swatch.hex)}
-                style={{ backgroundColor: swatch.hex }}
-                title={swatch.name}
-                aria-label={`Select ${swatch.name}`}
-                className={cn(
-                  'w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-all cursor-pointer shadow-2xs border border-black/10 hover:scale-115 flex items-center justify-center',
-                  color === swatch.hex && 'ring-2 ring-black/70 scale-110'
-                )}
-              >
-                {color === swatch.hex && (
-                  <Check className="w-3 h-3 text-slate-800 stroke-[3]" />
-                )}
-              </button>
-            ))}
-          </div>
-
           {/* Star Favorite Button */}
           <button
             type="button"
             onClick={handleToggleStar}
             aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             title="Toggle favorite"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/70 hover:bg-white text-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
           >
             <Star
               className={cn(
@@ -510,7 +461,7 @@ export const NoteEditor: React.FC = () => {
             onClick={handleDeleteNote}
             aria-label="Move to trash"
             title="Move to trash"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/70 hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -551,34 +502,19 @@ export const NoteEditor: React.FC = () => {
             </span>
           </div>
 
-          {/* Note Type Switcher */}
-          <div className="bg-black/5 p-0.5 rounded-xl flex items-center gap-0.5 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => handleTypeSwitch('note')}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
-                type === 'note'
-                  ? 'bg-white text-[#1F1F1F] shadow-2xs'
-                  : 'text-slate-600 hover:text-black'
-              )}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Note</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeSwitch('checklist')}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer',
-                type === 'checklist'
-                  ? 'bg-white text-[#1F1F1F] shadow-2xs'
-                  : 'text-slate-600 hover:text-black'
-              )}
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>Checklist</span>
-            </button>
+          {/* Mode Badge Indicator */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-medium text-xs self-start sm:self-auto border border-slate-200/60">
+            {type === 'checklist' ? (
+              <>
+                <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Checklist</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-3.5 h-3.5 text-blue-600" />
+                <span>Note</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -601,7 +537,7 @@ export const NoteEditor: React.FC = () => {
           <div className="flex-1 flex flex-col space-y-4">
             {/* Checklist Progress Overview & Metrics */}
             {checklistTotalCount > 0 && (
-              <div className="space-y-2 p-3.5 sm:p-4 rounded-2xl bg-white/70 border border-black/[0.04] shadow-2xs">
+              <div className="space-y-2 p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/60 shadow-2xs">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-[#1F1F1F]">
@@ -614,7 +550,7 @@ export const NoteEditor: React.FC = () => {
                     {checklistCompletedCount === checklistTotalCount ? '🎉 All tasks done' : 'In progress'}
                   </span>
                 </div>
-                <div className="w-full h-2 bg-black/10 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-slate-200/80 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${checklistProgressPercent}%` }}
                     className="h-full bg-[#10B981] rounded-full transition-all duration-300 ease-out"
@@ -634,7 +570,7 @@ export const NoteEditor: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.15 }}
-                    className="flex items-center gap-2.5 py-1.5 px-2 rounded-xl group hover:bg-black/[0.03] transition-colors"
+                    className="flex items-center gap-2.5 py-1.5 px-2 rounded-xl group hover:bg-slate-50 transition-colors"
                   >
                     {/* Interactive Circular Checkbox Button */}
                     <button
@@ -644,7 +580,7 @@ export const NoteEditor: React.FC = () => {
                         'w-5 h-5 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs hover:scale-105 active:scale-95',
                         item.isCompleted
                           ? 'bg-[#10B981] text-white'
-                          : 'border border-slate-500/60 bg-white/70 hover:bg-white text-transparent'
+                          : 'border border-slate-400 bg-white hover:border-slate-700 text-transparent'
                       )}
                     >
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -660,7 +596,7 @@ export const NoteEditor: React.FC = () => {
                       placeholder="List item..."
                       className={cn(
                         'flex-1 bg-transparent border-0 outline-none text-sm sm:text-base text-[#1F1F1F] focus:ring-0 py-0.5',
-                        item.isCompleted && 'line-through text-slate-500 opacity-60'
+                        item.isCompleted && 'line-through text-slate-400'
                       )}
                     />
 
@@ -686,7 +622,7 @@ export const NoteEditor: React.FC = () => {
                 value={newChecklistText}
                 onChange={(e) => setNewChecklistText(e.target.value)}
                 placeholder="+ Add an item and press Enter..."
-                className="flex-1 bg-white/50 focus:bg-white px-3.5 py-2 rounded-xl border border-black/[0.06] text-xs sm:text-sm text-[#1F1F1F] placeholder-slate-400 outline-none transition-all shadow-2xs"
+                className="flex-1 bg-slate-50 focus:bg-white px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-slate-400 text-xs sm:text-sm text-[#1F1F1F] placeholder-slate-400 outline-none transition-all shadow-2xs"
               />
               <button
                 type="submit"
@@ -699,7 +635,7 @@ export const NoteEditor: React.FC = () => {
           </div>
         )}
       </main>
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { MoreHorizontal, Trash2, Pencil, Star } from 'lucide-react';
 import type { Folder } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
@@ -53,11 +54,13 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   };
 
   return (
-    <div
+    <motion.div
       onClick={() => {
         if (!isRenaming && !readOnly) onOpen();
       }}
-      className="group relative w-full max-w-[270px] aspect-[1.18/1] cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1.5 select-none"
+      whileHover={{ y: -4, transition: { duration: 0.18, ease: 'easeOut' } }}
+      whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
+      className="group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 cursor-pointer transition-shadow duration-300 ease-out select-none"
     >
       {/* 1. Back Folder Body with Smooth Top-Left Tab Flap */}
       <div className="absolute inset-0 pointer-events-none">
@@ -219,6 +222,6 @@ export const FolderCard: React.FC<FolderCardProps> = ({
         </div>
 
       </div>
-    </div>
+    </motion.div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import {
   Clock,
   ArrowUpDown,
@@ -278,7 +279,13 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
   }
 
   return (
-    <div className="w-full space-y-6 flex-1">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98, y: 8 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full space-y-6 flex-1 select-none"
+    >
       {/* 1. Header & Meta Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4 border-b border-slate-100">
         <div>
@@ -475,7 +482,7 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
           })}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

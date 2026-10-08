@@ -392,7 +392,13 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
   }
 
   return (
-    <div className="w-full space-y-6 sm:space-y-8 flex-1 animate-fade-in select-none">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98, y: 8 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full space-y-6 sm:space-y-8 flex-1 select-none"
+    >
       {/* 1. Header Bar Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
         <div>
@@ -613,7 +619,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
           </AnimatePresence>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

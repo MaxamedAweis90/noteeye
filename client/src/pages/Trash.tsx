@@ -188,14 +188,14 @@ const TrashNoteCard: React.FC<TrashNoteCardProps> = ({
       onClick={onToggleSelect}
       style={{ backgroundColor: cardColor }}
       className={cn(
-        'group relative w-full max-w-[270px] aspect-[1.18/1] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none',
+        'group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none',
         isSelected
           ? 'ring-2 ring-[#0B57D0] shadow-md opacity-100 scale-[1.01]'
           : 'opacity-85 hover:opacity-100 hover:-translate-y-1 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-md'
       )}
     >
       {/* 1. Top Header Area: Title & Selection Checkbox */}
-      <div className="space-y-0.5 sm:space-y-1 min-w-0">
+      <div className="space-y-0.5 sm:space-y-1 min-w-0 shrink-0">
         <div className="flex items-start justify-between gap-1.5">
           <h3 className="font-bold text-[14px] sm:text-[16px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
             {item.title}
@@ -220,16 +220,16 @@ const TrashNoteCard: React.FC<TrashNoteCardProps> = ({
           </button>
         </div>
 
-        <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium">
+        <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium truncate">
           {formattedDate}
         </p>
 
         {/* 2. Middle Content Preview */}
-        <div className="pt-1 sm:pt-2 overflow-hidden">
+        <div className="pt-1 sm:pt-1.5 overflow-hidden flex-1 min-h-0">
           {isChecklist ? (
             <div className="space-y-1 sm:space-y-1.5 opacity-75">
-              {checklistItems.slice(0, 3).map((ci) => (
-                <div key={ci.id} className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-800">
+              {checklistItems.slice(0, 2).map((ci) => (
+                <div key={ci.id} className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-800 pointer-events-none select-none">
                   <div className="w-3.5 h-3.5 rounded-full border border-slate-500 shrink-0" />
                   <span className={cn('truncate', ci.isCompleted && 'line-through text-slate-500')}>
                     {ci.text}
@@ -238,7 +238,7 @@ const TrashNoteCard: React.FC<TrashNoteCardProps> = ({
               ))}
             </div>
           ) : (
-            <p className="text-xs sm:text-sm text-slate-800/75 leading-relaxed line-clamp-2 sm:line-clamp-3">
+            <p className="text-xs sm:text-sm text-slate-800/75 leading-relaxed line-clamp-2">
               {item.content || <span className="italic text-slate-400">Empty note...</span>}
             </p>
           )}
@@ -441,7 +441,13 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
   }
 
   return (
-    <div className="w-full space-y-6 sm:space-y-8 flex-1 animate-fade-in select-none relative pb-20">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98, y: 8 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full space-y-6 sm:space-y-8 flex-1 select-none relative pb-20"
+    >
       {/* 1. Auto-Purge Alert Banner */}
       <div className="w-full bg-amber-50/80 border border-amber-200/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
         <div className="flex items-center gap-2.5">
@@ -915,7 +921,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };
 
