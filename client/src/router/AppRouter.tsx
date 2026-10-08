@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
-import { HomePage } from '../pages/HomePage';
+import { Home } from '../pages/Home';
 import { TrashPage } from '../pages/TrashPage';
 
 // Scroll to top helper on navigation
@@ -25,7 +25,7 @@ export const AppRouter: React.FC = () => {
           path="/"
           element={
             <AppShell>
-              <HomePage />
+              <Home />
             </AppShell>
           }
         />
@@ -33,7 +33,7 @@ export const AppRouter: React.FC = () => {
           path="/recents"
           element={
             <AppShell>
-              <HomePage />
+              <Home />
             </AppShell>
           }
         />
@@ -41,7 +41,7 @@ export const AppRouter: React.FC = () => {
           path="/favorites"
           element={
             <AppShell>
-              <HomePage />
+              <Home />
             </AppShell>
           }
         />
@@ -49,7 +49,7 @@ export const AppRouter: React.FC = () => {
           path="/search"
           element={
             <AppShell>
-              <HomePage />
+              <Home />
             </AppShell>
           }
         />
@@ -71,7 +71,7 @@ export const AppRouter: React.FC = () => {
           path="*"
           element={
             <AppShell>
-              <HomePage />
+              <Home />
             </AppShell>
           }
         />

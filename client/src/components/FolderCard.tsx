@@ -55,12 +55,13 @@ export const FolderCard: React.FC<FolderCardProps> = ({
       onClick={() => {
         if (!isRenaming && !readOnly) onOpen();
       }}
-      className="group relative w-[260px] h-[220px] cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1.5 select-none shrink-0"
+      className="group relative w-full max-w-[270px] aspect-[1.18/1] cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1.5 select-none"
     >
       {/* 1. Back Folder Body with Smooth Top-Left Tab Flap */}
       <div className="absolute inset-0 pointer-events-none">
         <svg
           viewBox="0 0 260 220"
+          preserveAspectRatio="none"
           className="w-full h-full drop-shadow-[0_4px_10px_rgba(86,54,200,0.2)]"
           fill="none"
         >
@@ -80,19 +81,19 @@ export const FolderCard: React.FC<FolderCardProps> = ({
 
       {/* 2. Peeking White Paper Sheet (Visible ONLY when folder is populated; removed when empty) */}
       {count > 0 && (
-        <div className="absolute left-5 right-5 top-[28px] h-[40px] bg-white rounded-t-xl shadow-xs transition-transform duration-300 group-hover:-translate-y-1 z-1" />
+        <div className="absolute left-4 right-4 sm:left-5 sm:right-5 top-[12%] h-[18%] bg-white rounded-t-xl shadow-xs transition-transform duration-300 group-hover:-translate-y-1 z-1" />
       )}
 
       {/* 3. Front Pocket Container (Modern 3D Violet Gradient Surface) */}
-      <div className="absolute left-0 right-0 bottom-0 top-[46px] rounded-[22px] bg-gradient-to-b from-[#8266F5] via-[#6D4DE0] to-[#5535C5] p-5 flex flex-col justify-between shadow-[0_12px_28px_-6px_rgba(85,53,197,0.45),0_4px_12px_rgba(0,0,0,0.12)] group-hover:shadow-[0_18px_36px_-6px_rgba(85,53,197,0.58)] transition-all duration-300 border-t border-white/25 overflow-hidden z-2">
+      <div className="absolute left-0 right-0 bottom-0 top-[20%] rounded-[16px] sm:rounded-[20px] lg:rounded-[22px] bg-gradient-to-b from-[#8266F5] via-[#6D4DE0] to-[#5535C5] p-3.5 sm:p-4 lg:p-5 flex flex-col justify-between shadow-[0_12px_28px_-6px_rgba(85,53,197,0.45),0_4px_12px_rgba(0,0,0,0.12)] group-hover:shadow-[0_18px_36px_-6px_rgba(85,53,197,0.58)] transition-all duration-300 border-t border-white/25 overflow-hidden z-2">
         
         {/* Top Header Row: Title & Subtitle on Left, 3-Dot Circle on Right */}
-        <div className="w-full flex items-start justify-between gap-2 pt-0.5">
+        <div className="w-full flex items-start justify-between gap-1.5 sm:gap-2 pt-0.5">
           <div className="flex-1 min-w-0 pr-1">
-            <h3 className="font-bold text-[17px] text-white tracking-tight leading-tight truncate">
+            <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] text-white tracking-tight leading-tight truncate">
               {folder.name}
             </h3>
-            <p className="text-xs text-white/80 font-normal mt-0.5">
+            <p className="text-[10px] sm:text-xs text-white/80 font-normal mt-0.5">
               {count === 0 ? 'Empty' : `${count} ${count === 1 ? 'item' : 'items'}`}
             </p>
           </div>
@@ -104,9 +105,9 @@ export const FolderCard: React.FC<FolderCardProps> = ({
                 type="button"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
                 aria-label="Folder options"
-                className="w-6 h-6 rounded-full border border-white/40 hover:border-white/80 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-white/40 hover:border-white/80 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
               >
-                <MoreVertical className="w-3.5 h-3.5 stroke-[2.2]" />
+                <MoreVertical className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
               </button>
 
               {/* Quick Actions Dropdown Menu */}
@@ -167,8 +168,8 @@ export const FolderCard: React.FC<FolderCardProps> = ({
         </div>
 
         {/* Bottom Metadata: "Last added time {date}" matching reference image */}
-        <div className="pt-2">
-          <p className="text-[11px] text-white/75 font-normal select-none">
+        <div className="pt-1.5 sm:pt-2">
+          <p className="text-[10px] sm:text-[11px] text-white/75 font-normal select-none truncate">
             Last added time {formattedDate}
           </p>
         </div>

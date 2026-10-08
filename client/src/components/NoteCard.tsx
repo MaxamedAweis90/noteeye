@@ -74,28 +74,28 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     <div
       onClick={handleCardClick}
       style={{ backgroundColor: cardColor }}
-      className="group relative w-[260px] h-[220px] rounded-3xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none shrink-0"
+      className="group relative w-full max-w-[270px] aspect-[1.18/1] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none"
     >
       {/* 1. Top Header Area: Title & Date */}
-      <div className="space-y-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-bold text-[18px] sm:text-[20px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
+      <div className="space-y-0.5 sm:space-y-1 min-w-0">
+        <div className="flex items-start justify-between gap-1.5">
+          <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
             {item.title}
           </h3>
           {item.isFavorite && (
-            <span className="material-symbols-outlined text-amber-500 text-base shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span className="material-symbols-outlined text-amber-500 text-sm sm:text-base shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
               star
             </span>
           )}
         </div>
-        <p className="text-xs text-slate-700/60 font-medium">
+        <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium">
           {formattedDate}
         </p>
 
         {/* 2. Middle Content Preview */}
-        <div className="pt-2 overflow-hidden">
+        <div className="pt-1 sm:pt-2 overflow-hidden">
           {isChecklist ? (
-            <div className="space-y-1.5">
+            <div className="space-y-1 sm:space-y-1.5">
               {checklistItems.slice(0, 3).map((ci) => (
                 <div
                   key={ci.id}
@@ -103,25 +103,25 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                     e.stopPropagation();
                     if (!readOnly) toggleChecklistItem(item.id, ci.id);
                   }}
-                  className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer hover:opacity-80 transition-opacity"
+                  className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-800 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   {ci.isCompleted ? (
-                    <div className="w-4 h-4 rounded-full bg-[#1F1F1F] text-white flex items-center justify-center shrink-0">
-                      <svg className="w-2.5 h-2.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#1F1F1F] text-white flex items-center justify-center shrink-0">
+                      <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                       </svg>
                     </div>
                   ) : (
-                    <div className="w-4 h-4 rounded-full border border-slate-500 shrink-0" />
+                    <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-slate-500 shrink-0" />
                   )}
-                  <span className={`truncate text-xs ${ci.isCompleted ? 'line-through text-slate-500' : 'text-slate-800'}`}>
+                  <span className={`truncate text-[11px] sm:text-xs ${ci.isCompleted ? 'line-through text-slate-500' : 'text-slate-800'}`}>
                     {ci.text}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-800/80 leading-relaxed line-clamp-3">
+            <p className="text-xs sm:text-sm text-slate-800/80 leading-relaxed line-clamp-2 sm:line-clamp-3">
               {item.content || <span className="italic text-slate-400">Empty note...</span>}
             </p>
           )}
@@ -129,8 +129,8 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       </div>
 
       {/* 3. Bottom Pinned Action Bar */}
-      <div className="pt-3 flex items-center justify-between mt-auto">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700/65">
+      <div className="pt-1.5 sm:pt-3 flex items-center justify-between mt-auto">
+        <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-slate-700/65">
           {isChecklist ? (
             <>
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
@@ -141,17 +141,17 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
 
-        {/* Pinned 34px Circular Action Buttons (Charcoal #1F1F1F) */}
+        {/* Pinned Circular Action Buttons (Charcoal #1F1F1F) */}
         {!readOnly && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
             {/* Edit Button */}
             <button
               type="button"
               onClick={handleEditClick}
               aria-label="Edit note"
-              className="w-[34px] h-[34px] rounded-full bg-[#1F1F1F] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition-all cursor-pointer shadow-2xs"
+              className="w-7 h-7 sm:w-[32px] sm:h-[32px] lg:w-[34px] lg:h-[34px] rounded-full bg-[#1F1F1F] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition-all cursor-pointer shadow-2xs"
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                 <path d="m15 5 4 4" />
               </svg>
@@ -162,9 +162,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               type="button"
               onClick={handleDeleteClick}
               aria-label="Delete note"
-              className="w-[34px] h-[34px] rounded-full bg-[#1F1F1F] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition-all cursor-pointer shadow-2xs"
+              className="w-7 h-7 sm:w-[32px] sm:h-[32px] lg:w-[34px] lg:h-[34px] rounded-full bg-[#1F1F1F] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition-all cursor-pointer shadow-2xs"
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18" />
                 <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
