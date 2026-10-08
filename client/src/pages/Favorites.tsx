@@ -308,6 +308,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleFavoriteFolder = useNoteStore((state) => state.toggleFavoriteFolder);
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
+  const openQuickEditModal = useNoteStore((state) => state.openQuickEditModal);
 
   // View, Filter, and Sort states
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -558,7 +559,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
                 >
                   <NoteCard
                     item={note}
-                    onEdit={() => handleOpenNote(note)}
+                    onEdit={() => openQuickEditModal(note)}
                   />
                 </motion.div>
               ))}
@@ -608,7 +609,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
                 <NoteListItem
                   item={note}
                   onOpen={() => handleOpenNote(note)}
-                  onEdit={() => handleOpenNote(note)}
+                  onEdit={() => openQuickEditModal(note)}
                   onDelete={() =>
                     openDeleteDialog(
                       note.id,

@@ -55,6 +55,7 @@ export const Home: React.FC<HomeProps> = ({
   const searchQuery = useNoteStore((state) => state.searchQuery);
   const setSearchQuery = useNoteStore((state) => state.setSearchQuery);
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
+  const openNoteModal = useNoteStore((state) => state.openNoteModal);
 
   const recentScrollRef = useRef<HTMLDivElement>(null);
 
@@ -207,7 +208,7 @@ export const Home: React.FC<HomeProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => navigate('/notes/new?type=note')}
+              onClick={() => openNoteModal('note')}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#0B57D0] hover:bg-[#0041A2] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -326,7 +327,7 @@ export const Home: React.FC<HomeProps> = ({
           <div className="relative">
             <div
               ref={recentScrollRef}
-              className="flex items-start gap-4 sm:gap-5 overflow-x-auto pt-3 pb-5 -mx-2 px-2 sm:-mx-3 sm:px-3 scrollbar-none scroll-smooth"
+              className="flex items-start gap-4 sm:gap-5 overflow-x-auto pt-3 pb-5 -mx-2 px-2 sm:-mx-3 sm:px-3 no-scrollbar scrollbar-none scroll-smooth"
             >
               {recentItems.map((item) => (
                 <div key={`recent-${item.id}`} className="w-[170px] sm:w-[215px] lg:w-[260px] shrink-0">
@@ -403,7 +404,7 @@ export const Home: React.FC<HomeProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/notes/new?type=note')}
+                onClick={() => openNoteModal('note')}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0B57D0] hover:bg-[#0041A2] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />

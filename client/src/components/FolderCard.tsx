@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { MoreHorizontal, Trash2, Pencil, Star } from 'lucide-react';
 import type { Folder } from '../types';
@@ -24,6 +25,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   readOnly = false,
 }) => {
   const items = useNoteStore((state) => state.items);
+  const folders = useNoteStore((state) => state.folders);
   const renameFolder = useNoteStore((state) => state.renameFolder);
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
@@ -36,11 +38,16 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   const selectedItemId = useUIStore((state) => state.selectedItemId);
   const setSelectedItem = useUIStore((state) => state.setSelectedItem);
   const openContextMenu = useUIStore((state) => state.openContextMenu);
+  const closeDetailsPanel = useUIStore((state) => state.closeDetailsPanel);
+
+  const location = useLocation();
 
   const isSelected = selectedItemId === folder.id;
 
-  // Count active items inside this folder (excluding trash)
-  const count = items.filter((i) => i.folderId === folder.id && !i.isDeleted).length;
+  // Count active items and nested subfolders inside this folder (excluding trash)
+  const subfoldersCount = folders.filter((f) => f.parentId === folder.id && !f.isDeleted).length;
+  const notesCount = items.filter((i) => i.folderId === folder.id && !i.isDeleted).length;
+  const count = subfoldersCount + notesCount;
 
   // Format date nicely e.g. "Oct 13, 2025"
   const formattedDate = new Date(folder.updatedAt || folder.createdAt).toLocaleDateString(
@@ -70,14 +77,20 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   // Double-Click: Open folder
   const handleCardDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isRenaming && !readOnly) onOpen();
+    if (!isRenaming && !readOnly) {
+      closeDetailsPanel();
+      onOpen();
+    }
   };
 
-  // Right-Click Context Menu
+  // Right-Click Context Menu (Only active on Home and Folders)
   const handleContextMenu = (e: React.MouseEvent) => {
+    const isAllowedScreen = location.pathname === '/' || location.pathname.startsWith('/folders/');
+    if (!isAllowedScreen || readOnly) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
-    if (readOnly) return;
     setSelectedItem(folder.id, 'folder');
     openContextMenu({ x: e.clientX, y: e.clientY }, 'item', {
       id: folder.id,
@@ -88,6 +101,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   return (
     <motion.div
       data-card
+      data-card-id={folder.id}
       onClick={handleCardClick}
       onDoubleClick={handleCardDoubleClick}
       onContextMenu={handleContextMenu}
@@ -95,9 +109,28 @@ export const FolderCard: React.FC<FolderCardProps> = ({
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       className={cn(
         'group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 cursor-pointer transition-all duration-300 ease-out select-none',
-        isSelected && 'ring-2 ring-[#0B57D0]/60 ring-offset-2 ring-offset-[#F8FAFD] shadow-lg'
+        isSelected && 'shadow-xl -translate-y-1'
       )}
     >
+      {/* 0. Organic Folder Silhouette Selection Contour Highlight */}
+      {isSelected && (
+        <div className="absolute -inset-[3.5px] pointer-events-none z-20">
+          <svg
+            viewBox="0 0 260 220"
+            preserveAspectRatio="none"
+            className="w-full h-full overflow-visible"
+            fill="none"
+          >
+            <path
+              d="M 0 34 Q 0 16 16 16 L 82 16 Q 98 16 108 27 Q 118 38 134 38 L 244 38 Q 260 38 260 54 L 260 204 Q 260 220 244 220 L 16 220 Q 0 220 0 204 Z"
+              stroke="#0B57D0"
+              strokeWidth="4"
+              strokeLinejoin="round"
+              className="filter drop-shadow-[0_0_6px_rgba(11,87,208,0.5)]"
+            />
+          </svg>
+        </div>
+      )}
       {/* 1. Back Folder Body with Smooth Top-Left Tab Flap */}
       <div className="absolute inset-0 pointer-events-none">
         <svg

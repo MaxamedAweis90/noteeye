@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   FileText,
@@ -15,6 +15,7 @@ import {
   Pencil,
   Plus,
   Palette,
+  FolderPlus,
 } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
 import { useNoteStore } from '../store/useNoteStore';
@@ -53,9 +54,17 @@ export const ContextMenu: React.FC = () => {
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
   const toggleFavoriteFolder = useNoteStore((state) => state.toggleFavoriteFolder);
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
+  const openNoteModal = useNoteStore((state) => state.openNoteModal);
+  const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
 
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+
+  // Dismiss menu whenever route changes
+  useEffect(() => {
+    closeContextMenu();
+  }, [location.pathname, closeContextMenu]);
 
   // Dismiss listeners: click outside, scroll, Escape key
   useEffect(() => {
@@ -206,7 +215,16 @@ export const ContextMenu: React.FC = () => {
   const handleAddNoteToFolder = () => {
     closeContextMenu();
     if (targetFolder) {
-      navigate(`/notes/new?folderId=${targetFolder.id}&type=note`);
+      setCurrentFolder(targetFolder.id);
+      openNoteModal('note');
+    }
+  };
+
+  const handleAddFolderToFolder = () => {
+    closeContextMenu();
+    if (targetFolder) {
+      setCurrentFolder(targetFolder.id);
+      openFolderModal();
     }
   };
 
@@ -229,7 +247,7 @@ export const ContextMenu: React.FC = () => {
               type="button"
               onClick={() => {
                 closeContextMenu();
-                navigate('/notes/new?type=note');
+                openNoteModal('note');
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
             >
@@ -241,7 +259,7 @@ export const ContextMenu: React.FC = () => {
               type="button"
               onClick={() => {
                 closeContextMenu();
-                navigate('/notes/new?type=checklist');
+                openNoteModal('checklist');
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
             >
@@ -326,6 +344,14 @@ export const ContextMenu: React.FC = () => {
                 >
                   <Plus className="w-4 h-4 text-purple-600 shrink-0" />
                   <span>Add note here</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddFolderToFolder}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+                >
+                  <FolderPlus className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Add subfolder here</span>
                 </button>
                 <button
                   type="button"

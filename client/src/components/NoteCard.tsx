@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Star } from 'lucide-react';
 import type { Item } from '../types';
@@ -28,10 +28,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const navigate = useNavigate();
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
+  const openQuickEditModal = useNoteStore((state) => state.openQuickEditModal);
 
   const selectedItemId = useUIStore((state) => state.selectedItemId);
   const setSelectedItem = useUIStore((state) => state.setSelectedItem);
   const openContextMenu = useUIStore((state) => state.openContextMenu);
+  const closeDetailsPanel = useUIStore((state) => state.closeDetailsPanel);
+
+  const location = useLocation();
 
   const isSelected = selectedItemId === item.id;
 
@@ -57,10 +61,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     setSelectedItem(item.id, isChecklist ? 'checklist' : 'note');
   };
 
-  // Double-Click: Activate item (Open editor)
+  // Double-Click: Activate item (Open editor and close details panel)
   const handleCardDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (readOnly) return;
+    closeDetailsPanel();
     if (onEdit) {
       onEdit();
     } else {
@@ -68,11 +73,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     }
   };
 
-  // Right-Click Context Menu
+  // Right-Click Context Menu (Only active on Home and Folders)
   const handleContextMenu = (e: React.MouseEvent) => {
+    const isAllowedScreen = location.pathname === '/' || location.pathname.startsWith('/folders/');
+    if (!isAllowedScreen || readOnly) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
-    if (readOnly) return;
     setSelectedItem(item.id, isChecklist ? 'checklist' : 'note');
     openContextMenu({ x: e.clientX, y: e.clientY }, 'item', {
       id: item.id,
@@ -85,7 +93,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     if (onEdit) {
       onEdit();
     } else {
-      navigate(`/notes/${item.id}`);
+      openQuickEditModal(item);
     }
   };
 
@@ -111,6 +119,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   return (
     <motion.div
       data-card
+      data-card-id={item.id}
       onClick={handleCardClick}
       onDoubleClick={handleCardDoubleClick}
       onContextMenu={handleContextMenu}

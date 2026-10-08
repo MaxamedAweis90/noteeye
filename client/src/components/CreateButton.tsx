@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, X, FileText, CheckSquare, Sparkles, Folder } from 'lucide-react';
 import { useNoteStore } from '../store/useNoteStore';
@@ -28,12 +27,11 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
   onActionSelected,
   onSelect,
 }) => {
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const currentFolderId = useNoteStore((state) => state.currentFolderId);
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
+  const openNoteModal = useNoteStore((state) => state.openNoteModal);
 
   // Outside click listener to collapse back to idle State 1
   useEffect(() => {
@@ -58,8 +56,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
       openFolderModal();
     } else {
       const itemType = type === 'checklist' ? 'checklist' : 'note';
-      const folderParam = currentFolderId ? `&folder=${currentFolderId}` : '';
-      navigate(`/notes/new?type=${itemType}${folderParam}`);
+      openNoteModal(itemType);
     }
   };
 

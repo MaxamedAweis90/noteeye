@@ -3,6 +3,24 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Folder, Item, ItemType } from '../types';
 import { STARTER_FOLDERS, STARTER_ITEMS, DEFAULT_PASTEL_COLOR } from '../types';
 
+/**
+ * Recursively retrieves the root folder id and all descendant subfolder ids
+ */
+const getAllDescendantFolderIds = (allFolders: Folder[], rootId: string): Set<string> => {
+  const ids = new Set<string>([rootId]);
+  let added = true;
+  while (added) {
+    added = false;
+    for (const f of allFolders) {
+      if (f.parentId && ids.has(f.parentId) && !ids.has(f.id)) {
+        ids.add(f.id);
+        added = true;
+      }
+    }
+  }
+  return ids;
+};
+
 interface NoteStoreState {
   folders: Folder[];
   items: Item[];
@@ -24,7 +42,7 @@ interface NoteStoreState {
   } | null;
 
   // Actions - Folders
-  addFolder: (name: string, parentId?: string | null) => void;
+  addFolder: (name: string, parentId?: string | null) => Folder;
   renameFolder: (id: string, name: string) => void;
   deleteFolder: (id: string) => void;
   restoreFolder: (id: string) => void;
@@ -86,11 +104,10 @@ export const useNoteStore = create<NoteStoreState>()(
 
       addFolder: (name, parentId = null) => {
         const trimmed = name.trim();
-        if (!trimmed) return;
         const newFolder: Folder = {
           id: `folder-${Date.now()}`,
           userId: 'user-demo',
-          name: trimmed,
+          name: trimmed || 'Untitled Folder',
           parentId: parentId ?? null,
           isDeleted: false,
           createdAt: new Date().toISOString(),
@@ -100,6 +117,7 @@ export const useNoteStore = create<NoteStoreState>()(
           folders: [...state.folders, newFolder],
           isFolderModalOpen: false,
         }));
+        return newFolder;
       },
 
       renameFolder: (id, name) => {
@@ -113,33 +131,44 @@ export const useNoteStore = create<NoteStoreState>()(
       },
 
       deleteFolder: (id) => {
-        // Soft delete folder and cascade to its immediate items & subfolders
-        set((state) => ({
-          folders: state.folders.map((f) =>
-            f.id === id || f.parentId === id ? { ...f, isDeleted: true } : f
-          ),
-          items: state.items.map((i) =>
-            i.folderId === id ? { ...i, isDeleted: true } : i
-          ),
-        }));
+        // Soft delete folder and cascade to all nested subfolders and items
+        set((state) => {
+          const targetIds = getAllDescendantFolderIds(state.folders, id);
+          return {
+            folders: state.folders.map((f) =>
+              targetIds.has(f.id) ? { ...f, isDeleted: true } : f
+            ),
+            items: state.items.map((i) =>
+              i.folderId && targetIds.has(i.folderId) ? { ...i, isDeleted: true } : i
+            ),
+          };
+        });
       },
 
       restoreFolder: (id) => {
-        set((state) => ({
-          folders: state.folders.map((f) =>
-            f.id === id ? { ...f, isDeleted: false } : f
-          ),
-          items: state.items.map((i) =>
-            i.folderId === id ? { ...i, isDeleted: false } : i
-          ),
-        }));
+        // Restore folder and cascade to all nested subfolders and items
+        set((state) => {
+          const targetIds = getAllDescendantFolderIds(state.folders, id);
+          return {
+            folders: state.folders.map((f) =>
+              targetIds.has(f.id) ? { ...f, isDeleted: false } : f
+            ),
+            items: state.items.map((i) =>
+              i.folderId && targetIds.has(i.folderId) ? { ...i, isDeleted: false } : i
+            ),
+          };
+        });
       },
 
       permanentlyDeleteFolder: (id) => {
-        set((state) => ({
-          folders: state.folders.filter((f) => f.id !== id && f.parentId !== id),
-          items: state.items.filter((i) => i.folderId !== id),
-        }));
+        // Permanently delete folder, all nested subfolders, and items
+        set((state) => {
+          const targetIds = getAllDescendantFolderIds(state.folders, id);
+          return {
+            folders: state.folders.filter((f) => !targetIds.has(f.id)),
+            items: state.items.filter((i) => !i.folderId || !targetIds.has(i.folderId)),
+          };
+        });
       },
 
       setCurrentFolder: (folderId) => {

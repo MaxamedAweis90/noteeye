@@ -14,6 +14,10 @@ const ScrollToTop: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentIsland = document.getElementById('workspace-content-island');
+    if (contentIsland) {
+      contentIsland.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }, [pathname]);
 
   return null;

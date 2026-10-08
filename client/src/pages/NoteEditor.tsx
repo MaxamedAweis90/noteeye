@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { DEFAULT_PASTEL_COLOR } from '../types';
 import type { ItemType, ChecklistItem } from '../types';
 import { cn } from '../utils/cn';
@@ -39,6 +40,12 @@ export const NoteEditor: React.FC = () => {
   const updateItem = useNoteStore((state) => state.updateItem);
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
+  const closeDetailsPanel = useUIStore((state) => state.closeDetailsPanel);
+
+  // Automatically close details panel when opening full note editor
+  useEffect(() => {
+    closeDetailsPanel();
+  }, [closeDetailsPanel]);
 
   const isNewRoute = id === 'new' || !id;
 
