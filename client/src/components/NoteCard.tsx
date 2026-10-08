@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Star } from 'lucide-react';
 import type { Item } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
+import { cn } from '../utils/cn';
 
 interface NoteCardProps {
   item: Item;
@@ -20,10 +23,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   onDelete,
   readOnly = false,
 }) => {
-  const openNoteModal = useNoteStore((state) => state.openNoteModal);
-  const openQuickEditModal = useNoteStore((state) => state.openQuickEditModal);
+  const navigate = useNavigate();
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleChecklistItem = useNoteStore((state) => state.toggleChecklistItem);
+  const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
 
   // Format date nicely: e.g. "25 Apr 2026"
   const formattedDate = new Date(item.updatedAt || item.createdAt).toLocaleDateString(
@@ -45,7 +48,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     if (onEdit) {
       onEdit();
     } else {
-      openNoteModal(item.type, item);
+      navigate(`/notes/${item.id}`);
     }
   };
 
@@ -54,7 +57,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     if (onEdit) {
       onEdit();
     } else {
-      openQuickEditModal(item);
+      navigate(`/notes/${item.id}`);
     }
   };
 
@@ -64,6 +67,13 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       onDelete();
     } else {
       openDeleteDialog(item.id, item.title, isChecklist ? 'checklist' : 'note');
+    }
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!readOnly) {
+      toggleFavoriteItem(item.id);
     }
   };
 
@@ -82,11 +92,26 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
             {item.title}
           </h3>
-          {item.isFavorite && (
-            <span className="material-symbols-outlined text-amber-500 text-sm sm:text-base shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>
-              star
-            </span>
-          )}
+          <button
+            type="button"
+            onClick={handleToggleFavorite}
+            aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            className={cn(
+              'w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/70 hover:bg-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 hover:scale-105 active:scale-95',
+              item.isFavorite
+                ? 'opacity-100 pointer-events-auto'
+                : 'opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:pointer-events-auto'
+            )}
+          >
+            <Star
+              className={cn(
+                'w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform active:scale-125',
+                item.isFavorite
+                  ? 'fill-amber-400 text-amber-400'
+                  : 'text-slate-400 hover:text-amber-500 transition-colors'
+              )}
+            />
+          </button>
         </div>
         <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium">
           {formattedDate}

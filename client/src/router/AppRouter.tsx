@@ -2,7 +2,11 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { Home } from '../pages/Home';
-import { TrashPage } from '../pages/TrashPage';
+import { FolderDetail } from '../pages/FolderDetail';
+import { Recents } from '../pages/Recents';
+import { Favorites } from '../pages/Favorites';
+import { Trash } from '../pages/Trash';
+import { NoteEditor } from '../pages/NoteEditor';
 
 // Scroll to top helper on navigation
 const ScrollToTop: React.FC = () => {
@@ -30,10 +34,18 @@ export const AppRouter: React.FC = () => {
           }
         />
         <Route
+          path="/folders/:id"
+          element={
+            <AppShell>
+              <FolderDetail />
+            </AppShell>
+          }
+        />
+        <Route
           path="/recents"
           element={
             <AppShell>
-              <Home />
+              <Recents />
             </AppShell>
           }
         />
@@ -41,7 +53,23 @@ export const AppRouter: React.FC = () => {
           path="/favorites"
           element={
             <AppShell>
-              <Home />
+              <Favorites />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/notes/new"
+          element={
+            <AppShell>
+              <NoteEditor />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/notes/:id"
+          element={
+            <AppShell>
+              <NoteEditor />
             </AppShell>
           }
         />
@@ -57,7 +85,7 @@ export const AppRouter: React.FC = () => {
           path="/trash"
           element={
             <AppShell>
-              <TrashPage />
+              <Trash />
             </AppShell>
           }
         />

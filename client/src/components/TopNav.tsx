@@ -34,7 +34,6 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
   const folders = useNoteStore((state) => state.folders);
   const items = useNoteStore((state) => state.items);
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
-  const openNoteModal = useNoteStore((state) => state.openNoteModal);
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -120,9 +119,9 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
       }
       setIsSearchFocused(false);
       inputRef.current?.blur();
-      openNoteModal(item.type, item);
+      navigate(`/notes/${item.id}`);
     },
-    [openNoteModal]
+    [navigate]
   );
 
   const handleViewAllResults = useCallback(() => {

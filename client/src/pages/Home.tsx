@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useLocation, useSearchParams, useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowRight,
   Clock,
@@ -39,7 +39,9 @@ export const Home: React.FC<HomeProps> = ({
   userName = 'Alex',
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { id: folderParamId } = useParams<{ id?: string }>();
 
   const isRecentsRoute = location.pathname === '/recents';
   const isFavoritesRoute = location.pathname === '/favorites';
@@ -50,7 +52,6 @@ export const Home: React.FC<HomeProps> = ({
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
   const searchQuery = useNoteStore((state) => state.searchQuery);
   const setSearchQuery = useNoteStore((state) => state.setSearchQuery);
-  const openNoteModal = useNoteStore((state) => state.openNoteModal);
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
 
   const recentScrollRef = useRef<HTMLDivElement>(null);
@@ -61,6 +62,13 @@ export const Home: React.FC<HomeProps> = ({
       recentScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
+
+  // Synchronize route parameter /folders/:id with note store
+  useEffect(() => {
+    if (folderParamId) {
+      setCurrentFolder(folderParamId);
+    }
+  }, [folderParamId, setCurrentFolder]);
 
   // Synchronize URL query parameter ?q= with note store
   useEffect(() => {
@@ -191,7 +199,7 @@ export const Home: React.FC<HomeProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => openNoteModal('note')}
+              onClick={() => navigate('/notes/new?type=note')}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#0B57D0] hover:bg-[#0041A2] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -383,7 +391,7 @@ export const Home: React.FC<HomeProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => openNoteModal('note')}
+                onClick={() => navigate('/notes/new?type=note')}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0B57D0] hover:bg-[#0041A2] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -399,7 +407,10 @@ export const Home: React.FC<HomeProps> = ({
               <FolderCard
                 key={folder.id}
                 folder={folder}
-                onOpen={() => setCurrentFolder(folder.id)}
+                onOpen={() => {
+                  setCurrentFolder(folder.id);
+                  navigate(`/folders/${folder.id}`);
+                }}
               />
             ))}
 

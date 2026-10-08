@@ -30,21 +30,25 @@ interface NoteStoreState {
   restoreFolder: (id: string) => void;
   permanentlyDeleteFolder: (id: string) => void;
   setCurrentFolder: (folderId: string | null) => void;
+  toggleFavoriteFolder: (id: string) => void;
 
   // Actions - Items (Notes & Checklists)
   addItem: (data: {
+    id?: string;
     title: string;
     type: ItemType;
     folderId: string | null;
     content?: string;
     checklistItems?: Array<{ id: string; text: string; isCompleted: boolean }>;
     color?: string;
-  }) => void;
+    isFavorite?: boolean;
+  }) => Item;
   updateItem: (id: string, updates: Partial<Item>) => void;
   deleteItem: (id: string) => void;
   restoreItem: (id: string) => void;
   permanentlyDeleteItem: (id: string) => void;
   toggleChecklistItem: (itemId: string, checkItemId: string) => void;
+  toggleFavoriteItem: (id: string) => void;
 
   // Trash
   emptyTrash: () => void;
@@ -142,10 +146,24 @@ export const useNoteStore = create<NoteStoreState>()(
         set({ currentFolderId: folderId });
       },
 
+      toggleFavoriteFolder: (id) => {
+        set((state) => ({
+          folders: state.folders.map((f) =>
+            f.id === id
+              ? {
+                  ...f,
+                  isFavorite: !f.isFavorite,
+                  updatedAt: new Date().toISOString(),
+                }
+              : f
+          ),
+        }));
+      },
+
       addItem: (data) => {
         const now = new Date().toISOString();
         const newItem: Item = {
-          id: `item-${Date.now()}`,
+          id: data.id || `item-${Date.now()}`,
           userId: 'user-demo',
           title: data.title.trim() || 'Untitled',
           type: data.type,
@@ -154,6 +172,7 @@ export const useNoteStore = create<NoteStoreState>()(
           checklistItems: data.checklistItems || [],
           color: data.color || DEFAULT_PASTEL_COLOR,
           isDeleted: false,
+          isFavorite: Boolean(data.isFavorite),
           createdAt: now,
           updatedAt: now,
         };
@@ -162,6 +181,7 @@ export const useNoteStore = create<NoteStoreState>()(
           isNoteModalOpen: false,
           editingItem: null,
         }));
+        return newItem;
       },
 
       updateItem: (id, updates) => {
@@ -212,6 +232,20 @@ export const useNoteStore = create<NoteStoreState>()(
               ),
             };
           }),
+        }));
+      },
+
+      toggleFavoriteItem: (id) => {
+        set((state) => ({
+          items: state.items.map((i) =>
+            i.id === id
+              ? {
+                  ...i,
+                  isFavorite: !i.isFavorite,
+                  updatedAt: new Date().toISOString(),
+                }
+              : i
+          ),
         }));
       },
 

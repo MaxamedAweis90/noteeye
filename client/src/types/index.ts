@@ -33,6 +33,7 @@ export interface Folder {
   name: string;
   parentId: string | null; // null = root level
   isDeleted: boolean;
+  isFavorite?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +77,7 @@ export const STARTER_FOLDERS: Folder[] = [
     name: 'Work & Projects',
     parentId: null,
     isDeleted: false,
+    isFavorite: true,
     createdAt: '2026-04-12T11:30:00Z',
     updatedAt: '2026-04-12T11:30:00Z',
   },
@@ -88,6 +90,15 @@ export const STARTER_FOLDERS: Folder[] = [
     createdAt: '2026-04-15T14:15:00Z',
     updatedAt: '2026-04-15T14:15:00Z',
   },
+  {
+    id: 'folder-archive',
+    userId: 'user-demo',
+    name: 'Archive & Old Specs',
+    parentId: null,
+    isDeleted: true,
+    createdAt: '2026-03-20T10:00:00Z',
+    updatedAt: '2026-04-01T11:00:00Z',
+  },
 ];
 
 export const STARTER_ITEMS: Item[] = [
@@ -99,6 +110,7 @@ export const STARTER_ITEMS: Item[] = [
     title: 'Daily Morning Routine',
     color: '#FDE3C9', // Warm Peach
     isDeleted: false,
+    isFavorite: true,
     createdAt: '2026-04-25T08:00:00Z',
     updatedAt: '2026-04-25T08:00:00Z',
     checklistItems: [
@@ -116,6 +128,7 @@ export const STARTER_ITEMS: Item[] = [
     title: 'Q2 Product Launch Strategy',
     color: '#C7F3DE', // Mint Sage
     isDeleted: false,
+    isFavorite: true,
     createdAt: '2026-04-24T14:30:00Z',
     updatedAt: '2026-04-24T16:45:00Z',
     content:
@@ -129,6 +142,7 @@ export const STARTER_ITEMS: Item[] = [
     title: 'Atomic Habits Book Quotes',
     color: '#E5DEFA', // Soft Lavender
     isDeleted: false,
+    isFavorite: true,
     createdAt: '2026-04-22T19:20:00Z',
     updatedAt: '2026-04-22T19:20:00Z',
     content:
@@ -180,5 +194,31 @@ export const STARTER_ITEMS: Item[] = [
       { id: 'cl-11', text: 'Validate trash soft-delete and restore flows', isCompleted: false },
       { id: 'cl-12', text: 'Test mobile slide-over drawer responsiveness', isCompleted: false },
     ],
+  },
+  {
+    id: 'item-trash-1',
+    userId: 'user-demo',
+    folderId: 'folder-archive',
+    type: 'note',
+    title: '2025 Retrospective Notes',
+    color: '#E5DEFA', // Soft Lavender
+    isDeleted: true,
+    createdAt: '2026-03-24T14:00:00Z',
+    updatedAt: '2026-04-02T09:30:00Z',
+    content:
+      'Quarterly lessons learned and legacy component deprecation logs from the v1 architecture.',
+  },
+  {
+    id: 'item-trash-2',
+    userId: 'user-demo',
+    folderId: null,
+    type: 'note',
+    title: 'Draft Pitch: Vector Sync',
+    color: '#FDE3C9', // Warm Peach
+    isDeleted: true,
+    createdAt: '2026-03-12T16:20:00Z',
+    updatedAt: '2026-04-03T15:10:00Z',
+    content:
+      'Initial collaborative engine architecture concept and distributed node synchronization models.',
   },
 ];

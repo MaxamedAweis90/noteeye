@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { MoreVertical, Trash2, Edit3 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Pencil, Star } from 'lucide-react';
 import type { Folder } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
+import { cn } from '../utils/cn';
 
 interface FolderCardProps {
   folder: Folder;
@@ -24,6 +25,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   const renameFolder = useNoteStore((state) => state.renameFolder);
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
+  const toggleFavoriteFolder = useNoteStore((state) => state.toggleFavoriteFolder);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -87,7 +89,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
       {/* 3. Front Pocket Container (Modern 3D Violet Gradient Surface) */}
       <div className="absolute left-0 right-0 bottom-0 top-[20%] rounded-[16px] sm:rounded-[20px] lg:rounded-[22px] bg-gradient-to-b from-[#8266F5] via-[#6D4DE0] to-[#5535C5] p-3.5 sm:p-4 lg:p-5 flex flex-col justify-between shadow-[0_12px_28px_-6px_rgba(85,53,197,0.45),0_4px_12px_rgba(0,0,0,0.12)] group-hover:shadow-[0_18px_36px_-6px_rgba(85,53,197,0.58)] transition-all duration-300 border-t border-white/25 overflow-hidden z-2">
         
-        {/* Top Header Row: Title & Subtitle on Left, 3-Dot Circle on Right */}
+        {/* Top Header Row: Title & Subtitle on Left, Star & 3-Dot Circle on Right */}
         <div className="w-full flex items-start justify-between gap-1.5 sm:gap-2 pt-0.5">
           <div className="flex-1 min-w-0 pr-1">
             <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] text-white tracking-tight leading-tight truncate">
@@ -98,53 +100,95 @@ export const FolderCard: React.FC<FolderCardProps> = ({
             </p>
           </div>
 
-          {/* Context Options Trigger (3-dot circular button matching image) */}
-          {!readOnly && (
-            <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Star Indicator Button on Folder */}
+            {folder.isFavorite && (
               <button
                 type="button"
-                onClick={() => setIsMenuOpen((prev) => !prev)}
-                aria-label="Folder options"
-                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-white/40 hover:border-white/80 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavoriteFolder(folder.id);
+                }}
+                title="Starred folder"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 hover:bg-white/30 text-amber-300 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
               >
-                <MoreVertical className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-300 text-amber-300" />
               </button>
+            )}
 
-              {/* Quick Actions Dropdown Menu */}
-              {isMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setIsMenuOpen(false)}
-                  />
-                  <div className="absolute right-0 top-8 z-40 w-36 bg-white rounded-xl shadow-lg border border-slate-200 py-1 animate-fade-in text-xs">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        openFolderModal(folder);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Rename</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        openDeleteDialog(folder.id, folder.name, 'folder');
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 hover:bg-rose-50 font-medium text-left cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                      <span>Delete Folder</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+            {/* Context Options Trigger (3-dot circular button) */}
+            {!readOnly && (
+              <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  onClick={() => setIsMenuOpen((prev) => !prev)}
+                  aria-label="Folder options"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-white/40 hover:border-white/80 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                >
+                  <MoreHorizontal className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
+                </button>
+
+                {/* Quick Actions Dropdown Menu */}
+                {isMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-8 z-40 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 animate-fade-in text-xs">
+                      {/* 1. Rename */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          openFolderModal(folder);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Rename</span>
+                      </button>
+
+                      {/* 2. Favorite / Remove from Favorites */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          toggleFavoriteFolder(folder.id);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
+                      >
+                        <Star
+                          className={cn(
+                            'w-3.5 h-3.5',
+                            folder.isFavorite
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-slate-400'
+                          )}
+                        />
+                        <span>
+                          {folder.isFavorite ? 'Remove from Favorites' : 'Favorite'}
+                        </span>
+                      </button>
+
+                      {/* 3. Delete */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          openDeleteDialog(folder.id, folder.name, 'folder');
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 hover:bg-rose-50 font-medium text-left cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Middle Area: Clean Surface or Inline Rename Form */}
