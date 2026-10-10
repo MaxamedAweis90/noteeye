@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Trash2,
@@ -19,6 +19,7 @@ import { GridSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
 import type { Folder, Item } from '../types';
 import { cn } from '../utils/cn';
+import { cardDropVariants, listRowDropVariants, cardLayoutTransition } from '../utils/animations';
 
 /**
  * TrashFolderCard — Google Drive / Noteeye 3D Folder in Trashed State
@@ -317,6 +318,18 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortOrder, setSortOrder] = useState<'recent' | 'name'>('recent');
+  const [hasEntered, setHasEntered] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const scrollContainer = document.getElementById('workspace-content-island');
+    if (!scrollContainer) return;
+    const handleScroll = () => {
+      setIsScrolled(scrollContainer.scrollTop > 8);
+    };
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Confirmation dialog state
   const [confirmModal, setConfirmModal] = useState<{
@@ -447,30 +460,41 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98, y: 8 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => setHasEntered(true)}
+      style={{ transform: hasEntered ? 'none' : undefined }}
       className="w-full space-y-6 sm:space-y-8 flex-1 select-none relative pb-20"
     >
-      {/* 1. Auto-Purge Alert Banner */}
-      <div className="w-full bg-amber-50/80 border border-amber-200/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
-          <span className="text-xs sm:text-sm font-medium text-amber-950">
-            Items in Trash are permanently deleted after 30 days.
-          </span>
+      {/* Sticky Header Container (Flush at Top of Workspace Island) */}
+      <div
+        className={cn(
+          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 space-y-3.5',
+          isScrolled
+            ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
+            : 'border-b border-slate-100/60 shadow-none'
+        )}
+      >
+        {/* 1. Auto-Purge Alert Banner */}
+        <div className="w-full bg-amber-50/80 border border-amber-200/60 rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-amber-950">
+              Items in Trash are permanently deleted after 30 days.
+            </span>
+          </div>
+
+          {totalTrashCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setConfirmModal({ isOpen: true, type: 'empty' })}
+              className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer self-start sm:self-auto shrink-0 transition-colors"
+            >
+              Empty Trash now
+            </button>
+          )}
         </div>
 
-        {totalTrashCount > 0 && (
-          <button
-            type="button"
-            onClick={() => setConfirmModal({ isOpen: true, type: 'empty' })}
-            className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer self-start sm:self-auto shrink-0 transition-colors"
-          >
-            Empty Trash now
-          </button>
-        )}
-      </div>
-
-      {/* 2. Header Bar & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+        {/* 2. Header Bar & Controls */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
@@ -545,6 +569,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
           </div>
         )}
       </div>
+      </div>
 
       {/* 3. Main Content Area */}
       {totalTrashCount === 0 ? (
@@ -562,7 +587,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
         /* Grid View: Continuous Responsive Grid (Folders first, Notes following) */
         <div className="w-full">
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 max-w-[1540px]">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {/* Trashed Folders */}
               {sortedFolders.map((folder) => {
                 const count = items.filter(
@@ -573,10 +598,11 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                   <motion.div
                     key={`folder-${folder.id}`}
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
-                    transition={{ layout: { duration: 0.25, ease: 'easeOut' } }}
+                    variants={cardDropVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ layout: cardLayoutTransition }}
                     className="w-full flex justify-center"
                   >
                     <TrashFolderCard
@@ -606,10 +632,11 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                   <motion.div
                     key={`note-${note.id}`}
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
-                    transition={{ layout: { duration: 0.25, ease: 'easeOut' } }}
+                    variants={cardDropVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ layout: cardLayoutTransition }}
                     className="w-full flex justify-center"
                   >
                     <TrashNoteCard
@@ -636,7 +663,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
       ) : (
         /* List View: Muted List Rows */
         <div className="w-full space-y-2.5 max-w-4xl">
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {/* Trashed Folders */}
             {sortedFolders.map((folder) => {
               const isSelected = selectedIds.has(folder.id);
@@ -647,10 +674,11 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                 <motion.div
                   key={`folder-row-${folder.id}`}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.2, ease: 'easeOut' } }}
+                  variants={listRowDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                   onClick={() => toggleSelect(folder.id)}
                   className={cn(
                     'w-full rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 sm:gap-4 border transition-all cursor-pointer select-none',
@@ -731,10 +759,11 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                 <motion.div
                   key={`note-row-${note.id}`}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.2, ease: 'easeOut' } }}
+                  variants={listRowDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                   onClick={() => toggleSelect(note.id)}
                   style={{ backgroundColor: isSelected ? undefined : note.color || '#FDE3C9' }}
                   className={cn(

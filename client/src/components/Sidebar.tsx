@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useNoteStore } from '../store/useNoteStore';
 import { CreateButton } from './CreateButton';
@@ -8,6 +8,14 @@ export const Sidebar: React.FC = () => {
   const isMobileSidebarOpen = useNoteStore((state) => state.isMobileSidebarOpen);
   const toggleMobileSidebar = useNoteStore((state) => state.toggleMobileSidebar);
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
+  const folders = useNoteStore((state) => state.folders);
+  const items = useNoteStore((state) => state.items);
+
+  const trashCount = useMemo(() => {
+    const trashedFolders = folders.filter((f) => f.isDeleted).length;
+    const trashedNotes = items.filter((i) => i.isDeleted).length;
+    return trashedFolders + trashedNotes;
+  }, [folders, items]);
 
   const isHomeActive = location.pathname === '/';
   const isRecentsActive = location.pathname === '/recents';
@@ -86,16 +94,29 @@ export const Sidebar: React.FC = () => {
           onClick={() => {
             toggleMobileSidebar(false);
           }}
-          className={`flex items-center gap-4 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
+          className={`flex items-center gap-3.5 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer group ${
             isTrashActive
               ? 'bg-[#C2E7FF] text-[#001D35] font-semibold'
               : 'text-[#444746] hover:bg-[#E8EDF4] hover:text-[#1F1F1F]'
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]">
+          <span className="material-symbols-outlined text-[22px] shrink-0">
             delete
           </span>
           <span className="text-sm">Trash</span>
+          <span
+            className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full min-w-[20px] text-center transition-all ${
+              trashCount > 0
+                ? isTrashActive
+                  ? 'bg-[#001D35] text-white shadow-2xs'
+                  : 'bg-slate-200/90 text-slate-700 group-hover:bg-slate-300'
+                : isTrashActive
+                ? 'bg-[#001D35]/10 text-[#001D35]'
+                : 'text-slate-400 bg-slate-100 group-hover:bg-slate-200/60'
+            }`}
+          >
+            {trashCount}
+          </span>
         </NavLink>
       </nav>
     </div>

@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cardDropVariants, listRowDropVariants, cardLayoutTransition } from '../utils/animations';
 import {
   Clock,
   ArrowUpDown,
@@ -183,6 +184,18 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [filterType, setFilterType] = useState<'all' | 'note' | 'checklist' | 'favorites'>('all');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [hasEntered, setHasEntered] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const scrollContainer = document.getElementById('workspace-content-island');
+    if (!scrollContainer) return;
+    const handleScroll = () => {
+      setIsScrolled(scrollContainer.scrollTop > 8);
+    };
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleSection = (key: string) => {
     setCollapsedSections((prev) => ({
@@ -285,10 +298,19 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98, y: 8 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => setHasEntered(true)}
+      style={{ transform: hasEntered ? 'none' : undefined }}
       className="w-full space-y-6 flex-1 select-none"
     >
-      {/* 1. Header & Meta Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4 border-b border-slate-100">
+      {/* 1. Header & Meta Bar (Sticky at Top of Workspace Island) */}
+      <div
+        className={cn(
+          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4',
+          isScrolled
+            ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
+            : 'border-b border-slate-100/60 shadow-none'
+        )}
+      >
         <div>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#EDF2FC] text-[#0B57D0] flex items-center justify-center shadow-2xs">
@@ -461,22 +483,46 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
                     {viewMode === 'grid' ? (
                       /* Strict 2-to-5 responsive card grid matching system standard */
                       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 max-w-[1540px]">
-                        {bucket.items.map((item) => (
-                          <NoteCard key={item.id} item={item} />
-                        ))}
+                        <AnimatePresence>
+                          {bucket.items.map((item) => (
+                            <motion.div
+                              key={`recent-${item.id}`}
+                              layout
+                              variants={cardDropVariants}
+                              initial="initial"
+                              animate="animate"
+                              exit="exit"
+                              transition={{ layout: cardLayoutTransition }}
+                              className="w-full flex justify-center"
+                            >
+                              <NoteCard item={item} />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
                       </div>
                     ) : (
                       /* List Mode */
                       <div className="flex flex-col gap-2.5 max-w-4xl">
-                        {bucket.items.map((item) => (
-                          <NoteListItem
-                            key={item.id}
-                            item={item}
-                            onOpen={() => navigate(`/notes/${item.id}`)}
-                            onEdit={() => navigate(`/notes/${item.id}`)}
-                            onDelete={() => openDeleteDialog(item.id, item.title, item.type)}
-                          />
-                        ))}
+                        <AnimatePresence>
+                          {bucket.items.map((item) => (
+                            <motion.div
+                              key={`recent-row-${item.id}`}
+                              layout
+                              variants={listRowDropVariants}
+                              initial="initial"
+                              animate="animate"
+                              exit="exit"
+                              transition={{ layout: cardLayoutTransition }}
+                            >
+                              <NoteListItem
+                                item={item}
+                                onOpen={() => navigate(`/notes/${item.id}`)}
+                                onEdit={() => navigate(`/notes/${item.id}`)}
+                                onDelete={() => openDeleteDialog(item.id, item.title, item.type)}
+                              />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
                       </div>
                     )}
                   </div>

@@ -95,7 +95,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             id="workspace-content-island"
             onClick={handleCanvasClick}
             onContextMenu={handleCanvasContextMenu}
-            className="bg-white rounded-2xl md:rounded-[24px] h-full max-h-[calc(100vh-5rem)] p-4 sm:p-6 lg:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] flex flex-col flex-1 transition-all min-w-0 overflow-y-auto custom-scrollbar"
+            className="bg-white rounded-2xl md:rounded-[24px] h-full max-h-[calc(100vh-5rem)] px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8 pt-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] flex flex-col flex-1 transition-all min-w-0 overflow-y-auto custom-scrollbar"
           >
             {children ? (
               children

@@ -1,6 +1,7 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation, useSearchParams, useParams, useNavigate, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cardDropVariants, cardLayoutTransition } from '../utils/animations';
 import {
   ArrowRight,
   Clock,
@@ -20,6 +21,7 @@ import { FolderCard } from '../components/FolderCard';
 import { NoteCard } from '../components/NoteCard';
 import { GridSkeleton, NoteCardSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
+import { cn } from '../utils/cn';
 
 export interface HomeProps {
   isLoading?: boolean;
@@ -65,6 +67,20 @@ export const Home: React.FC<HomeProps> = ({
       recentScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
   };
+
+  const [hasEntered, setHasEntered] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Monitor workspace scroll position to reactively elevate sticky header
+  useEffect(() => {
+    const scrollContainer = document.getElementById('workspace-content-island');
+    if (!scrollContainer) return;
+    const handleScroll = () => {
+      setIsScrolled(scrollContainer.scrollTop > 8);
+    };
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Synchronize route parameter /folders/:id with note store
   useEffect(() => {
@@ -186,11 +202,20 @@ export const Home: React.FC<HomeProps> = ({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98, y: 8 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => setHasEntered(true)}
+      style={{ transform: hasEntered ? 'none' : undefined }}
       className="w-full space-y-8 flex-1"
     >
       {/* 1. TOP BREADCRUMB & CONTROLS (Rendered when inside a sub-folder or during search/filtering) */}
       {(!isRootDashboard || currentFolderId !== null) && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+        <div
+          className={cn(
+            'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4',
+            isScrolled
+              ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
+              : 'border-b border-transparent shadow-none'
+          )}
+        >
           <Breadcrumbs
             currentFolderId={currentFolderId}
             folders={activeFolders}
@@ -239,9 +264,16 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       )}
 
-      {/* 3. HERO GREETING SECTION (Root View Only) */}
+      {/* 3. HERO GREETING SECTION (Root View Only - Sticky at Top of Workspace Island) */}
       {isRootDashboard && (
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+        <header
+          className={cn(
+            'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6',
+            isScrolled
+              ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
+              : 'border-b border-transparent shadow-none'
+          )}
+        >
           <div className="max-w-2xl">
             <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold text-[#1F1F1F] tracking-tight leading-tight">
               Hi, {userName} —{' '}
@@ -329,11 +361,22 @@ export const Home: React.FC<HomeProps> = ({
               ref={recentScrollRef}
               className="flex items-start gap-4 sm:gap-5 overflow-x-auto pt-3 pb-5 -mx-2 px-2 sm:-mx-3 sm:px-3 no-scrollbar scrollbar-none scroll-smooth"
             >
-              {recentItems.map((item) => (
-                <div key={`recent-${item.id}`} className="w-[170px] sm:w-[215px] lg:w-[260px] shrink-0">
-                  <NoteCard item={item} />
-                </div>
-              ))}
+              <AnimatePresence>
+                {recentItems.map((item) => (
+                  <motion.div
+                    key={`recent-${item.id}`}
+                    layout
+                    variants={cardDropVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ layout: cardLayoutTransition }}
+                    className="w-[170px] sm:w-[215px] lg:w-[260px] shrink-0"
+                  >
+                    <NoteCard item={item} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         </section>
@@ -415,22 +458,45 @@ export const Home: React.FC<HomeProps> = ({
         ) : (
           /* Continuous Grid: Folder cards first, Notes following directly */
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 max-w-[1540px]">
-            {/* 1. Folders render first */}
-            {displayedFolders.map((folder) => (
-              <FolderCard
-                key={folder.id}
-                folder={folder}
-                onOpen={() => {
-                  setCurrentFolder(folder.id);
-                  navigate(`/folders/${folder.id}`);
-                }}
-              />
-            ))}
+            <AnimatePresence>
+              {/* 1. Folders render first */}
+              {displayedFolders.map((folder) => (
+                <motion.div
+                  key={`folder-${folder.id}`}
+                  layout
+                  variants={cardDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
+                  className="w-full flex justify-center"
+                >
+                  <FolderCard
+                    folder={folder}
+                    onOpen={() => {
+                      setCurrentFolder(folder.id);
+                      navigate(`/folders/${folder.id}`);
+                    }}
+                  />
+                </motion.div>
+              ))}
 
-            {/* 2. Notes and checklists follow immediately */}
-            {displayedNotes.map((item) => (
-              <NoteCard key={item.id} item={item} />
-            ))}
+              {/* 2. Notes and checklists follow immediately */}
+              {displayedNotes.map((item) => (
+                <motion.div
+                  key={`note-${item.id}`}
+                  layout
+                  variants={cardDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
+                  className="w-full flex justify-center"
+                >
+                  <NoteCard key={item.id} item={item} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </section>

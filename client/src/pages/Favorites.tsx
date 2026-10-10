@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -22,6 +22,7 @@ import { GridSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
 import type { Item, Folder } from '../types';
 import { cn } from '../utils/cn';
+import { cardDropVariants, listRowDropVariants, cardLayoutTransition } from '../utils/animations';
 
 /**
  * NoteListItem — Google Keep / Material 3 Horizontal List Row for Notes & Checklists
@@ -314,6 +315,18 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterType, setFilterType] = useState<'all' | 'folders' | 'notes'>('all');
   const [sortOrder, setSortOrder] = useState<'recent' | 'name'>('recent');
+  const [hasEntered, setHasEntered] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const scrollContainer = document.getElementById('workspace-content-island');
+    if (!scrollContainer) return;
+    const handleScroll = () => {
+      setIsScrolled(scrollContainer.scrollTop > 8);
+    };
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Filter active starred folders (excluding trash)
   const favoriteFolders = useMemo(() => {
@@ -399,10 +412,19 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98, y: 8 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => setHasEntered(true)}
+      style={{ transform: hasEntered ? 'none' : undefined }}
       className="w-full space-y-6 sm:space-y-8 flex-1 select-none"
     >
-      {/* 1. Header Bar Area */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+      {/* 1. Header Bar Area (Sticky at Top of Workspace Island) */}
+      <div
+        className={cn(
+          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4',
+          isScrolled
+            ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
+            : 'border-b border-slate-100/60 shadow-none'
+        )}
+      >
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
@@ -527,16 +549,17 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
         /* 3. Main Grid Architecture (Strict Uniform Geometry with Smooth Framer Motion Removal) */
         <div className="w-full">
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 max-w-[1540px]">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {/* Starred Folders render first */}
               {displayedFolders.map((folder) => (
                 <motion.div
                   key={`folder-${folder.id}`}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.25, ease: 'easeOut' } }}
+                  variants={cardDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                   className="w-full flex justify-center"
                 >
                   <FolderCard
@@ -551,10 +574,11 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
                 <motion.div
                   key={`note-${note.id}`}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.25, ease: 'easeOut' } }}
+                  variants={cardDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                   className="w-full flex justify-center"
                 >
                   <NoteCard
@@ -569,7 +593,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
       ) : (
         /* 4. List View Architecture (Continuous List with Smooth Framer Motion Removal) */
         <div className="w-full space-y-2.5 max-w-4xl">
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {/* Starred Folders first */}
             {displayedFolders.map((folder) => {
               const count = items.filter(
@@ -579,10 +603,11 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
                 <motion.div
                   key={`folder-row-${folder.id}`}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.2, ease: 'easeOut' } }}
+                  variants={listRowDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                 >
                   <FolderListItem
                     folder={folder}
@@ -601,10 +626,11 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
               <motion.div
                 key={`note-row-${note.id}`}
                 layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                transition={{ layout: { duration: 0.2, ease: 'easeOut' } }}
+                variants={listRowDropVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ layout: cardLayoutTransition }}
               >
                 <NoteListItem
                   item={note}

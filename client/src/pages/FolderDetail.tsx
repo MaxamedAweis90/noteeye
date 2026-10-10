@@ -28,6 +28,7 @@ import { GridSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
 import type { Folder, Item } from '../types';
 import { cn } from '../utils/cn';
+import { cardDropVariants, listRowDropVariants, cardLayoutTransition } from '../utils/animations';
 
 /**
  * FolderListItem — Material 3 Horizontal List Row for Subfolders inside FolderDetail
@@ -343,6 +344,18 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortOrder, setSortOrder] = useState<'recent' | 'name'>('recent');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hasEntered, setHasEntered] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const scrollContainer = document.getElementById('workspace-content-island');
+    if (!scrollContainer) return;
+    const handleScroll = () => {
+      setIsScrolled(scrollContainer.scrollTop > 8);
+    };
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Subfolders strictly assigned to this folder
   const subfolders = useMemo(() => {
@@ -452,44 +465,55 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98, y: 8 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => setHasEntered(true)}
+      style={{ transform: hasEntered ? 'none' : undefined }}
       className="w-full space-y-6 sm:space-y-8 flex-1 select-none relative"
     >
-      {/* 1. Hierarchical Breadcrumb Trail */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 select-none overflow-x-auto py-1"
+      {/* Sticky Header Container (Flush at Top of Workspace Island) */}
+      <div
+        className={cn(
+          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 space-y-3',
+          isScrolled
+            ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
+            : 'border-b border-slate-100/60 shadow-none'
+        )}
       >
-        <Link
-          to="/"
-          className="flex items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors shrink-0"
+        {/* 1. Hierarchical Breadcrumb Trail */}
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 select-none overflow-x-auto py-1"
         >
-          <Home className="w-3.5 h-3.5" />
-          <span>Collections</span>
-        </Link>
-        {breadcrumbTrail.map((f, idx) => {
-          const isCurrent = idx === breadcrumbTrail.length - 1;
-          return (
-            <React.Fragment key={f.id}>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-              {isCurrent ? (
-                <span className="text-[#1F1F1F] font-bold truncate max-w-[200px] sm:max-w-xs">
-                  {f.name}
-                </span>
-              ) : (
-                <Link
-                  to={`/folders/${f.id}`}
-                  className="text-slate-400 hover:text-slate-800 transition-colors truncate max-w-[160px]"
-                >
-                  {f.name}
-                </Link>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </nav>
+          <Link
+            to="/"
+            className="flex items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors shrink-0"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>Collections</span>
+          </Link>
+          {breadcrumbTrail.map((f, idx) => {
+            const isCurrent = idx === breadcrumbTrail.length - 1;
+            return (
+              <React.Fragment key={f.id}>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                {isCurrent ? (
+                  <span className="text-[#1F1F1F] font-bold truncate max-w-[200px] sm:max-w-xs">
+                    {f.name}
+                  </span>
+                ) : (
+                  <Link
+                    to={`/folders/${f.id}`}
+                    className="text-slate-400 hover:text-slate-800 transition-colors truncate max-w-[160px]"
+                  >
+                    {f.name}
+                  </Link>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </nav>
 
-      {/* 2. Folder Header & Meta Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        {/* 2. Folder Header & Meta Controls */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left: Badge, Title & Context Menu */}
         <div className="flex items-start gap-3.5 min-w-0">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#8F7BF0] to-[#5939C7] text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -686,6 +710,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
           </button>
         </div>
       </div>
+      </div>
 
       {/* 3. Folder Contents: Grid / List View */}
       {totalItemsCount === 0 ? (
@@ -722,15 +747,16 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
         <div className="w-full">
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 max-w-[1540px]">
             {/* 1. Subfolder Cards First */}
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {subfolders.map((sub) => (
                 <motion.div
                   key={sub.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.25, ease: 'easeOut' } }}
+                  variants={cardDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                   className="w-full flex justify-center"
                 >
                   <FolderCard
@@ -745,15 +771,16 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
             </AnimatePresence>
 
             {/* 2. Note Cards Follow Directly */}
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {folderNotes.map((note) => (
                 <motion.div
                   key={note.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.25, ease: 'easeOut' } }}
+                  variants={cardDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                   className="w-full flex justify-center"
                 >
                   <NoteCard
@@ -769,7 +796,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
         /* List View: Subfolders first, notes follow directly */
         <div className="w-full space-y-2.5 max-w-4xl">
           {/* 1. Subfolders in List Mode */}
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {subfolders.map((sub) => {
               const subCount =
                 items.filter((i) => i.folderId === sub.id && !i.isDeleted).length +
@@ -778,10 +805,11 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
                 <motion.div
                   key={sub.id}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                  transition={{ layout: { duration: 0.2, ease: 'easeOut' } }}
+                  variants={listRowDropVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ layout: cardLayoutTransition }}
                 >
                   <FolderListItem
                     folder={sub}
@@ -800,15 +828,16 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
           </AnimatePresence>
 
           {/* 2. Notes in List Mode */}
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {folderNotes.map((note) => (
               <motion.div
                 key={note.id}
                 layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                transition={{ layout: { duration: 0.2, ease: 'easeOut' } }}
+                variants={listRowDropVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ layout: cardLayoutTransition }}
               >
                 <NoteListItem
                   item={note}
