@@ -322,7 +322,10 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
   const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
   const openNoteModal = useNoteStore((state) => state.openNoteModal);
   const openQuickEditModal = useNoteStore((state) => state.openQuickEditModal);
+  const executeTransfer = useNoteStore((state) => state.executeTransfer);
   const closeDetailsPanel = useUIStore((state) => state.closeDetailsPanel);
+
+  const [dragOverBreadcrumbId, setDragOverBreadcrumbId] = useState<string | null>(null);
 
   // Synchronize active folder context and initially close details panel upon folder entry
   useEffect(() => {
@@ -478,14 +481,70 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
             : 'border-b border-slate-100/60 shadow-none'
         )}
       >
-        {/* 1. Hierarchical Breadcrumb Trail */}
+        {/* 1. Hierarchical Breadcrumb Trail with Drop Targets */}
         <nav
           aria-label="Breadcrumb"
           className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 select-none overflow-x-auto py-1"
         >
           <Link
             to="/"
-            className="flex items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors shrink-0"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setDragOverBreadcrumbId('root');
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setDragOverBreadcrumbId(null);
+              }
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOverBreadcrumbId(null);
+              try {
+                const raw = e.dataTransfer.getData('application/json');
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                if (data.type === 'batch' && Array.isArray(data.items)) {
+                  executeTransfer(
+                    data.items.map((item: any) => ({
+                      type: item.type,
+                      id: item.id,
+                      name: item.name || item.title,
+                      action: 'cut',
+                    })),
+                    null
+                  );
+                } else if (data.id) {
+                  executeTransfer(
+                    [
+                      {
+                        type: data.type === 'folder' ? 'folder' : 'note',
+                        id: data.id,
+                        name: data.name || data.title,
+                        action: 'cut',
+                      },
+                    ],
+                    null
+                  );
+                }
+              } catch (err) {
+                console.error('Drop error on root breadcrumb:', err);
+              } finally {
+                useUIStore.getState().clearMultiSelection();
+                useUIStore.getState().setIsDraggingMulti(false);
+              }
+            }}
+            className={cn(
+              'flex items-center gap-1 transition-colors shrink-0 px-1.5 py-0.5 rounded-lg',
+              dragOverBreadcrumbId === 'root'
+                ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-400 font-bold'
+                : 'text-slate-400 hover:text-slate-800'
+            )}
           >
             <Home className="w-3.5 h-3.5" />
             <span>Collections</span>
@@ -496,13 +555,69 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
               <React.Fragment key={f.id}>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                 {isCurrent ? (
-                  <span className="text-[#1F1F1F] font-bold truncate max-w-[200px] sm:max-w-xs">
+                  <span className="text-[#1F1F1F] font-bold truncate max-w-[200px] sm:max-w-xs px-1.5 py-0.5">
                     {f.name}
                   </span>
                 ) : (
                   <Link
                     to={`/folders/${f.id}`}
-                    className="text-slate-400 hover:text-slate-800 transition-colors truncate max-w-[160px]"
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                    }}
+                    onDragEnter={(e) => {
+                      e.preventDefault();
+                      setDragOverBreadcrumbId(f.id);
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                        setDragOverBreadcrumbId(null);
+                      }
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOverBreadcrumbId(null);
+                      try {
+                        const raw = e.dataTransfer.getData('application/json');
+                        if (!raw) return;
+                        const data = JSON.parse(raw);
+                        if (data.type === 'batch' && Array.isArray(data.items)) {
+                          executeTransfer(
+                            data.items.map((item: any) => ({
+                              type: item.type,
+                              id: item.id,
+                              name: item.name || item.title,
+                              action: 'cut',
+                            })),
+                            f.id
+                          );
+                        } else if (data.id) {
+                          executeTransfer(
+                            [
+                              {
+                                type: data.type === 'folder' ? 'folder' : 'note',
+                                id: data.id,
+                                name: data.name || data.title,
+                                action: 'cut',
+                              },
+                            ],
+                            f.id
+                          );
+                        }
+                      } catch (err) {
+                        console.error('Drop error on breadcrumb:', err);
+                      } finally {
+                        useUIStore.getState().clearMultiSelection();
+                        useUIStore.getState().setIsDraggingMulti(false);
+                      }
+                    }}
+                    className={cn(
+                      'transition-colors truncate max-w-[160px] px-1.5 py-0.5 rounded-lg',
+                      dragOverBreadcrumbId === f.id
+                        ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-400 font-bold'
+                        : 'text-slate-400 hover:text-slate-800'
+                    )}
                   >
                     {f.name}
                   </Link>
@@ -785,6 +900,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({ isLoading = false })
                 >
                   <NoteCard
                     item={note}
+                    onOpen={() => handleOpenNote(note)}
                     onEdit={() => openQuickEditModal(note)}
                   />
                 </motion.div>

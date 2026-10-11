@@ -583,6 +583,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
                 >
                   <NoteCard
                     item={note}
+                    onOpen={() => handleOpenNote(note)}
                     onEdit={() => openQuickEditModal(note)}
                   />
                 </motion.div>

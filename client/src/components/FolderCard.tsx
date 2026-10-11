@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { MoreHorizontal, Trash2, Pencil, Star } from 'lucide-react';
+import { MoreHorizontal, Trash2, Pencil, Star, Check } from 'lucide-react';
 import type { Folder } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { cn } from '../utils/cn';
+import { createStackedDragGhost } from '../utils/dragGhost';
 
 interface FolderCardProps {
   folder: Folder;
   onOpen: () => void;
   readOnly?: boolean;
+  isSelectedMulti?: boolean;
+  isMultiSelectMode?: boolean;
+  onToggleSelect?: () => void;
 }
 
 /**
@@ -23,6 +27,9 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   folder,
   onOpen,
   readOnly = false,
+  isSelectedMulti = false,
+  isMultiSelectMode = false,
+  onToggleSelect,
 }) => {
   const items = useNoteStore((state) => state.items);
   const folders = useNoteStore((state) => state.folders);
@@ -30,19 +37,26 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleFavoriteFolder = useNoteStore((state) => state.toggleFavoriteFolder);
+  const executeTransfer = useNoteStore((state) => state.executeTransfer);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(folder.name);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const selectedItemId = useUIStore((state) => state.selectedItemId);
   const setSelectedItem = useUIStore((state) => state.setSelectedItem);
   const openContextMenu = useUIStore((state) => state.openContextMenu);
   const closeDetailsPanel = useUIStore((state) => state.closeDetailsPanel);
+  const clipboardItem = useUIStore((state) => state.clipboardItem);
+  const selectedIds = useUIStore((state) => state.selectedIds);
+  const isDraggingMulti = useUIStore((state) => state.isDraggingMulti);
 
   const location = useLocation();
 
   const isSelected = selectedItemId === folder.id;
+  const isCut = clipboardItem?.id === folder.id && clipboardItem?.action === 'cut';
 
   // Count active items and nested subfolders inside this folder (excluding trash)
   const subfoldersCount = folders.filter((f) => f.parentId === folder.id && !f.isDeleted).length;
@@ -59,6 +73,8 @@ export const FolderCard: React.FC<FolderCardProps> = ({
     }
   );
 
+  const isCardSelected = isSelectedMulti || isSelected;
+
   const handleRenameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (renameValue.trim()) {
@@ -67,10 +83,75 @@ export const FolderCard: React.FC<FolderCardProps> = ({
     }
   };
 
-  // Single-Click: Select folder
+  // Drag Source Handlers
+  const handleDragStart = (e: React.DragEvent) => {
+    if (readOnly || isRenaming) return;
+    setIsDragging(true);
+
+    const isThisSelected = selectedIds.has(folder.id);
+    const hasMultipleSelected = isThisSelected && selectedIds.size > 1;
+
+    if (hasMultipleSelected) {
+      useUIStore.getState().setIsDraggingMulti(true);
+
+      const store = useNoteStore.getState();
+      const batchItems = Array.from(selectedIds)
+        .map((id) => {
+          const f = store.folders.find((fold) => fold.id === id && !fold.isDeleted);
+          if (f) return { type: 'folder' as const, id: f.id, name: f.name, color: '#7B61FF' };
+          const n = store.items.find((note) => note.id === id && !note.isDeleted);
+          if (n) return { type: 'note' as const, id: n.id, title: n.title, name: n.title, color: n.color };
+          return null;
+        })
+        .filter(Boolean);
+
+      e.dataTransfer.setData(
+        'application/json',
+        JSON.stringify({
+          type: 'batch',
+          items: batchItems,
+        })
+      );
+      e.dataTransfer.effectAllowed = 'move';
+
+      const ghost = createStackedDragGhost(
+        selectedIds.size,
+        folder.name,
+        'folder',
+        '#7B61FF'
+      );
+      e.dataTransfer.setDragImage(ghost, 50, 40);
+      setTimeout(() => {
+        if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+      }, 0);
+    } else {
+      e.dataTransfer.setData(
+        'application/json',
+        JSON.stringify({ type: 'folder', id: folder.id, name: folder.name })
+      );
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    useUIStore.getState().setIsDraggingMulti(false);
+  };
+
+  // Single-Click: Select folder (or toggle multi-select when Ctrl held or in multi-select mode)
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isRenaming || readOnly) return;
+    if (e.ctrlKey || e.metaKey) {
+      if (onToggleSelect) {
+        onToggleSelect();
+      }
+      return;
+    }
+    if (isMultiSelectMode && onToggleSelect) {
+      onToggleSelect();
+      return;
+    }
     setSelectedItem(folder.id, 'folder');
   };
 
@@ -78,6 +159,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   const handleCardDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isRenaming && !readOnly) {
+      if (e.ctrlKey || e.metaKey || isMultiSelectMode) return;
       closeDetailsPanel();
       onOpen();
     }
@@ -98,22 +180,115 @@ export const FolderCard: React.FC<FolderCardProps> = ({
     });
   };
 
+  // HTML5 Drag and Drop Handlers for Folder Drop Target
+  const handleDragOver = (e: React.DragEvent) => {
+    if (readOnly) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    if (readOnly) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (readOnly) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (readOnly) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    try {
+      const raw = e.dataTransfer.getData('application/json');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+
+      if (data.type === 'batch' && Array.isArray(data.items)) {
+        executeTransfer(
+          data.items.map((item: any) => ({
+            type: item.type,
+            id: item.id,
+            name: item.name || item.title,
+            action: 'cut',
+          })),
+          folder.id
+        );
+      } else if (data.id) {
+        executeTransfer(
+          [
+            {
+              type: data.type === 'folder' ? 'folder' : 'note',
+              id: data.id,
+              name: data.name || data.title,
+              action: 'cut',
+            },
+          ],
+          folder.id
+        );
+      }
+    } catch (err) {
+      console.error('Drop error on folder:', err);
+    } finally {
+      useUIStore.getState().clearMultiSelection();
+      useUIStore.getState().setIsDraggingMulti(false);
+    }
+  };
+
   return (
     <motion.div
       data-card
       data-card-id={folder.id}
+      draggable={!readOnly && !isRenaming}
+      onDragStartCapture={handleDragStart}
+      onDragEndCapture={handleDragEnd}
       onClick={handleCardClick}
       onDoubleClick={handleCardDoubleClick}
       onContextMenu={handleContextMenu}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       whileHover={{ y: -4, transition: { duration: 0.18, ease: 'easeOut' } }}
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       className={cn(
         'group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 cursor-pointer transition-all duration-300 ease-out select-none',
-        isSelected && 'shadow-xl -translate-y-1'
+        isCardSelected && 'shadow-xl -translate-y-1',
+        isDragOver && 'ring-4 ring-[#0B57D0] scale-[1.03] shadow-2xl z-30',
+        isDragging && 'opacity-60 scale-95 ring-2 ring-purple-500 shadow-2xl z-40',
+        !isDragging && isDraggingMulti && isSelectedMulti && 'opacity-40 scale-95 ring-2 ring-purple-300',
+        isCut && 'opacity-60 border-dashed border-2 border-slate-400 rounded-3xl'
       )}
     >
+      {/* Visual Stack of Folders/Cards when dragging multiple selected items */}
+      {isDragging && isSelectedMulti && selectedIds.size > 1 && (
+        <>
+          <div
+            className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-purple-900/40 border border-purple-500/40 shadow-md pointer-events-none -z-10"
+            style={{ transform: 'rotate(-6deg) translate(-7px, 6px)' }}
+          />
+          <div
+            className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-purple-700/50 border border-purple-400/30 shadow-md pointer-events-none -z-5"
+            style={{ transform: 'rotate(5deg) translate(7px, 3px)' }}
+          />
+          <div className="absolute -top-2 -right-2 z-40 bg-[#0B57D0] text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 border-2 border-white">
+            <span>{selectedIds.size}</span>
+          </div>
+        </>
+      )}
       {/* 0. Organic Folder Silhouette Selection Contour Highlight */}
-      {isSelected && (
+      {isCardSelected && (
         <div className="absolute -inset-[3.5px] pointer-events-none z-20">
           <svg
             viewBox="0 0 260 220"
@@ -173,8 +348,32 @@ export const FolderCard: React.FC<FolderCardProps> = ({
           </div>
 
           <div className="flex items-center gap-1 shrink-0">
-            {/* Star Indicator Button on Folder */}
-            {folder.isFavorite && (
+            {/* Morphing Top-Right Action: Checkmark when selected, checkbox target in multi-select mode, or Favorite Star */}
+            {isSelectedMulti ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect?.();
+                }}
+                title="Deselect folder"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#0B57D0] text-white ring-2 ring-white flex items-center justify-center transition-all cursor-pointer shadow-md scale-105 active:scale-95"
+              >
+                <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3] text-white" />
+              </button>
+            ) : isMultiSelectMode ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect?.();
+                }}
+                title="Select folder"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-white/60 bg-white/20 hover:bg-white/40 text-transparent hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95 group/chk"
+              >
+                <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3] opacity-0 group-hover/chk:opacity-90" />
+              </button>
+            ) : folder.isFavorite ? (
               <button
                 type="button"
                 onClick={(e) => {
@@ -186,7 +385,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
               >
                 <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-300 text-amber-300" />
               </button>
-            )}
+            ) : null}
 
             {/* Context Options Trigger (3-dot circular button) */}
             {!readOnly && (

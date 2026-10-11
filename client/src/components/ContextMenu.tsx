@@ -16,6 +16,8 @@ import {
   Plus,
   Palette,
   FolderPlus,
+  Scissors,
+  CornerDownRight,
 } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
 import { useNoteStore } from '../store/useNoteStore';
@@ -35,7 +37,7 @@ const PASTEL_PALETTE = [
  * Supports Canvas Empty Space and Item (Note/Folder) menus.
  * New Features & Ideas:
  * 1. Quick Pastel Palette: Change note color in 1-click directly from context menu.
- * 2. Duplicate Note: Instant cloning with preserved metadata.
+ * 2. Cut, Copy & Paste: Full clipboard actions for moving and duplicating notes/folders.
  * 3. Copy Text to Clipboard: One-click clipboard copy.
  * 4. Folder Quick Actions: Rename & New note inside folder.
  */
@@ -45,6 +47,10 @@ export const ContextMenu: React.FC = () => {
   const closeContextMenu = useUIStore((state) => state.closeContextMenu);
   const setSelectedItem = useUIStore((state) => state.setSelectedItem);
   const toggleDetailsPanel = useUIStore((state) => state.toggleDetailsPanel);
+  const clipboard = useUIStore((state) => state.clipboard);
+  const clipboardItem = useUIStore((state) => state.clipboardItem);
+  const copyItem = useUIStore((state) => state.copyItem);
+  const cutItem = useUIStore((state) => state.cutItem);
 
   const items = useNoteStore((state) => state.items);
   const folders = useNoteStore((state) => state.folders);
@@ -56,6 +62,8 @@ export const ContextMenu: React.FC = () => {
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const openNoteModal = useNoteStore((state) => state.openNoteModal);
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
+  const executeTransfer = useNoteStore((state) => state.executeTransfer);
+  const currentFolderId = useNoteStore((state) => state.currentFolderId);
 
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -101,9 +109,14 @@ export const ContextMenu: React.FC = () => {
 
   // Viewport boundary clamping
   const menuWidth = 224;
-  const menuHeight = contextMenu.type === 'item' ? 320 : 190;
+  const menuHeight = contextMenu.type === 'item' ? 440 : 260;
   const clampedX = Math.min(Math.max(12, contextMenu.x), window.innerWidth - menuWidth - 12);
   const clampedY = Math.min(Math.max(12, contextMenu.y), window.innerHeight - menuHeight - 12);
+
+  // Determine active folder based on route or current context
+  const activeFolderId = location.pathname.startsWith('/folders/')
+    ? location.pathname.replace('/folders/', '')
+    : (location.pathname === '/' ? null : currentFolderId);
 
   // Lookup target item/folder
   const targetNote = contextMenu.targetType !== 'folder' && contextMenu.targetId
@@ -123,6 +136,50 @@ export const ContextMenu: React.FC = () => {
       navigate(`/folders/${contextMenu.targetId}`);
     } else if (contextMenu.targetId) {
       navigate(`/notes/${contextMenu.targetId}`);
+    }
+  };
+
+  const handleCut = () => {
+    closeContextMenu();
+    if (contextMenu.targetId) {
+      cutItem(
+        contextMenu.targetType === 'folder' ? 'folder' : 'note',
+        contextMenu.targetId,
+        targetTitle
+      );
+    }
+  };
+
+  const handleCopy = () => {
+    closeContextMenu();
+    if (contextMenu.targetId) {
+      copyItem(
+        contextMenu.targetType === 'folder' ? 'folder' : 'note',
+        contextMenu.targetId,
+        targetTitle
+      );
+    }
+  };
+
+  const handlePaste = (destFolderId: string | null = activeFolderId) => {
+    closeContextMenu();
+    if (clipboard && clipboard.items.length > 0) {
+      executeTransfer(
+        clipboard.items.map((i) => ({ ...i, action: clipboard.action })),
+        destFolderId
+      );
+    } else if (clipboardItem) {
+      executeTransfer(
+        [
+          {
+            type: clipboardItem.type,
+            id: clipboardItem.id,
+            action: clipboardItem.action,
+            name: clipboardItem.name,
+          },
+        ],
+        destFolderId
+      );
     }
   };
 
@@ -243,6 +300,24 @@ export const ContextMenu: React.FC = () => {
         {contextMenu.type === 'canvas' ? (
           // Variant A: Empty Space Context Menu
           <div className="space-y-0.5">
+            {/* Clipboard Paste Option on Canvas */}
+            {clipboardItem && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handlePaste(activeFolderId)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-[#0B57D0] hover:bg-blue-50 rounded-xl cursor-pointer transition-colors text-left"
+                >
+                  <Clipboard className="w-4 h-4 text-[#0B57D0] shrink-0" />
+                  <span>
+                    Paste {clipboardItem.type === 'folder' ? 'Folder' : 'Note'}
+                    {clipboardItem.name ? ` (${clipboardItem.name.slice(0, 12)}${clipboardItem.name.length > 12 ? '...' : ''})` : ''}
+                  </span>
+                </button>
+                <div className="h-px bg-slate-100 my-1" />
+              </>
+            )}
+
             <button
               type="button"
               onClick={() => {
@@ -334,9 +409,38 @@ export const ContextMenu: React.FC = () => {
               <span>Open</span>
             </button>
 
+            {/* Cut & Copy Actions */}
+            <button
+              type="button"
+              onClick={handleCut}
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+            >
+              <Scissors className="w-4 h-4 text-slate-500 shrink-0" />
+              <span>Cut</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+            >
+              <Copy className="w-4 h-4 text-slate-500 shrink-0" />
+              <span>Copy</span>
+            </button>
+
             {/* Folder Specific Actions */}
             {targetFolder && (
               <>
+                {clipboardItem && clipboardItem.id !== targetFolder.id && (
+                  <button
+                    type="button"
+                    onClick={() => handlePaste(targetFolder.id)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-[#0B57D0] hover:bg-blue-50 rounded-xl cursor-pointer transition-colors text-left"
+                  >
+                    <CornerDownRight className="w-4 h-4 text-[#0B57D0] shrink-0" />
+                    <span>Paste into folder</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleAddNoteToFolder}

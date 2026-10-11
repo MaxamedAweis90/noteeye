@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Bell, Info } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchDropdown } from './SearchDropdown';
 import { UserMenu } from './UserMenu';
 import { useNoteStore } from '../store/useNoteStore';
-import { useUIStore } from '../store/uiStore';
-import { cn } from '../utils/cn';
 import type { Item } from '../types';
 import {
   getRecentSearches,
@@ -36,9 +34,6 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
   const folders = useNoteStore((state) => state.folders);
   const items = useNoteStore((state) => state.items);
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
-
-  const isDetailsPanelOpen = useUIStore((state) => state.isDetailsPanelOpen);
-  const toggleDetailsPanel = useUIStore((state) => state.toggleDetailsPanel);
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -210,32 +205,8 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
           </div>
         </div>
 
-        {/* 3. Right Section: Subtle Notifications Trigger & Morphing User Menu */}
-        <div className="flex items-center justify-end gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={toggleDetailsPanel}
-            className={cn(
-              'p-2 rounded-full transition-colors cursor-pointer',
-              isDetailsPanelOpen
-                ? 'bg-[#D3E3FD] text-[#041E49]'
-                : 'text-[#444746] hover:text-[#1F1F1F] hover:bg-[#E8EDF4]'
-            )}
-            title="Toggle item details"
-            aria-label="Toggle details panel"
-          >
-            <Info className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            className="p-2 text-[#444746] hover:text-[#1F1F1F] hover:bg-[#E8EDF4] rounded-full transition-colors cursor-pointer relative"
-            aria-label="Notifications"
-          >
-            <Bell className="w-4 h-4 text-slate-600" />
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#0B57D0] rounded-full" />
-          </button>
-
+        {/* 3. Right Section: User Menu */}
+        <div className="flex items-center justify-end shrink-0">
           <UserMenu />
         </div>
       </div>

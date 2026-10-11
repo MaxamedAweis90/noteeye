@@ -10,7 +10,7 @@ import {
   User,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useNoteStore } from '../store/useNoteStore';
 import { cn } from '../utils/cn';
@@ -22,6 +22,7 @@ import { cn } from '../utils/cn';
  */
 export const DetailsPanel: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const isDetailsPanelOpen = useUIStore((state) => state.isDetailsPanelOpen);
   const closeDetailsPanel = useUIStore((state) => state.closeDetailsPanel);
   const selectedItemId = useUIStore((state) => state.selectedItemId);
@@ -93,6 +94,11 @@ export const DetailsPanel: React.FC = () => {
       navigate(`/notes/${selectedNote.id}`);
     }
   };
+
+  // DetailsPanel is disabled in note editor
+  if (location.pathname.startsWith('/notes')) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

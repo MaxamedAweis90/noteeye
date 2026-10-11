@@ -1,17 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Star } from 'lucide-react';
+import { Star, Check } from 'lucide-react';
 import type { Item } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { cn } from '../utils/cn';
+import { createStackedDragGhost } from '../utils/dragGhost';
 
 interface NoteCardProps {
   item: Item;
+  onOpen?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   readOnly?: boolean; // For trash page
+  isSelectedMulti?: boolean;
+  isMultiSelectMode?: boolean;
+  onToggleSelect?: () => void;
 }
 
 /**
@@ -21,9 +26,13 @@ interface NoteCardProps {
  */
 export const NoteCard: React.FC<NoteCardProps> = ({
   item,
+  onOpen,
   onEdit,
   onDelete,
   readOnly = false,
+  isSelectedMulti = false,
+  isMultiSelectMode = false,
+  onToggleSelect,
 }) => {
   const navigate = useNavigate();
   const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
@@ -34,10 +43,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const setSelectedItem = useUIStore((state) => state.setSelectedItem);
   const openContextMenu = useUIStore((state) => state.openContextMenu);
   const closeDetailsPanel = useUIStore((state) => state.closeDetailsPanel);
+  const clipboardItem = useUIStore((state) => state.clipboardItem);
+  const selectedIds = useUIStore((state) => state.selectedIds);
+  const isDraggingMulti = useUIStore((state) => state.isDraggingMulti);
 
+  const [isDragging, setIsDragging] = useState(false);
   const location = useLocation();
 
   const isSelected = selectedItemId === item.id;
+  const isCut = clipboardItem?.id === item.id && clipboardItem?.action === 'cut';
 
   // Format date nicely: e.g. "25 Apr 2026"
   const formattedDate = new Date(item.updatedAt || item.createdAt).toLocaleDateString(
@@ -54,20 +68,31 @@ export const NoteCard: React.FC<NoteCardProps> = ({
   const completedCount = checklistItems.filter((ci) => ci.isCompleted).length;
   const totalCount = checklistItems.length;
 
-  // Single-Click: Select item
+  // Single-Click: Select item (or toggle multi-select when Ctrl held or in multi-select mode)
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (readOnly) return;
+    if (e.ctrlKey || e.metaKey) {
+      if (onToggleSelect) {
+        onToggleSelect();
+      }
+      return;
+    }
+    if (isMultiSelectMode && onToggleSelect) {
+      onToggleSelect();
+      return;
+    }
     setSelectedItem(item.id, isChecklist ? 'checklist' : 'note');
   };
 
-  // Double-Click: Activate item (Open editor and close details panel)
+  // Double-Click: Activate item (Open full note editor and close details panel)
   const handleCardDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (readOnly) return;
+    if (e.ctrlKey || e.metaKey || isMultiSelectMode) return;
     closeDetailsPanel();
-    if (onEdit) {
-      onEdit();
+    if (onOpen) {
+      onOpen();
     } else {
       navigate(`/notes/${item.id}`);
     }
@@ -113,6 +138,60 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    if (readOnly) return;
+    setIsDragging(true);
+
+    const isThisSelected = selectedIds.has(item.id);
+    const hasMultipleSelected = isThisSelected && selectedIds.size > 1;
+
+    if (hasMultipleSelected) {
+      useUIStore.getState().setIsDraggingMulti(true);
+
+      const store = useNoteStore.getState();
+      const batchItems = Array.from(selectedIds)
+        .map((id) => {
+          const f = store.folders.find((folder) => folder.id === id && !folder.isDeleted);
+          if (f) return { type: 'folder' as const, id: f.id, name: f.name, color: '#7B61FF' };
+          const n = store.items.find((note) => note.id === id && !note.isDeleted);
+          if (n) return { type: 'note' as const, id: n.id, title: n.title, name: n.title, color: n.color };
+          return null;
+        })
+        .filter(Boolean);
+
+      e.dataTransfer.setData(
+        'application/json',
+        JSON.stringify({
+          type: 'batch',
+          items: batchItems,
+        })
+      );
+      e.dataTransfer.effectAllowed = 'move';
+
+      const ghost = createStackedDragGhost(
+        selectedIds.size,
+        item.title,
+        'note',
+        item.color || (isChecklist ? '#CEEBFD' : '#FDE3C9')
+      );
+      e.dataTransfer.setDragImage(ghost, 50, 40);
+      setTimeout(() => {
+        if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+      }, 0);
+    } else {
+      e.dataTransfer.setData(
+        'application/json',
+        JSON.stringify({ type: 'note', id: item.id, title: item.title })
+      );
+      e.dataTransfer.effectAllowed = 'move';
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    useUIStore.getState().setIsDraggingMulti(false);
+  };
+
   // Default fallback pastel color if item has none
   const cardColor = item.color || (isChecklist ? '#CEEBFD' : '#FDE3C9');
 
@@ -120,6 +199,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     <motion.div
       data-card
       data-card-id={item.id}
+      draggable={!readOnly}
+      onDragStartCapture={handleDragStart}
+      onDragEndCapture={handleDragEnd}
       onClick={handleCardClick}
       onDoubleClick={handleCardDoubleClick}
       onContextMenu={handleContextMenu}
@@ -127,38 +209,87 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       style={{ backgroundColor: cardColor }}
       className={cn(
-        'group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none overflow-hidden',
-        isSelected
+        'group relative w-full max-w-[270px] aspect-[1.18/1] min-h-0 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 lg:p-5 border border-black/[0.04] flex flex-col justify-between transition-all duration-200 cursor-pointer select-none',
+        isSelectedMulti
+          ? 'ring-2 ring-[#0B57D0] shadow-xl -translate-y-1 scale-[1.01]'
+          : isSelected
           ? 'ring-2 ring-[#0B57D0]/50 shadow-md'
-          : 'shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)]'
+          : 'shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)]',
+        isDragging && 'opacity-60 scale-95 ring-2 ring-blue-500 shadow-2xl z-40',
+        !isDragging && isDraggingMulti && isSelectedMulti && 'opacity-40 scale-95 ring-2 ring-blue-300',
+        isCut && 'opacity-60 border-dashed border-2 border-slate-400'
       )}
     >
+      {/* Visual Stack of Cards when dragging multiple selected items */}
+      {isDragging && isSelectedMulti && selectedIds.size > 1 && (
+        <>
+          <div
+            className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-slate-300/90 border border-slate-400/40 shadow-md pointer-events-none -z-10"
+            style={{ transform: 'rotate(-6deg) translate(-7px, 6px)' }}
+          />
+          <div
+            className="absolute inset-0 rounded-2xl sm:rounded-3xl bg-slate-200/95 border border-slate-400/30 shadow-md pointer-events-none -z-5"
+            style={{ transform: 'rotate(5deg) translate(7px, 3px)' }}
+          />
+          <div className="absolute -top-2 -right-2 z-40 bg-[#0B57D0] text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 border-2 border-white">
+            <span>{selectedIds.size}</span>
+          </div>
+        </>
+      )}
       {/* 1. Top Header Area: Title & Date */}
       <div className="space-y-0.5 sm:space-y-1 min-w-0 shrink-0">
         <div className="flex items-start justify-between gap-1.5">
           <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
             {item.title}
           </h3>
-          <button
-            type="button"
-            onClick={handleToggleFavorite}
-            aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-            className={cn(
-              'w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/70 hover:bg-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 hover:scale-105 active:scale-95',
-              item.isFavorite
-                ? 'opacity-100 pointer-events-auto'
-                : 'opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:pointer-events-auto'
-            )}
-          >
-            <Star
+
+          {/* Morphing Top-Right Action: Checkmark when selected, checkbox target in multi-select mode, or Favorite star */}
+          {isSelectedMulti ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect?.();
+              }}
+              aria-label="Deselect item"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B57D0] text-white ring-2 ring-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md shrink-0 scale-105 active:scale-95"
+            >
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+            </button>
+          ) : isMultiSelectMode ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect?.();
+              }}
+              aria-label="Select item"
+              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-slate-400/80 bg-white/80 hover:bg-white hover:border-[#0B57D0] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 active:scale-95 group/chk"
+            >
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3] text-[#0B57D0] opacity-0 group-hover/chk:opacity-60 transition-opacity" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleToggleFavorite}
+              aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               className={cn(
-                'w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform active:scale-125',
+                'w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/70 hover:bg-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 hover:scale-105 active:scale-95',
                 item.isFavorite
-                  ? 'fill-amber-400 text-amber-400'
-                  : 'text-slate-400 hover:text-amber-500 transition-colors'
+                  ? 'opacity-100 pointer-events-auto'
+                  : 'opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:pointer-events-auto'
               )}
-            />
-          </button>
+            >
+              <Star
+                className={cn(
+                  'w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform active:scale-125',
+                  item.isFavorite
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'text-slate-400 hover:text-amber-500 transition-colors'
+                )}
+              />
+            </button>
+          )}
         </div>
         <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium truncate">
           {formattedDate}

@@ -10,12 +10,16 @@ import {
   Plus,
   Search,
   X,
-  FileText,
-  Folder as FolderIcon,
   ChevronLeft,
   ChevronRight,
+  Trash2,
+  Star,
+  CheckSquare,
+  Copy,
+  Scissors,
 } from 'lucide-react';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { FolderCard } from '../components/FolderCard';
 import { NoteCard } from '../components/NoteCard';
@@ -58,6 +62,18 @@ export const Home: React.FC<HomeProps> = ({
   const setSearchQuery = useNoteStore((state) => state.setSearchQuery);
   const openFolderModal = useNoteStore((state) => state.openFolderModal);
   const openNoteModal = useNoteStore((state) => state.openNoteModal);
+  const deleteFolder = useNoteStore((state) => state.deleteFolder);
+  const deleteItem = useNoteStore((state) => state.deleteItem);
+  const toggleFavoriteFolder = useNoteStore((state) => state.toggleFavoriteFolder);
+  const toggleFavoriteItem = useNoteStore((state) => state.toggleFavoriteItem);
+  const copyItems = useUIStore((state) => state.copyItems);
+  const cutItems = useUIStore((state) => state.cutItems);
+  const selectedIds = useUIStore((state) => state.selectedIds);
+  const setSelectedIds = useUIStore((state) => state.setSelectedIds);
+  const toggleSelectId = useUIStore((state) => state.toggleSelectId);
+  const clearMultiSelection = useUIStore((state) => state.clearMultiSelection);
+
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean }>({ isOpen: false });
 
   const recentScrollRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +166,119 @@ export const Home: React.FC<HomeProps> = ({
 
   const totalCollectionCount = displayedFolders.length + displayedNotes.length;
   const isRootDashboard = !currentFolderId && !isRecentsRoute && !isFavoritesRoute && !isSearching;
+
+  // All selectable items currently displayed on this dashboard view
+  const allDisplayedItemIds = useMemo(() => {
+    return [
+      ...displayedFolders.map((f) => f.id),
+      ...displayedNotes.map((n) => n.id),
+    ];
+  }, [displayedFolders, displayedNotes]);
+
+  const isAllSelected =
+    allDisplayedItemIds.length > 0 &&
+    allDisplayedItemIds.every((id) => selectedIds.has(id));
+
+  const handleBatchCopy = () => {
+    const entries: Array<{ type: 'note' | 'folder'; id: string; name: string }> = [];
+    selectedIds.forEach((id) => {
+      const f = folders.find((folder) => folder.id === id);
+      if (f) entries.push({ type: 'folder', id: f.id, name: f.name });
+      const n = items.find((item) => item.id === id);
+      if (n) entries.push({ type: 'note', id: n.id, name: n.title });
+    });
+    copyItems(entries);
+  };
+
+  const handleBatchCut = () => {
+    const entries: Array<{ type: 'note' | 'folder'; id: string; name: string }> = [];
+    selectedIds.forEach((id) => {
+      const f = folders.find((folder) => folder.id === id);
+      if (f) entries.push({ type: 'folder', id: f.id, name: f.name });
+      const n = items.find((item) => item.id === id);
+      if (n) entries.push({ type: 'note', id: n.id, name: n.title });
+    });
+    cutItems(entries);
+  };
+
+  // Clear selection upon route / folder navigation
+  useEffect(() => {
+    clearMultiSelection();
+  }, [currentFolderId, location.pathname, clearMultiSelection]);
+
+  // Keyboard shortcut listener: Escape clears selection, Ctrl+A / Cmd+A selects all, Ctrl+C / Ctrl+X copies/cuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedIds.size > 0) {
+        clearMultiSelection();
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+        const activeTag = document.activeElement?.tagName?.toLowerCase();
+        if (activeTag === 'input' || activeTag === 'textarea') return;
+        e.preventDefault();
+        setSelectedIds(new Set(allDisplayedItemIds));
+      }
+      if ((e.ctrlKey || e.metaKey) && selectedIds.size > 0) {
+        if (e.key === 'c' || e.key === 'C') {
+          const activeTag = document.activeElement?.tagName?.toLowerCase();
+          if (activeTag === 'input' || activeTag === 'textarea') return;
+          e.preventDefault();
+          handleBatchCopy();
+        }
+        if (e.key === 'x' || e.key === 'X') {
+          const activeTag = document.activeElement?.tagName?.toLowerCase();
+          if (activeTag === 'input' || activeTag === 'textarea') return;
+          e.preventDefault();
+          handleBatchCut();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIds, allDisplayedItemIds, folders, items, clearMultiSelection, setSelectedIds]);
+
+  const handleToggleSelect = (id: string) => {
+    toggleSelectId(id);
+  };
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      clearMultiSelection();
+    } else {
+      setSelectedIds(new Set(allDisplayedItemIds));
+    }
+  };
+
+  const handleBatchStar = () => {
+    const selectedFolders = folders.filter((f) => selectedIds.has(f.id));
+    const selectedNotes = items.filter((i) => selectedIds.has(i.id));
+    const allStarred =
+      (selectedFolders.length === 0 || selectedFolders.every((f) => f.isFavorite)) &&
+      (selectedNotes.length === 0 || selectedNotes.every((i) => i.isFavorite));
+
+    selectedFolders.forEach((f) => {
+      if (allStarred ? f.isFavorite : !f.isFavorite) {
+        toggleFavoriteFolder(f.id);
+      }
+    });
+    selectedNotes.forEach((i) => {
+      if (allStarred ? i.isFavorite : !i.isFavorite) {
+        toggleFavoriteItem(i.id);
+      }
+    });
+  };
+
+  const handleBatchTrash = () => {
+    selectedIds.forEach((id) => {
+      if (folders.some((f) => f.id === id)) {
+        deleteFolder(id);
+      } else {
+        deleteItem(id);
+      }
+    });
+    clearMultiSelection();
+    setConfirmModal({ isOpen: false });
+  };
 
   // Render Skeleton view if loading (Zero CLS Layout Transition)
   if (isLoading) {
@@ -292,18 +421,8 @@ export const Home: React.FC<HomeProps> = ({
             </p>
           </div>
 
-          {/* Quick Metric Pills & Details Toggle */}
+          {/* Details Toggle */}
           <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-2xl">
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-xl shadow-2xs border border-slate-200/60 text-xs font-semibold text-[#1F1F1F]">
-                <FolderIcon className="w-3.5 h-3.5 text-amber-500" />
-                <span>{activeFolders.length} Folders</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                <FileText className="w-3.5 h-3.5 text-blue-600" />
-                <span>{activeItems.length} Notes</span>
-              </div>
-            </div>
             <DetailsToggleButton />
           </div>
         </header>
@@ -373,7 +492,12 @@ export const Home: React.FC<HomeProps> = ({
                     transition={{ layout: cardLayoutTransition }}
                     className="w-[170px] sm:w-[215px] lg:w-[260px] shrink-0"
                   >
-                    <NoteCard item={item} />
+                    <NoteCard
+                      item={item}
+                      isSelectedMulti={selectedIds.has(item.id)}
+                      isMultiSelectMode={selectedIds.size > 0}
+                      onToggleSelect={() => handleToggleSelect(item.id)}
+                    />
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -477,6 +601,9 @@ export const Home: React.FC<HomeProps> = ({
                       setCurrentFolder(folder.id);
                       navigate(`/folders/${folder.id}`);
                     }}
+                    isSelectedMulti={selectedIds.has(folder.id)}
+                    isMultiSelectMode={selectedIds.size > 0}
+                    onToggleSelect={() => handleToggleSelect(folder.id)}
                   />
                 </motion.div>
               ))}
@@ -493,13 +620,163 @@ export const Home: React.FC<HomeProps> = ({
                   transition={{ layout: cardLayoutTransition }}
                   className="w-full flex justify-center"
                 >
-                  <NoteCard key={item.id} item={item} />
+                  <NoteCard
+                    key={item.id}
+                    item={item}
+                    isSelectedMulti={selectedIds.has(item.id)}
+                    isMultiSelectMode={selectedIds.size > 0}
+                    onToggleSelect={() => handleToggleSelect(item.id)}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
         )}
       </section>
+
+      {/* 7. Contextual Floating Multi-Select Action Dock (Active when ≥1 item selected) */}
+      <AnimatePresence>
+        {selectedIds.size > 0 && (
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
+          >
+            <div className="h-12 bg-[#001D35] text-white rounded-full px-5 py-2.5 flex items-center gap-3.5 sm:gap-4 shadow-2xl border border-slate-700/40 select-none">
+              {/* Clear button */}
+              <button
+                type="button"
+                onClick={() => clearMultiSelection()}
+                aria-label="Clear selection"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Selection summary */}
+              <span className="text-xs sm:text-sm font-medium text-white whitespace-nowrap">
+                {selectedIds.size} {selectedIds.size === 1 ? 'item selected' : 'items selected'}
+              </span>
+
+              {/* Vertical divider */}
+              <div className="w-px h-5 bg-slate-600/70" />
+
+              {/* Select All Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleSelectAll}
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-200 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <CheckSquare className="w-3.5 h-3.5 text-[#7BB1FF]" />
+                <span>{isAllSelected ? 'Deselect all' : 'Select all'}</span>
+              </button>
+
+              {/* Vertical divider */}
+              <div className="w-px h-5 bg-slate-600/70" />
+
+              {/* Batch Star Toggle */}
+              <button
+                type="button"
+                onClick={handleBatchStar}
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-200 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                <span>Star</span>
+              </button>
+
+              {/* Vertical divider */}
+              <div className="w-px h-5 bg-slate-600/70" />
+
+              {/* Batch Cut */}
+              <button
+                type="button"
+                onClick={handleBatchCut}
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-200 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <Scissors className="w-3.5 h-3.5 text-slate-300" />
+                <span>Cut</span>
+              </button>
+
+              {/* Batch Copy */}
+              <button
+                type="button"
+                onClick={handleBatchCopy}
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-200 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <Copy className="w-3.5 h-3.5 text-slate-300" />
+                <span>Copy</span>
+              </button>
+
+              {/* Vertical divider */}
+              <div className="w-px h-5 bg-slate-600/70" />
+
+              {/* Batch Delete / Move to Trash */}
+              <button
+                type="button"
+                onClick={() => setConfirmModal({ isOpen: true })}
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-rose-300 hover:text-rose-200 hover:bg-rose-500/20 px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Move to trash</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 8. Minimalist Confirmation Modal Dialog for Batch Trash */}
+      <AnimatePresence>
+        {confirmModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setConfirmModal({ isOpen: false })}
+              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 z-10 space-y-4"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                <Trash2 className="w-5 h-5" />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#1F1F1F]">
+                  Move {selectedIds.size} {selectedIds.size === 1 ? 'item' : 'items'} to Trash?
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                  These items will be moved to Trash. You can restore them anytime within 30 days.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmModal({ isOpen: false })}
+                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBatchTrash}
+                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors cursor-pointer"
+                >
+                  Move to Trash
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

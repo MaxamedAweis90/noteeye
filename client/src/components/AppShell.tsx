@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
 import { NoteModal } from './NoteModal';
-import { FolderModal, QuickEditModal, DeleteDialog } from './modals';
+import { FolderModal, QuickEditModal, DeleteDialog, ConflictDialog } from './modals';
 import { ContextMenu } from './ContextMenu';
 import { DetailsPanel } from './DetailsPanel';
 import { useNoteStore } from '../store/useNoteStore';
@@ -21,13 +22,16 @@ interface AppShellProps {
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const setSelectedItem = useUIStore((state) => state.setSelectedItem);
+
+  const items = useNoteStore((state) => state.items);
+  const folders = useNoteStore((state) => state.folders);
   const isFolderModalOpen = useNoteStore((state) => state.isFolderModalOpen);
   const closeFolderModal = useNoteStore((state) => state.closeFolderModal);
   const editingFolder = useNoteStore((state) => state.editingFolder);
   const addFolder = useNoteStore((state) => state.addFolder);
   const renameFolder = useNoteStore((state) => state.renameFolder);
   const currentFolderId = useNoteStore((state) => state.currentFolderId);
+  const executeTransfer = useNoteStore((state) => state.executeTransfer);
 
   const isQuickEditModalOpen = useNoteStore((state) => state.isQuickEditModalOpen);
   const closeQuickEditModal = useNoteStore((state) => state.closeQuickEditModal);
@@ -39,8 +43,129 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const deleteItem = useNoteStore((state) => state.deleteItem);
   const deleteFolder = useNoteStore((state) => state.deleteFolder);
 
+  const selectedItemId = useUIStore((state) => state.selectedItemId);
+  const selectedItemType = useUIStore((state) => state.selectedItemType);
+  const setSelectedItem = useUIStore((state) => state.setSelectedItem);
   const clearSelection = useUIStore((state) => state.clearSelection);
   const openContextMenu = useUIStore((state) => state.openContextMenu);
+  const clipboard = useUIStore((state) => state.clipboard);
+  const clipboardItem = useUIStore((state) => state.clipboardItem);
+  const copyItem = useUIStore((state) => state.copyItem);
+  const cutItem = useUIStore((state) => state.cutItem);
+  const clearClipboard = useUIStore((state) => state.clearClipboard);
+  const toastMessage = useUIStore((state) => state.toastMessage);
+  const showToast = useUIStore((state) => state.showToast);
+
+  // Global Keyboard Shortcuts for Clipboard (Ctrl/Cmd + C, X, V)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is editing in an input, textarea, or contentEditable element
+      const activeEl = document.activeElement;
+      if (
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          (activeEl as HTMLElement).isContentEditable ||
+          activeEl.getAttribute('role') === 'textbox')
+      ) {
+        return;
+      }
+
+      const isModKey = e.ctrlKey || e.metaKey;
+
+      // Escape: Cancel cut / clear clipboard
+      if (e.key === 'Escape' && (clipboard?.action === 'cut' || clipboardItem?.action === 'cut')) {
+        clearClipboard();
+        return;
+      }
+
+      if (!isModKey) return;
+
+      const key = e.key.toLowerCase();
+
+      // Ctrl/Cmd + C: Copy selected item
+      if (key === 'c') {
+        if (!selectedItemId) return;
+        const targetFolder = folders.find((f) => f.id === selectedItemId);
+        if (targetFolder) {
+          e.preventDefault();
+          copyItem('folder', targetFolder.id, targetFolder.name);
+          return;
+        }
+        const targetNote = items.find((i) => i.id === selectedItemId);
+        if (targetNote) {
+          e.preventDefault();
+          copyItem('note', targetNote.id, targetNote.title);
+          return;
+        }
+      }
+
+      // Ctrl/Cmd + X: Cut selected item
+      if (key === 'x') {
+        if (!selectedItemId) return;
+        const targetFolder = folders.find((f) => f.id === selectedItemId);
+        if (targetFolder) {
+          e.preventDefault();
+          cutItem('folder', targetFolder.id, targetFolder.name);
+          return;
+        }
+        const targetNote = items.find((i) => i.id === selectedItemId);
+        if (targetNote) {
+          e.preventDefault();
+          cutItem('note', targetNote.id, targetNote.title);
+          return;
+        }
+      }
+
+      // Ctrl/Cmd + V: Paste into current view/folder
+      if (key === 'v') {
+        const isAllowedScreen = location.pathname === '/' || location.pathname.startsWith('/folders/');
+        if (!isAllowedScreen) return;
+
+        const destFolderId = location.pathname.startsWith('/folders/')
+          ? location.pathname.replace('/folders/', '')
+          : (location.pathname === '/' ? null : currentFolderId);
+
+        if (clipboard && clipboard.items.length > 0) {
+          e.preventDefault();
+          executeTransfer(
+            clipboard.items.map((i) => ({ ...i, action: clipboard.action })),
+            destFolderId
+          );
+        } else if (clipboardItem) {
+          e.preventDefault();
+          executeTransfer(
+            [
+              {
+                type: clipboardItem.type,
+                id: clipboardItem.id,
+                action: clipboardItem.action,
+                name: clipboardItem.name,
+              },
+            ],
+            destFolderId
+          );
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    selectedItemId,
+    selectedItemType,
+    clipboard,
+    clipboardItem,
+    copyItem,
+    cutItem,
+    clearClipboard,
+    showToast,
+    items,
+    folders,
+    location.pathname,
+    currentFolderId,
+    executeTransfer,
+  ]);
 
   // Deselect on empty canvas click
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -108,8 +233,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             )}
           </div>
 
-          {/* Integrated Companion Details Panel Island */}
-          <DetailsPanel />
+          {/* Integrated Companion Details Panel Island (Active outside note editor) */}
+          {!location.pathname.startsWith('/notes') && <DetailsPanel />}
         </main>
       </div>
 
@@ -170,6 +295,25 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           }
         }}
       />
+      <ConflictDialog />
+
+      {/* Floating Micro-Toast Action Feedback Banner */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="fixed bottom-7 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          >
+            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[#1F1F1F]/95 text-white text-xs sm:text-sm font-medium rounded-full shadow-2xl backdrop-blur-md border border-white/10 select-none">
+              <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0 animate-pulse" />
+              <span>{toastMessage}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

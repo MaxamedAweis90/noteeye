@@ -12,6 +12,11 @@ import {
   FileText,
   X,
   AlertTriangle,
+  Info,
+  CheckCircle2,
+  Sparkles,
+  Clock,
+  CheckSquare,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNoteStore } from '../store/useNoteStore';
@@ -343,6 +348,17 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
     type: 'empty',
   });
 
+  // Retention Policy Modal State & Empty Click Feedback
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [emptyFeedback, setEmptyFeedback] = useState(false);
+
+  const handleEmptyClickWhenEmpty = () => {
+    setEmptyFeedback(true);
+    setTimeout(() => {
+      setEmptyFeedback(false);
+    }, 2400);
+  };
+
   // Sort Folders
   const sortedFolders = useMemo(() => {
     const list = [...trashedFolders];
@@ -443,12 +459,14 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
   // Loading skeleton view
   if (isLoading) {
     return (
-      <div className="w-full space-y-8 flex-1 animate-fade-in select-none">
-        <div className="h-14 w-full bg-slate-100 rounded-2xl shimmer-mask" />
+      <div className="w-full space-y-6 sm:space-y-8 flex-1 animate-fade-in select-none">
+        {/* Sticky Header Skeleton */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="h-8 w-44 bg-slate-200/80 rounded-xl shimmer-mask" />
           <div className="h-8 w-32 bg-slate-100 rounded-full shimmer-mask" />
         </div>
+        {/* Top of Scrollable Content: Message Bar Skeleton */}
+        <div className="h-14 w-full bg-slate-100 rounded-2xl shimmer-mask" />
         <GridSkeleton folderCount={2} noteCount={4} />
       </div>
     );
@@ -467,108 +485,190 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
       {/* Sticky Header Container (Flush at Top of Workspace Island) */}
       <div
         className={cn(
-          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 space-y-3.5',
+          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200',
           isScrolled
             ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
-            : 'border-b border-slate-100/60 shadow-none'
+            : 'border-b border-transparent shadow-none'
         )}
       >
-        {/* 1. Auto-Purge Alert Banner */}
-        <div className="w-full bg-amber-50/80 border border-amber-200/60 rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-amber-950">
-              Items in Trash are permanently deleted after 30 days.
-            </span>
+        {/* Header Bar & Controls */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
+                <span>Trash</span>
+                <Trash2 className="w-6 h-6 text-slate-700 shrink-0" />
+              </h1>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+                {totalTrashCount} {totalTrashCount === 1 ? 'item' : 'items'}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Items in trash can be restored back to your workspace or permanently deleted.
+            </p>
           </div>
 
+          {/* Right Controls Dock */}
           {totalTrashCount > 0 && (
+            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+              {/* View Mode Toggle */}
+              <div className="bg-slate-100 p-1 rounded-full flex items-center gap-0.5 border border-black/[0.04]">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  aria-label="Grid view"
+                  className={cn(
+                    'flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer',
+                    viewMode === 'grid'
+                      ? 'bg-white text-[#0B57D0] shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  )}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  aria-label="List view"
+                  className={cn(
+                    'flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer',
+                    viewMode === 'list'
+                      ? 'bg-white text-[#0B57D0] shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-800'
+                  )}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Details Toggle Button */}
+              <DetailsToggleButton />
+
+              {/* Sort Order */}
+              <button
+                type="button"
+                onClick={() => setSortOrder((prev) => (prev === 'recent' ? 'name' : 'recent'))}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-black/[0.04] transition-colors cursor-pointer"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+                <span>
+                  {sortOrder === 'recent' ? 'Date trashed' : 'Alphabetical (A-Z)'}
+                </span>
+              </button>
+
+              {/* Select All Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleSelectAll}
+                className="text-xs font-medium text-slate-600 hover:text-[#0B57D0] bg-slate-100 hover:bg-slate-200/70 px-3 py-1.5 rounded-full border border-black/[0.04] transition-colors cursor-pointer"
+              >
+                {isAllSelected ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Auto-Purge Alert Banner (Scrolled with Content) */}
+      <div
+        className={cn(
+          'w-full rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs transition-all duration-200',
+          totalTrashCount > 0
+            ? 'bg-gradient-to-r from-amber-50/90 via-amber-50/70 to-orange-50/50 border border-amber-200/70'
+            : 'bg-gradient-to-r from-slate-50/90 via-slate-50/60 to-blue-50/40 border border-slate-200/70'
+        )}
+      >
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div
+            className={cn(
+              'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-2xs',
+              totalTrashCount > 0
+                ? 'bg-amber-100/90 text-amber-700'
+                : 'bg-slate-100 text-slate-500'
+            )}
+          >
+            {totalTrashCount > 0 ? (
+              <AlertCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-600" />
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span
+              className={cn(
+                'text-xs sm:text-sm font-medium',
+                totalTrashCount > 0 ? 'text-amber-950' : 'text-slate-700'
+              )}
+            >
+              Items in Trash are permanently deleted after 30 days.
+            </span>
+            {totalTrashCount > 0 ? (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100/80 text-amber-900 border border-amber-200/60 shrink-0">
+                <Clock className="w-3 h-3 text-amber-700" />
+                <span>{totalTrashCount} {totalTrashCount === 1 ? 'item' : 'items'}</span>
+              </span>
+            ) : (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
+                <Sparkles className="w-3 h-3 text-emerald-600" />
+                <span>Trash is clean</span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Interactive Actions Dock */}
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowPolicyModal(true)}
+            title="View 30-day retention policy"
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer',
+              totalTrashCount > 0
+                ? 'text-amber-800 hover:text-amber-950 hover:bg-amber-100/70'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            )}
+          >
+            <Info className="w-3.5 h-3.5" />
+            <span>Policy details</span>
+          </button>
+
+          {totalTrashCount > 0 ? (
             <button
               type="button"
               onClick={() => setConfirmModal({ isOpen: true, type: 'empty' })}
-              className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer self-start sm:self-auto shrink-0 transition-colors"
+              className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-rose-600 hover:text-white bg-white hover:bg-rose-600 border border-rose-200 hover:border-rose-600 shadow-2xs hover:shadow-xs active:scale-95 transition-all duration-150 cursor-pointer"
             >
-              Empty Trash now
+              <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+              <span>Empty Trash now</span>
             </button>
+          ) : (
+            <div className="relative inline-flex items-center">
+              <button
+                type="button"
+                onClick={handleEmptyClickWhenEmpty}
+                title="Trash is already empty"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 bg-slate-100/90 border border-slate-200/60 hover:text-slate-600 hover:bg-slate-200/50 active:scale-95 transition-all cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 opacity-60" />
+                <span>Empty Trash</span>
+              </button>
+              <AnimatePresence>
+                {emptyFeedback && (
+                  <motion.span
+                    initial={{ opacity: 0, y: 4, scale: 0.9 }}
+                    animate={{ opacity: 1, y: -30, scale: 1 }}
+                    exit={{ opacity: 0, y: 2, scale: 0.95 }}
+                    transition={{ duration: 0.18 }}
+                    className="absolute -top-1 right-0 sm:left-1/2 sm:-translate-x-1/2 whitespace-nowrap bg-[#1F1F1F] text-white text-[11px] font-medium px-2.5 py-1 rounded-full shadow-lg z-30 pointer-events-none"
+                  >
+                    Trash is already empty ✨
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </div>
-
-        {/* 2. Header Bar & Controls */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
-              <span>Trash</span>
-              <Trash2 className="w-6 h-6 text-slate-700 shrink-0" />
-            </h1>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-              {totalTrashCount} {totalTrashCount === 1 ? 'item' : 'items'}
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Items in trash can be restored back to your workspace or permanently deleted.
-          </p>
-        </div>
-
-        {/* Right Controls Dock */}
-        {totalTrashCount > 0 && (
-          <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-            {/* View Mode Toggle */}
-            <div className="bg-slate-100 p-1 rounded-full flex items-center gap-0.5 border border-black/[0.04]">
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                aria-label="Grid view"
-                className={cn(
-                  'flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer',
-                  viewMode === 'grid'
-                    ? 'bg-white text-[#0B57D0] shadow-xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-800'
-                )}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                aria-label="List view"
-                className={cn(
-                  'flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer',
-                  viewMode === 'list'
-                    ? 'bg-white text-[#0B57D0] shadow-xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-800'
-                )}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Details Toggle Button */}
-            <DetailsToggleButton />
-
-            {/* Sort Order */}
-            <button
-              type="button"
-              onClick={() => setSortOrder((prev) => (prev === 'recent' ? 'name' : 'recent'))}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-black/[0.04] transition-colors cursor-pointer"
-            >
-              <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
-              <span>
-                {sortOrder === 'recent' ? 'Date trashed' : 'Alphabetical (A-Z)'}
-              </span>
-            </button>
-
-            {/* Select All Toggle */}
-            <button
-              type="button"
-              onClick={handleToggleSelectAll}
-              className="text-xs font-medium text-slate-600 hover:text-[#0B57D0] bg-slate-100 hover:bg-slate-200/70 px-3 py-1.5 rounded-full border border-black/[0.04] transition-colors cursor-pointer"
-            >
-              {isAllSelected ? 'Deselect all' : 'Select all'}
-            </button>
-          </div>
-        )}
-      </div>
       </div>
 
       {/* 3. Main Content Area */}
@@ -870,6 +970,19 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
               {/* Vertical divider */}
               <div className="w-px h-5 bg-slate-600/70" />
 
+              {/* Select All Toggle */}
+              <button
+                type="button"
+                onClick={handleToggleSelectAll}
+                className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-200 hover:text-white hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <CheckSquare className="w-3.5 h-3.5 text-[#7BB1FF]" />
+                <span>{isAllSelected ? 'Deselect all' : 'Select all'}</span>
+              </button>
+
+              {/* Vertical divider */}
+              <div className="w-px h-5 bg-slate-600/70" />
+
               {/* Batch Restore */}
               <button
                 type="button"
@@ -948,6 +1061,82 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                   className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors cursor-pointer"
                 >
                   {confirmModal.type === 'empty' ? 'Empty Trash' : 'Delete Forever'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 6. 30-Day Retention Policy Modal Dialog */}
+      <AnimatePresence>
+        {showPolicyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPolicyModal(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 z-10 space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyModal(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                  aria-label="Close dialog"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-[#1F1F1F]">
+                  30-Day Trash Retention Policy
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                  How Noteeye keeps your deleted files secure and manages storage:
+                </p>
+              </div>
+
+              <div className="space-y-3 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100 text-xs text-slate-600">
+                <div className="flex items-start gap-2.5">
+                  <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p>
+                    <strong className="text-slate-800">Automatic Purge:</strong> Items moved to Trash stay for 30 days before being permanently deleted.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <RotateCcw className="w-4 h-4 text-[#0B57D0] shrink-0 mt-0.5" />
+                  <p>
+                    <strong className="text-slate-800">Full Recovery:</strong> You can restore any note or folder back to its workspace anytime within this period.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <Trash2 className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <p>
+                    <strong className="text-slate-800">Instant Empty:</strong> Use "Empty Trash now" whenever you want to clear all items permanently right away.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-[#0B57D0] hover:bg-[#0041A2] shadow-xs transition-colors cursor-pointer"
+                >
+                  Got it
                 </button>
               </div>
             </motion.div>

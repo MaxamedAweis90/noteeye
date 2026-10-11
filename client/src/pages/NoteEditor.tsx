@@ -1,6 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
 import {
   ArrowLeft,
   Check,
@@ -15,13 +21,13 @@ import {
   Clock,
   AlertCircle,
   Home,
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { useNoteStore } from '../store/useNoteStore';
-import { useUIStore } from '../store/uiStore';
-import { DEFAULT_PASTEL_COLOR } from '../types';
-import type { ItemType, ChecklistItem } from '../types';
-import { cn } from '../utils/cn';
+} from "lucide-react";
+import { format } from "date-fns";
+import { useNoteStore } from "../store/useNoteStore";
+import { useUIStore } from "../store/uiStore";
+import { DEFAULT_PASTEL_COLOR } from "../types";
+import type { ItemType, ChecklistItem } from "../types";
+import { cn } from "../utils/cn";
 
 /**
  * Screen 06: Full Note / Checklist Editor
@@ -47,10 +53,13 @@ export const NoteEditor: React.FC = () => {
     closeDetailsPanel();
   }, [closeDetailsPanel]);
 
-  const isNewRoute = id === 'new' || !id;
+  const isNewRoute = id === "new" || !id;
 
   // Active (non-deleted) folders for assignment dropdown
-  const activeFolders = useMemo(() => folders.filter((f) => !f.isDeleted), [folders]);
+  const activeFolders = useMemo(
+    () => folders.filter((f) => !f.isDeleted),
+    [folders],
+  );
 
   // Lookup existing item
   const existingItem = useMemo(() => {
@@ -63,21 +72,21 @@ export const NoteEditor: React.FC = () => {
   const activeId = existingItem ? existingItem.id : createdItemId;
 
   // Form states
-  const [title, setTitle] = useState('');
-  const [type, setType] = useState<ItemType>('note');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState<ItemType>("note");
+  const [content, setContent] = useState("");
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [color, setColor] = useState(DEFAULT_PASTEL_COLOR);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
-  const [lastSavedTime, setLastSavedTime] = useState<string>('Just now');
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
+  const [lastSavedTime, setLastSavedTime] = useState<string>("Just now");
 
   // Folder dropdown open state
   const [isFolderDropdownOpen, setIsFolderDropdownOpen] = useState(false);
 
   // New checklist item text input for bottom CTA
-  const [newChecklistText, setNewChecklistText] = useState('');
+  const [newChecklistText, setNewChecklistText] = useState("");
   const newChecklistInputRef = useRef<HTMLInputElement>(null);
 
   // Loaded ID ref to prevent autosave state feedback overwrite while typing
@@ -89,30 +98,36 @@ export const NoteEditor: React.FC = () => {
       loadedIdRef.current = existingItem.id;
       setTitle(existingItem.title);
       setType(existingItem.type);
-      setContent(existingItem.content || '');
+      setContent(existingItem.content || "");
       setChecklistItems(existingItem.checklistItems || []);
-      setColor(existingItem.color || (existingItem.type === 'checklist' ? '#CEEBFD' : DEFAULT_PASTEL_COLOR));
+      setColor(
+        existingItem.color ||
+          (existingItem.type === "checklist"
+            ? "#CEEBFD"
+            : DEFAULT_PASTEL_COLOR),
+      );
       setFolderId(existingItem.folderId);
       setIsFavorite(Boolean(existingItem.isFavorite));
-      setSaveStatus('saved');
+      setSaveStatus("saved");
       setLastSavedTime(
         existingItem.updatedAt
-          ? format(new Date(existingItem.updatedAt), 'h:mm a')
-          : 'Just now'
+          ? format(new Date(existingItem.updatedAt), "h:mm a")
+          : "Just now",
       );
-    } else if (isNewRoute && loadedIdRef.current !== 'new') {
-      loadedIdRef.current = 'new';
-      const paramType = searchParams.get('type') === 'checklist' ? 'checklist' : 'note';
-      const paramFolder = searchParams.get('folder') || currentFolderId || null;
-      setTitle('');
+    } else if (isNewRoute && loadedIdRef.current !== "new") {
+      loadedIdRef.current = "new";
+      const paramType =
+        searchParams.get("type") === "checklist" ? "checklist" : "note";
+      const paramFolder = searchParams.get("folder") || currentFolderId || null;
+      setTitle("");
       setType(paramType);
-      setContent('');
+      setContent("");
       setChecklistItems([]);
-      setColor(paramType === 'checklist' ? '#CEEBFD' : DEFAULT_PASTEL_COLOR);
+      setColor(paramType === "checklist" ? "#CEEBFD" : DEFAULT_PASTEL_COLOR);
       setFolderId(paramFolder);
       setIsFavorite(false);
-      setSaveStatus('saved');
-      setLastSavedTime('Just now');
+      setSaveStatus("saved");
+      setLastSavedTime("Just now");
     }
   }, [existingItem, isNewRoute, searchParams, currentFolderId]);
 
@@ -129,13 +144,17 @@ export const NoteEditor: React.FC = () => {
     if (!hasLoadedRef.current) return;
 
     const trimmedTitle = title.trim();
-    const hasData = trimmedTitle.length > 0 || content.trim().length > 0 || checklistItems.length > 0;
-    const fallbackTitle = type === 'checklist' ? 'Untitled Checklist' : 'Untitled Note';
+    const hasData =
+      trimmedTitle.length > 0 ||
+      content.trim().length > 0 ||
+      checklistItems.length > 0;
+    const fallbackTitle =
+      type === "checklist" ? "Untitled Checklist" : "Untitled Note";
 
     if (!activeId) {
       // Create new note only if there is meaningful content or title
       if (hasData) {
-        setSaveStatus('saving');
+        setSaveStatus("saving");
         const newItem = addItem({
           title: trimmedTitle || fallbackTitle,
           type,
@@ -145,15 +164,19 @@ export const NoteEditor: React.FC = () => {
           color,
           isFavorite,
         });
-        loadedIdRef.current = newItem.id;
-        setCreatedItemId(newItem.id);
-        setSaveStatus('saved');
-        setLastSavedTime(format(new Date(), 'h:mm:ss a'));
-        navigate(`/notes/${newItem.id}`, { replace: true });
+        if (newItem) {
+          loadedIdRef.current = newItem.id;
+          setCreatedItemId(newItem.id);
+          setSaveStatus("saved");
+          setLastSavedTime(format(new Date(), "h:mm:ss a"));
+          navigate(`/notes/${newItem.id}`, { replace: true });
+        } else {
+          setSaveStatus("saved");
+        }
       }
     } else {
       // Update existing item
-      setSaveStatus('saving');
+      setSaveStatus("saving");
       updateItem(activeId, {
         title: trimmedTitle || fallbackTitle,
         type,
@@ -163,14 +186,26 @@ export const NoteEditor: React.FC = () => {
         color,
         isFavorite,
       });
-      setSaveStatus('saved');
-      setLastSavedTime(format(new Date(), 'h:mm:ss a'));
+      setSaveStatus("saved");
+      setLastSavedTime(format(new Date(), "h:mm:ss a"));
     }
-  }, [activeId, title, type, folderId, content, checklistItems, color, isFavorite, addItem, updateItem, navigate]);
+  }, [
+    activeId,
+    title,
+    type,
+    folderId,
+    content,
+    checklistItems,
+    color,
+    isFavorite,
+    addItem,
+    updateItem,
+    navigate,
+  ]);
 
   // Trigger debounced autosave on value changes
   const triggerAutosave = useCallback(() => {
-    setSaveStatus('saving');
+    setSaveStatus("saving");
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -206,8 +241,9 @@ export const NoteEditor: React.FC = () => {
     if (activeId) {
       openDeleteDialog(
         activeId,
-        title.trim() || (type === 'checklist' ? 'Untitled Checklist' : 'Untitled Note'),
-        type === 'checklist' ? 'checklist' : 'note'
+        title.trim() ||
+          (type === "checklist" ? "Untitled Checklist" : "Untitled Note"),
+        type === "checklist" ? "checklist" : "note",
       );
     }
   };
@@ -242,14 +278,16 @@ export const NoteEditor: React.FC = () => {
   // Checklist Item Actions
   const handleToggleChecklistItem = (itemId: string) => {
     setChecklistItems((prev) =>
-      prev.map((c) => (c.id === itemId ? { ...c, isCompleted: !c.isCompleted } : c))
+      prev.map((c) =>
+        c.id === itemId ? { ...c, isCompleted: !c.isCompleted } : c,
+      ),
     );
     triggerAutosave();
   };
 
   const handleUpdateChecklistItemText = (itemId: string, text: string) => {
     setChecklistItems((prev) =>
-      prev.map((c) => (c.id === itemId ? { ...c, text } : c))
+      prev.map((c) => (c.id === itemId ? { ...c, text } : c)),
     );
     triggerAutosave();
   };
@@ -269,7 +307,7 @@ export const NoteEditor: React.FC = () => {
         isCompleted: false,
       };
       setChecklistItems((prev) => [...prev, newItem]);
-      setNewChecklistText('');
+      setNewChecklistText("");
       triggerAutosave();
       setTimeout(() => {
         newChecklistInputRef.current?.focus();
@@ -279,13 +317,13 @@ export const NoteEditor: React.FC = () => {
 
   const handleChecklistKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       const newItem: ChecklistItem = {
         id: `cl-${Date.now()}`,
-        text: '',
+        text: "",
         isCompleted: false,
       };
       const nextList = [...checklistItems];
@@ -296,7 +334,7 @@ export const NoteEditor: React.FC = () => {
         const nextInput = document.getElementById(`cl-input-${newItem.id}`);
         nextInput?.focus();
       }, 50);
-    } else if (e.key === 'Backspace' && checklistItems[index].text === '') {
+    } else if (e.key === "Backspace" && checklistItems[index].text === "") {
       e.preventDefault();
       if (checklistItems.length > 1) {
         const prevId = checklistItems[index - 1]?.id;
@@ -313,16 +351,19 @@ export const NoteEditor: React.FC = () => {
 
   // Word count & Checklist metrics
   const wordCount = useMemo(() => {
-    if (type === 'checklist') {
+    if (type === "checklist") {
       return checklistItems.reduce(
-        (acc, item) => acc + (item.text.trim() ? item.text.trim().split(/\s+/).length : 0),
-        0
+        (acc, item) =>
+          acc + (item.text.trim() ? item.text.trim().split(/\s+/).length : 0),
+        0,
       );
     }
     return content.trim() ? content.trim().split(/\s+/).length : 0;
   }, [type, content, checklistItems]);
 
-  const checklistCompletedCount = checklistItems.filter((c) => c.isCompleted).length;
+  const checklistCompletedCount = checklistItems.filter(
+    (c) => c.isCompleted,
+  ).length;
   const checklistTotalCount = checklistItems.length;
   const checklistProgressPercent =
     checklistTotalCount > 0
@@ -344,7 +385,7 @@ export const NoteEditor: React.FC = () => {
         </p>
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B57D0] text-white text-xs font-semibold hover:bg-blue-700 transition-colors shadow-xs active:scale-95 cursor-pointer"
         >
           <Home className="w-4 h-4" />
@@ -363,7 +404,7 @@ export const NoteEditor: React.FC = () => {
       className="w-full flex flex-col flex-1 bg-white relative select-none sm:select-text"
     >
       {/* 1. Top Navigation & Action Header */}
-      <header className="h-14 flex items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 select-none">
+      <header className="h-14 mt-2 flex items-center justify-between gap-3 pb-4 mb-2 border-b border-slate-100 select-none">
         {/* Left: Back Pill + Folder Assignment + Auto-Save Status */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
@@ -401,10 +442,10 @@ export const NoteEditor: React.FC = () => {
                         type="button"
                         onClick={() => handleSelectFolder(f.id)}
                         className={cn(
-                          'w-full flex items-center gap-2 px-3.5 py-2 text-left cursor-pointer transition-colors truncate',
+                          "w-full flex items-center gap-2 px-3.5 py-2 text-left cursor-pointer transition-colors truncate",
                           folderId === f.id
-                            ? 'bg-purple-50 text-purple-700 font-semibold'
-                            : 'text-slate-700 hover:bg-slate-50'
+                            ? "bg-purple-50 text-purple-700 font-semibold"
+                            : "text-slate-700 hover:bg-slate-50",
                         )}
                       >
                         <FolderIcon className="w-3.5 h-3.5 text-purple-500 shrink-0" />
@@ -419,13 +460,15 @@ export const NoteEditor: React.FC = () => {
 
           {/* Reassuring Auto-Save Status Pill */}
           <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-slate-50 border border-slate-200/60 shadow-2xs transition-all text-xs">
-            {saveStatus === 'saving' ? (
+            {saveStatus === "saving" ? (
               <div className="flex items-center gap-1.5 text-amber-700 font-medium">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
                 </span>
-                <span className="hidden sm:inline font-semibold">Saving changes...</span>
+                <span className="hidden sm:inline font-semibold">
+                  Saving changes...
+                </span>
                 <span className="sm:hidden font-semibold">Saving...</span>
               </div>
             ) : (
@@ -433,10 +476,16 @@ export const NoteEditor: React.FC = () => {
                 <span className="w-3.5 h-3.5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
-                <span className="hidden md:inline font-semibold">All changes saved automatically</span>
-                <span className="hidden sm:inline md:hidden font-semibold">Auto-saved</span>
+                <span className="hidden md:inline font-semibold">
+                  All changes saved automatically
+                </span>
+                <span className="hidden sm:inline md:hidden font-semibold">
+                  Auto-saved
+                </span>
                 <span className="sm:hidden font-semibold">Saved</span>
-                <span className="text-slate-400 text-[10px] hidden lg:inline">• {lastSavedTime}</span>
+                <span className="text-slate-400 text-[10px] hidden lg:inline">
+                  • {lastSavedTime}
+                </span>
               </div>
             )}
           </div>
@@ -448,16 +497,18 @@ export const NoteEditor: React.FC = () => {
           <button
             type="button"
             onClick={handleToggleStar}
-            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={
+              isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
             title="Toggle favorite"
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 text-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
           >
             <Star
               className={cn(
-                'w-4 h-4 transition-transform active:scale-125',
+                "w-4 h-4 transition-transform active:scale-125",
                 isFavorite
-                  ? 'fill-amber-400 text-amber-400'
-                  : 'text-slate-400 hover:text-amber-500'
+                  ? "fill-amber-400 text-amber-400"
+                  : "text-slate-400 hover:text-amber-500",
               )}
             />
           </button>
@@ -476,7 +527,7 @@ export const NoteEditor: React.FC = () => {
       </header>
 
       {/* 2. Centered Editorial Canvas Area */}
-      <main className="w-full max-w-3xl mx-auto py-4 sm:py-6 flex flex-col flex-1">
+      <main className="w-full max-w-3xl mx-auto pt-1 sm:pt-2 pb-6 sm:pb-8 flex flex-col flex-1">
         {/* Title Input */}
         <input
           type="text"
@@ -485,7 +536,9 @@ export const NoteEditor: React.FC = () => {
             setTitle(e.target.value);
             triggerAutosave();
           }}
-          placeholder={type === 'checklist' ? 'Untitled Checklist' : 'Untitled Note'}
+          placeholder={
+            type === "checklist" ? "Untitled Checklist" : "Untitled Note"
+          }
           className="w-full bg-transparent border-0 outline-none text-2xl sm:text-4xl font-extrabold text-[#1F1F1F] placeholder-slate-400/80 mb-3 tracking-tight focus:ring-0 leading-tight"
         />
 
@@ -496,8 +549,8 @@ export const NoteEditor: React.FC = () => {
               <Clock className="w-3.5 h-3.5" />
               <span>
                 {existingItem
-                  ? `Updated ${format(new Date(existingItem.updatedAt || existingItem.createdAt), 'd MMM yyyy, h:mm a')}`
-                  : 'Draft'}
+                  ? `Updated ${format(new Date(existingItem.updatedAt || existingItem.createdAt), "d MMM yyyy, h:mm a")}`
+                  : "Draft"}
               </span>
             </span>
             <span>•</span>
@@ -511,7 +564,7 @@ export const NoteEditor: React.FC = () => {
 
           {/* Mode Badge Indicator */}
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-medium text-xs self-start sm:self-auto border border-slate-200/60">
-            {type === 'checklist' ? (
+            {type === "checklist" ? (
               <>
                 <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Checklist</span>
@@ -526,7 +579,7 @@ export const NoteEditor: React.FC = () => {
         </div>
 
         {/* 3. Content Body Section */}
-        {type === 'note' ? (
+        {type === "note" ? (
           /* Standard Note Content Body */
           <div className="flex-1 flex flex-col">
             <textarea
@@ -548,13 +601,18 @@ export const NoteEditor: React.FC = () => {
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-[#1F1F1F]">
-                      {checklistCompletedCount} of {checklistTotalCount} completed
+                      {checklistCompletedCount} of {checklistTotalCount}{" "}
+                      completed
                     </span>
                     <span className="text-slate-400 font-normal">•</span>
-                    <span className="text-slate-500 font-normal">{checklistProgressPercent}% ready</span>
+                    <span className="text-slate-500 font-normal">
+                      {checklistProgressPercent}% ready
+                    </span>
                   </div>
                   <span className="text-slate-400 font-normal text-[11px] hidden sm:inline">
-                    {checklistCompletedCount === checklistTotalCount ? '🎉 All tasks done' : 'In progress'}
+                    {checklistCompletedCount === checklistTotalCount
+                      ? "🎉 All tasks done"
+                      : "In progress"}
                   </span>
                 </div>
                 <div className="w-full h-2 bg-slate-200/80 rounded-full overflow-hidden">
@@ -584,10 +642,10 @@ export const NoteEditor: React.FC = () => {
                       type="button"
                       onClick={() => handleToggleChecklistItem(item.id)}
                       className={cn(
-                        'w-5 h-5 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs hover:scale-105 active:scale-95',
+                        "w-5 h-5 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs hover:scale-105 active:scale-95",
                         item.isCompleted
-                          ? 'bg-[#10B981] text-white'
-                          : 'border border-slate-400 bg-white hover:border-slate-700 text-transparent'
+                          ? "bg-[#10B981] text-white"
+                          : "border border-slate-400 bg-white hover:border-slate-700 text-transparent",
                       )}
                     >
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -598,12 +656,14 @@ export const NoteEditor: React.FC = () => {
                       id={`cl-input-${item.id}`}
                       type="text"
                       value={item.text}
-                      onChange={(e) => handleUpdateChecklistItemText(item.id, e.target.value)}
+                      onChange={(e) =>
+                        handleUpdateChecklistItemText(item.id, e.target.value)
+                      }
                       onKeyDown={(e) => handleChecklistKeyDown(e, index)}
                       placeholder="List item..."
                       className={cn(
-                        'flex-1 bg-transparent border-0 outline-none text-sm sm:text-base text-[#1F1F1F] focus:ring-0 py-0.5',
-                        item.isCompleted && 'line-through text-slate-400'
+                        "flex-1 bg-transparent border-0 outline-none text-sm sm:text-base text-[#1F1F1F] focus:ring-0 py-0.5",
+                        item.isCompleted && "line-through text-slate-400",
                       )}
                     />
 
@@ -622,7 +682,10 @@ export const NoteEditor: React.FC = () => {
             </div>
 
             {/* Bottom Add Item Input / CTA */}
-            <form onSubmit={handleAddChecklistItem} className="flex items-center gap-2 pt-2">
+            <form
+              onSubmit={handleAddChecklistItem}
+              className="flex items-center gap-2 pt-2"
+            >
               <input
                 ref={newChecklistInputRef}
                 type="text"
