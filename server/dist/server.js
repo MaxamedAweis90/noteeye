@@ -90,8 +90,8 @@ app.use((err, _req, res, _next) => {
         message: err.message || 'Internal Server Error',
     });
 });
-// Only start standalone HTTP listener when not running on Vercel
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+// Standalone HTTP listener (Local development ONLY, never on Vercel serverless)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL && !process.env.VERCEL_ENV) {
     const startServer = async () => {
         try {
             await connectDB();
@@ -100,8 +100,7 @@ if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
             });
         }
         catch (error) {
-            console.error(`[Server] Startup aborted: ${error.message}`);
-            process.exit(1);
+            console.error(`[Server] Startup error: ${error.message}`);
         }
     };
     startServer();

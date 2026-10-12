@@ -9,10 +9,14 @@ export const connectDB = async () => {
     if (mongoose.connection.readyState >= 1) {
         return mongoose;
     }
-    const uri = process.env.MONGODB_URI;
+    let uri = process.env.MONGODB_URI;
     if (!uri) {
         console.error('[MongoDB Error] MONGODB_URI environment variable is not defined!');
         return;
+    }
+    uri = uri.trim();
+    if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
+        uri = uri.slice(1, -1).trim();
     }
     if (isConnecting) {
         return;
