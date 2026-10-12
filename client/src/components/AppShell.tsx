@@ -5,10 +5,14 @@ import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
 import { NoteModal } from './NoteModal';
 import { FolderModal, QuickEditModal, DeleteDialog, ConflictDialog } from './modals';
+import { ProfileModal } from './profile/ProfileModal';
+import { SettingsModal } from './settings/SettingsModal';
 import { ContextMenu } from './ContextMenu';
 import { DetailsPanel } from './DetailsPanel';
+import { MobileBottomNav } from './MobileBottomNav';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 interface AppShellProps {
   children?: React.ReactNode;
@@ -55,6 +59,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const clearClipboard = useUIStore((state) => state.clearClipboard);
   const toastMessage = useUIStore((state) => state.toastMessage);
   const showToast = useUIStore((state) => state.showToast);
+
+  // Global Keyboard Shortcuts (Ctrl+K, Ctrl+N, Ctrl+Shift+N, Escape, Delete, Ctrl+I)
+  useKeyboardShortcuts();
 
   // Global Keyboard Shortcuts for Clipboard (Ctrl/Cmd + C, X, V)
   useEffect(() => {
@@ -126,7 +133,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           ? location.pathname.replace('/folders/', '')
           : (location.pathname === '/' ? null : currentFolderId);
 
-        if (clipboard && clipboard.items.length > 0) {
+        if (clipboard && clipboard.items && clipboard.items.length > 0) {
           e.preventDefault();
           executeTransfer(
             clipboard.items.map((i) => ({ ...i, action: clipboard.action })),
@@ -145,6 +152,32 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             ],
             destFolderId
           );
+        }
+      }
+
+      // Ctrl/Cmd + Z: Workspace Undo (outside editor)
+      if (key === 'z' && !e.shiftKey) {
+        const isEditorPage = location.pathname.startsWith('/note') || location.pathname.startsWith('/checklist');
+        if (!isEditorPage) {
+          e.preventDefault();
+          const undone = useNoteStore.getState().undoWorkspaceAction();
+          if (!undone) {
+            useUIStore.getState().showToast('Nothing to undo');
+          }
+          return;
+        }
+      }
+
+      // Ctrl/Cmd + Shift + Z or Ctrl + Y: Workspace Redo (outside editor)
+      if ((key === 'z' && e.shiftKey) || key === 'y') {
+        const isEditorPage = location.pathname.startsWith('/note') || location.pathname.startsWith('/checklist');
+        if (!isEditorPage) {
+          e.preventDefault();
+          const redone = useNoteStore.getState().redoWorkspaceAction();
+          if (!redone) {
+            useUIStore.getState().showToast('Nothing to redo');
+          }
+          return;
         }
       }
     };
@@ -220,7 +253,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             id="workspace-content-island"
             onClick={handleCanvasClick}
             onContextMenu={handleCanvasContextMenu}
-            className="bg-white rounded-2xl md:rounded-[24px] h-full max-h-[calc(100vh-5rem)] px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8 pt-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] flex flex-col flex-1 transition-all min-w-0 overflow-y-auto custom-scrollbar"
+            className="bg-white rounded-2xl md:rounded-[24px] h-full max-h-[calc(100vh-5rem)] px-4 sm:px-6 lg:px-8 pb-24 sm:pb-6 lg:pb-8 pt-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] flex flex-col flex-1 transition-all min-w-0 overflow-y-auto custom-scrollbar"
           >
             {children ? (
               children
@@ -296,6 +329,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         }}
       />
       <ConflictDialog />
+      <ProfileModal />
+      <SettingsModal />
+
+      {/* Mobile Bottom Navigation Bar (< 768px) */}
+      <MobileBottomNav />
 
       {/* Floating Micro-Toast Action Feedback Banner */}
       <AnimatePresence>
@@ -305,7 +343,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="fixed bottom-7 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+            className="fixed bottom-20 md:bottom-7 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
           >
             <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[#1F1F1F]/95 text-white text-xs sm:text-sm font-medium rounded-full shadow-2xl backdrop-blur-md border border-white/10 select-none">
               <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0 animate-pulse" />

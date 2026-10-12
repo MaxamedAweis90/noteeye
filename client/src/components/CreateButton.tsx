@@ -1,9 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, FileText, CheckSquare, Sparkles, Folder } from 'lucide-react';
-import { useNoteStore } from '../store/useNoteStore';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  Plus,
+  X,
+  FileText,
+  CheckSquare,
+  Folder,
+  Lightbulb,
+} from "lucide-react";
+import { useNoteStore } from "../store/useNoteStore";
 
-export type CreateActionType = 'note' | 'checklist' | 'idea' | 'folder';
+export type CreateActionType = "note" | "checklist" | "idea" | "folder";
 
 interface CreateButtonProps {
   className?: string;
@@ -12,7 +19,7 @@ interface CreateButtonProps {
 }
 
 const springTransition = {
-  type: 'spring' as const,
+  type: "spring" as const,
   stiffness: 450,
   damping: 30,
 };
@@ -23,7 +30,7 @@ const springTransition = {
  * using React 19, motion/react layout animations, and Lucide icons.
  */
 export const CreateButton: React.FC<CreateButtonProps> = ({
-  className = '',
+  className = "",
   onActionSelected,
   onSelect,
 }) => {
@@ -36,15 +43,18 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
   // Outside click listener to collapse back to idle State 1
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
   const handleAction = (type: CreateActionType) => {
@@ -52,10 +62,10 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
     onActionSelected?.();
     onSelect?.(type);
 
-    if (type === 'folder') {
+    if (type === "folder") {
       openFolderModal();
     } else {
-      const itemType = type === 'checklist' ? 'checklist' : 'note';
+      const itemType = type === "checklist" ? "checklist" : "note";
       openNoteModal(itemType);
     }
   };
@@ -67,8 +77,8 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
         transition={springTransition}
         className={`bg-white border border-slate-200/80 select-none overflow-hidden ${
           isOpen
-            ? 'w-full sm:w-56 p-2 rounded-2xl shadow-xl flex flex-col z-50'
-            : 'w-full h-12 px-5 rounded-2xl shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer transition-shadow'
+            ? "w-full sm:w-56 p-2 rounded-2xl shadow-xl flex flex-col z-50"
+            : "w-full h-12 px-5 rounded-2xl shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer transition-shadow"
         }`}
         onClick={!isOpen ? () => setIsOpen(true) : undefined}
       >
@@ -122,7 +132,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                 {/* 1. New note */}
                 <button
                   type="button"
-                  onClick={() => handleAction('note')}
+                  onClick={() => handleAction("note")}
                   className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                 >
                   <FileText className="w-4 h-4 text-blue-600 shrink-0" />
@@ -132,7 +142,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                 {/* 2. New checklist */}
                 <button
                   type="button"
-                  onClick={() => handleAction('checklist')}
+                  onClick={() => handleAction("checklist")}
                   className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                 >
                   <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -142,10 +152,10 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                 {/* 3. New idea */}
                 <button
                   type="button"
-                  onClick={() => handleAction('idea')}
+                  onClick={() => handleAction("idea")}
                   className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                 >
-                  <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+                  <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
                   <span>New idea</span>
                 </button>
               </div>
@@ -156,7 +166,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
               {/* D. Folder Action */}
               <button
                 type="button"
-                onClick={() => handleAction('folder')}
+                onClick={() => handleAction("folder")}
                 className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
               >
                 <Folder className="w-4 h-4 text-amber-500 shrink-0" />

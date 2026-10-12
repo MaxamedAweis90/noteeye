@@ -1,16 +1,18 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
-import { Logo } from './Logo';
-import { SearchDropdown } from './SearchDropdown';
-import { UserMenu } from './UserMenu';
-import { useNoteStore } from '../store/useNoteStore';
-import type { Item } from '../types';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, X } from "lucide-react";
+import { Logo } from "./Logo";
+import { SearchDropdown } from "./SearchDropdown";
+import { UserMenu } from "./UserMenu";
+import { MobileSearchModal } from "./MobileSearchModal";
+import { MobileUserDrawer } from "./MobileUserDrawer";
+import { useNoteStore } from "../store/useNoteStore";
+import type { Item } from "../types";
 import {
   getRecentSearches,
   saveRecentSearch,
   removeRecentSearch,
-} from '../utils/recentSearches';
+} from "../utils/recentSearches";
 
 export interface TopNavProps {
   className?: string;
@@ -19,12 +21,12 @@ export interface TopNavProps {
 /**
  * TopNav Component — Seamless Google Drive Material 3 Navigation Bar
  * Features:
- * - Direct integration into outer #F8FAFD canvas (no dividing bottom border)
- * - Brand logo component with home reset
- * - Dynamic morphing search bar with auto-height quick results & recent search suggestions
+ * - Desktop: Center-left pill search bar with auto-height morphing dropdown
+ * - Mobile: Compact pill search button that morphs into full-screen search modal
+ * - Mobile User Drawer: Triggered when tapping the user avatar on mobile
  * - User Profile avatar pill with layout morphing action card
  */
-export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
+export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
   const navigate = useNavigate();
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,13 +39,26 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isMobileUserDrawerOpen, setIsMobileUserDrawerOpen] = useState(false);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
     setRecentSearches(getRecentSearches());
   }, []);
 
-  // Collapse dropdown on click outside
+  // Listen for global shortcut event to open mobile search if on small screen
+  useEffect(() => {
+    const handleOpenMobileSearch = () => {
+      if (window.innerWidth < 768) {
+        setIsMobileSearchOpen(true);
+      }
+    };
+    window.addEventListener("noteeye:open-mobile-search", handleOpenMobileSearch);
+    return () => window.removeEventListener("noteeye:open-mobile-search", handleOpenMobileSearch);
+  }, []);
+
+  // Handle outside click to blur desktop search dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -54,17 +69,13 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Escape key handler to clear focus and close dropdown
+  // Desktop search handlers
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Escape') {
-      setIsSearchFocused(false);
-      inputRef.current?.blur();
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
+    if (e.key === "Enter") {
       const trimmed = searchQuery.trim();
       if (trimmed) {
         const updated = saveRecentSearch(trimmed);
@@ -77,38 +88,31 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
   };
 
   const handleSelectRecent = useCallback(
-    (search: string) => {
-      setSearchQuery(search);
-      const updated = saveRecentSearch(search);
+    (term: string) => {
+      const updated = saveRecentSearch(term);
       setRecentSearches(updated);
+      setSearchQuery(term);
       setIsSearchFocused(false);
       inputRef.current?.blur();
-      navigate(`/search?q=${encodeURIComponent(search)}`);
+      navigate(`/search?q=${encodeURIComponent(term)}`);
     },
-    [navigate, setSearchQuery]
+    [navigate, setSearchQuery],
   );
 
-  const handleRemoveRecent = useCallback(
-    (search: string, e: React.MouseEvent) => {
-      e.stopPropagation();
-      const updated = removeRecentSearch(search);
-      setRecentSearches(updated);
-    },
-    []
-  );
+  const handleRemoveRecent = useCallback((search: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = removeRecentSearch(search);
+    setRecentSearches(updated);
+  }, []);
 
   const handleSelectFolder = useCallback(
-    (folderId: string, folderName: string) => {
-      if (searchQuery.trim()) {
-        const updated = saveRecentSearch(folderName);
-        setRecentSearches(updated);
-      }
-      setCurrentFolder(folderId);
+    (folderId: string) => {
       setIsSearchFocused(false);
       inputRef.current?.blur();
-      navigate('/');
+      setCurrentFolder(folderId);
+      navigate(`/folders/${folderId}`);
     },
-    [navigate, searchQuery, setCurrentFolder]
+    [navigate, setCurrentFolder],
   );
 
   const handleSelectItem = useCallback(
@@ -121,7 +125,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
       inputRef.current?.blur();
       navigate(`/notes/${item.id}`);
     },
-    [navigate]
+    [navigate],
   );
 
   const handleViewAllResults = useCallback(() => {
@@ -136,80 +140,112 @@ export const TopNav: React.FC<TopNavProps> = ({ className = '' }) => {
   }, [navigate, searchQuery]);
 
   const handleClearQuery = () => {
-    setSearchQuery('');
+    setSearchQuery("");
     inputRef.current?.focus();
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-40 bg-[#F8FAFD] select-none ${className}`}>
-      <div className="h-16 px-6 flex items-center justify-between w-full select-none bg-transparent gap-4">
-        {/* 1. Left Section: Noteeye Brand Logo Component */}
-        <div className="w-auto md:w-56 shrink-0 flex items-center">
-          <Logo />
-        </div>
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 bg-[#F8FAFD] select-none ${className}`}
+      >
+        <div className="h-16 px-4 md:px-6 flex items-center justify-between w-full select-none bg-transparent gap-3 md:gap-4">
+          {/* 1. Left Section: Noteeye Brand Logo Component */}
+          <div className="w-auto md:w-56 shrink-0 flex items-center">
+            <Logo />
+          </div>
 
-        {/* 2. Center-Left: Pill Search Bar (Positioned directly between the two red lines) */}
-        <div className="flex-1 flex items-center justify-start min-w-0">
-          <div
-            ref={searchContainerRef}
-            className="w-full max-w-[560px] lg:max-w-[620px] relative"
-          >
-            {/* Pill Input Container */}
+          {/* 2. Center: Desktop Search Bar (md and above) */}
+          <div className="hidden md:flex flex-1 items-center justify-start min-w-0">
             <div
-              className={`w-full h-11 px-4 rounded-full bg-[#EDF2FC] border border-transparent focus-within:border-slate-300 focus-within:bg-white flex items-center gap-3 transition-colors duration-200 shadow-sm relative ${
-                isSearchFocused ? 'bg-white border-slate-300 shadow-md' : ''
-              }`}
+              ref={searchContainerRef}
+              className="w-full max-w-[560px] lg:max-w-[620px] relative"
             >
-              <Search className="w-[18px] h-[18px] text-slate-500 shrink-0 select-none" />
+              {/* Pill Input Container */}
+              <div
+                className={`w-full h-11 px-4 rounded-full bg-[#EDF2FC] border border-transparent focus-within:border-slate-300 focus-within:bg-white flex items-center gap-3 transition-colors duration-200 shadow-sm relative ${
+                  isSearchFocused ? "bg-white border-slate-300 shadow-md" : ""
+                }`}
+              >
+                <Search className="w-[18px] h-[18px] text-slate-500 shrink-0 select-none" />
 
-              <input
-                ref={inputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => {
-                  setRecentSearches(getRecentSearches());
-                  setIsSearchFocused(true);
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder="Search in Noteeye"
-                className="w-full bg-transparent border-0 outline-none text-sm text-[#1F1F1F] placeholder-slate-500 font-normal"
-                aria-label="Search notes, checklists, and folders"
+                <input
+                  id="noteeye-main-search-input"
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    setRecentSearches(getRecentSearches());
+                    setIsSearchFocused(true);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Search in Noteeye (Ctrl+K)"
+                  className="w-full bg-transparent border-0 outline-none text-sm text-[#1F1F1F] placeholder-slate-500 font-normal"
+                  aria-label="Search notes, checklists, and folders"
+                />
+
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearQuery}
+                    className="p-1 text-slate-400 hover:text-slate-700 rounded-full transition-colors cursor-pointer shrink-0"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Dynamic Auto-Height Morphing Search Dropdown */}
+              <SearchDropdown
+                isOpen={isSearchFocused}
+                query={searchQuery}
+                recentSearches={recentSearches}
+                folders={folders}
+                items={items}
+                onSelectRecent={handleSelectRecent}
+                onRemoveRecent={handleRemoveRecent}
+                onSelectFolder={handleSelectFolder}
+                onSelectItem={handleSelectItem}
+                onViewAllResults={handleViewAllResults}
               />
-
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={handleClearQuery}
-                  className="p-1 text-slate-400 hover:text-slate-700 rounded-full transition-colors cursor-pointer shrink-0"
-                  aria-label="Clear search"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
             </div>
+          </div>
 
-            {/* Dynamic Auto-Height Morphing Search Dropdown */}
-            <SearchDropdown
-              isOpen={isSearchFocused}
-              query={searchQuery}
-              recentSearches={recentSearches}
-              folders={folders}
-              items={items}
-              onSelectRecent={handleSelectRecent}
-              onRemoveRecent={handleRemoveRecent}
-              onSelectFolder={handleSelectFolder}
-              onSelectItem={handleSelectItem}
-              onViewAllResults={handleViewAllResults}
-            />
+          {/* 2b. Center: Mobile Morphing Search Trigger Button (< md) */}
+          <div className="flex md:hidden flex-1 items-center justify-center min-w-0 px-1">
+            <button
+              type="button"
+              onClick={() => setIsMobileSearchOpen(true)}
+              className="w-full max-w-[220px] sm:max-w-[280px] h-10 px-3.5 rounded-full bg-[#EDF2FC] hover:bg-[#E2E8F4] border border-slate-200/60 flex items-center gap-2.5 text-xs text-slate-500 font-medium transition-all shadow-2xs active:scale-98 cursor-pointer"
+              aria-label="Open search popup"
+            >
+              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="truncate">Search notes...</span>
+            </button>
+          </div>
+
+          {/* 3. Right Section: User Menu (Desktop popup + Mobile drawer trigger) */}
+          <div className="flex items-center justify-end shrink-0">
+            <UserMenu onMobileAvatarClick={() => setIsMobileUserDrawerOpen(true)} />
           </div>
         </div>
+      </header>
 
-        {/* 3. Right Section: User Menu */}
-        <div className="flex items-center justify-end shrink-0">
-          <UserMenu />
-        </div>
-      </div>
-    </header>
+      {/* Mobile Morphing Search Modal Overlay */}
+      <MobileSearchModal
+        isOpen={isMobileSearchOpen}
+        onClose={() => setIsMobileSearchOpen(false)}
+      />
+
+      {/* Mobile Slide-Over User Profile Drawer */}
+      <MobileUserDrawer
+        isOpen={isMobileUserDrawerOpen}
+        onClose={() => setIsMobileUserDrawerOpen(false)}
+      />
+    </>
   );
 };
+
+export default TopNav;

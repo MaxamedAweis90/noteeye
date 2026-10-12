@@ -103,14 +103,24 @@ export const DetailsPanel: React.FC = () => {
   return (
     <AnimatePresence>
       {isDetailsPanelOpen && (
-        <motion.aside
-          data-details-panel
-          initial={{ opacity: 0, x: 24, scale: 0.98 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: 24, scale: 0.98 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full lg:w-80 xl:w-88 shrink-0 bg-white rounded-2xl md:rounded-[24px] h-[calc(100vh-5rem)] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] border border-slate-100 flex flex-col overflow-hidden sticky top-20 z-20 select-none"
-        >
+        <>
+          {/* Mobile overlay backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="lg:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-xs select-none"
+            onClick={closeDetailsPanel}
+          />
+          <motion.aside
+            data-details-panel
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-y-0 right-0 z-50 w-full max-w-xs sm:max-w-sm lg:static lg:z-20 lg:w-80 xl:w-88 shrink-0 bg-white rounded-l-2xl lg:rounded-2xl md:rounded-[24px] h-full lg:h-[calc(100vh-5rem)] shadow-2xl lg:shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] border-l lg:border border-slate-100 flex flex-col overflow-hidden lg:sticky lg:top-20 select-none"
+          >
           {!hasSelectedItem ? (
             /* Empty State: Matching Google Drive Reference (when no item is selected) */
             <div className="flex-1 flex flex-col h-full">
@@ -439,6 +449,7 @@ export const DetailsPanel: React.FC = () => {
             </>
           )}
         </motion.aside>
+        </>
       )}
     </AnimatePresence>
   );

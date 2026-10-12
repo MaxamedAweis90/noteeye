@@ -71,7 +71,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   };
 
   return (
-    <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-500 overflow-x-auto py-1">
+    <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-500 overflow-x-auto py-1 scrollbar-none">
       {/* Root / Home Button */}
       <button
         type="button"

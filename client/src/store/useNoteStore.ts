@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Folder, Item, ItemType } from '../types';
+import type { Folder, Item, ItemType, ChecklistItem } from '../types';
 import { STARTER_FOLDERS, STARTER_ITEMS, DEFAULT_PASTEL_COLOR } from '../types';
 import { useUIStore } from './uiStore';
+export { useNotesStore } from './notesStore';
+export { useFoldersStore } from './foldersStore';
 
 export interface ConflictRecord {
   incomingId: string;
@@ -23,7 +25,7 @@ export interface ConflictRecord {
     type: ItemType;
     folderId: string | null;
     content?: string;
-    checklistItems?: Array<{ id: string; text: string; isCompleted: boolean }>;
+    checklistItems?: ChecklistItem[];
     color?: string;
     isFavorite?: boolean;
   };
@@ -37,6 +39,13 @@ export interface ConflictDialogState {
   isOpen: boolean;
   conflicts: ConflictRecord[];
   currentIndex: number;
+}
+
+export interface WorkspaceAction {
+  id: string;
+  description: string;
+  undo: () => void;
+  redo: () => void;
 }
 
 /**
@@ -121,12 +130,12 @@ interface NoteStoreState {
   // Actions - Folders
   addFolder: (name: string, parentId?: string | null) => Folder | null;
   renameFolder: (id: string, name: string) => void;
-  deleteFolder: (id: string) => void;
-  restoreFolder: (id: string) => void;
+  deleteFolder: (id: string, recordHistory?: boolean) => void;
+  restoreFolder: (id: string, recordHistory?: boolean) => void;
   permanentlyDeleteFolder: (id: string) => void;
   setCurrentFolder: (folderId: string | null) => void;
   toggleFavoriteFolder: (id: string) => void;
-  moveFolderToFolder: (folderId: string, targetFolderId: string | null) => void;
+  moveFolderToFolder: (folderId: string, targetFolderId: string | null, recordHistory?: boolean) => void;
   duplicateFolder: (folderId: string, targetParentId?: string | null) => Folder | null;
 
   // Actions - Items (Notes & Checklists)
@@ -136,18 +145,25 @@ interface NoteStoreState {
     type: ItemType;
     folderId: string | null;
     content?: string;
-    checklistItems?: Array<{ id: string; text: string; isCompleted: boolean }>;
+    checklistItems?: ChecklistItem[];
     color?: string;
     isFavorite?: boolean;
   }) => Item | null;
   updateItem: (id: string, updates: Partial<Item>) => void;
-  deleteItem: (id: string) => void;
-  restoreItem: (id: string) => void;
+  deleteItem: (id: string, recordHistory?: boolean) => void;
+  restoreItem: (id: string, recordHistory?: boolean) => void;
   permanentlyDeleteItem: (id: string) => void;
   toggleChecklistItem: (itemId: string, checkItemId: string) => void;
   toggleFavoriteItem: (id: string) => void;
-  moveNoteToFolder: (noteId: string, folderId: string | null) => void;
+  moveNoteToFolder: (noteId: string, folderId: string | null, recordHistory?: boolean) => void;
   duplicateItem: (noteId: string, targetFolderId?: string | null) => Item | null;
+
+  // Workspace-Level Undo / Redo
+  workspaceUndoStack: WorkspaceAction[];
+  workspaceRedoStack: WorkspaceAction[];
+  pushWorkspaceAction: (action: Omit<WorkspaceAction, 'id'>) => void;
+  undoWorkspaceAction: () => boolean;
+  redoWorkspaceAction: () => boolean;
 
   // Conflict actions
   openConflictDialog: (conflicts: ConflictRecord[]) => void;
@@ -196,6 +212,8 @@ export const useNoteStore = create<NoteStoreState>()(
       quickEditItem: null,
       deleteDialogData: null,
       conflictDialogData: null,
+      workspaceUndoStack: [],
+      workspaceRedoStack: [],
 
       addFolder: (name, parentId = null) => {
         const trimmed = name.trim();
@@ -245,7 +263,10 @@ export const useNoteStore = create<NoteStoreState>()(
           userId: 'user-demo',
           name: finalName,
           parentId: targetParentId,
+          isFavorite: false,
+          isTrash: false,
           isDeleted: false,
+          deletedAt: null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -253,6 +274,7 @@ export const useNoteStore = create<NoteStoreState>()(
           folders: [...prevState.folders, newFolder],
           isFolderModalOpen: false,
         }));
+        useUIStore.getState().showToast(`Created folder "${finalName}"`);
         return newFolder;
       },
 
@@ -266,7 +288,8 @@ export const useNoteStore = create<NoteStoreState>()(
         }));
       },
 
-      deleteFolder: (id) => {
+      deleteFolder: (id, recordHistory = true) => {
+        const folder = useNoteStore.getState().folders.find((f) => f.id === id);
         // Soft delete folder and cascade to all nested subfolders and items
         set((state) => {
           const targetIds = getAllDescendantFolderIds(state.folders, id);
@@ -279,9 +302,20 @@ export const useNoteStore = create<NoteStoreState>()(
             ),
           };
         });
+        if (folder) {
+          if (recordHistory) {
+            useNoteStore.getState().pushWorkspaceAction({
+              description: `Moved folder "${folder.name}" to Trash`,
+              undo: () => useNoteStore.getState().restoreFolder(id, false),
+              redo: () => useNoteStore.getState().deleteFolder(id, false),
+            });
+          }
+          useUIStore.getState().showToast(`Moved folder "${folder.name}" to Trash`);
+        }
       },
 
-      restoreFolder: (id) => {
+      restoreFolder: (id, recordHistory = true) => {
+        const folder = useNoteStore.getState().folders.find((f) => f.id === id);
         // Restore folder and cascade to all nested subfolders and items
         set((state) => {
           const targetIds = getAllDescendantFolderIds(state.folders, id);
@@ -294,9 +328,20 @@ export const useNoteStore = create<NoteStoreState>()(
             ),
           };
         });
+        if (folder) {
+          if (recordHistory) {
+            useNoteStore.getState().pushWorkspaceAction({
+              description: `Restored folder "${folder.name}"`,
+              undo: () => useNoteStore.getState().deleteFolder(id, false),
+              redo: () => useNoteStore.getState().restoreFolder(id, false),
+            });
+          }
+          useUIStore.getState().showToast(`Restored folder "${folder.name}"`);
+        }
       },
 
       permanentlyDeleteFolder: (id) => {
+        const folder = useNoteStore.getState().folders.find((f) => f.id === id);
         // Permanently delete folder, all nested subfolders, and items
         set((state) => {
           const targetIds = getAllDescendantFolderIds(state.folders, id);
@@ -305,6 +350,7 @@ export const useNoteStore = create<NoteStoreState>()(
             items: state.items.filter((i) => !i.folderId || !targetIds.has(i.folderId)),
           };
         });
+        useUIStore.getState().showToast(`Permanently deleted folder "${folder?.name || 'folder'}"`);
       },
 
       setCurrentFolder: (folderId) => {
@@ -312,21 +358,31 @@ export const useNoteStore = create<NoteStoreState>()(
       },
 
       toggleFavoriteFolder: (id) => {
+        const folder = useNoteStore.getState().folders.find((f) => f.id === id);
+        if (!folder) return;
+        const willBeFav = !folder.isFavorite;
         set((state) => ({
           folders: state.folders.map((f) =>
             f.id === id
               ? {
                   ...f,
-                  isFavorite: !f.isFavorite,
+                  isFavorite: willBeFav,
                   updatedAt: new Date().toISOString(),
                 }
               : f
           ),
         }));
+        useUIStore.getState().showToast(willBeFav ? `Added folder "${folder.name}" to Favorites` : `Removed folder "${folder.name}" from Favorites`);
       },
 
-      moveFolderToFolder: (folderId, targetFolderId) => {
+      moveFolderToFolder: (folderId, targetFolderId, recordHistory = true) => {
         if (folderId === targetFolderId) return;
+        const folder = useNoteStore.getState().folders.find((f) => f.id === folderId);
+        if (!folder) return;
+        const prevParentId = folder.parentId;
+        const targetParent = targetFolderId ? useNoteStore.getState().folders.find((f) => f.id === targetFolderId) : null;
+        const targetName = targetParent ? targetParent.name : 'Home';
+
         set((state) => {
           // Prevent cyclical moves: targetFolderId cannot be a descendant of folderId
           if (targetFolderId) {
@@ -345,6 +401,15 @@ export const useNoteStore = create<NoteStoreState>()(
             ),
           };
         });
+
+        if (recordHistory) {
+          useNoteStore.getState().pushWorkspaceAction({
+            description: `Moved folder "${folder.name}" to ${targetName}`,
+            undo: () => useNoteStore.getState().moveFolderToFolder(folderId, prevParentId, false),
+            redo: () => useNoteStore.getState().moveFolderToFolder(folderId, targetFolderId, false),
+          });
+        }
+        useUIStore.getState().showToast(`Moved folder "${folder.name}" to ${targetName}`);
       },
 
       duplicateFolder: (folderId, targetParentId) => {
@@ -441,12 +506,19 @@ export const useNoteStore = create<NoteStoreState>()(
           id: data.id || `item-${Date.now()}`,
           userId: 'user-demo',
           title: trimmedTitle,
+          body: data.content || '',
+          content: data.content || '',
           type: data.type,
           folderId: targetFolderId,
-          content: data.content || '',
-          checklistItems: data.checklistItems || [],
+          checklistItems: data.checklistItems?.map((ci) => ({
+            ...ci,
+            completed: ci.completed ?? ci.isCompleted ?? false,
+            isCompleted: ci.isCompleted ?? ci.completed ?? false,
+          })) || [],
           color: data.color || DEFAULT_PASTEL_COLOR,
+          isTrash: false,
           isDeleted: false,
+          deletedAt: null,
           isFavorite: Boolean(data.isFavorite),
           createdAt: now,
           updatedAt: now,
@@ -475,24 +547,48 @@ export const useNoteStore = create<NoteStoreState>()(
         }));
       },
 
-      deleteItem: (id) => {
+      deleteItem: (id, recordHistory = true) => {
+        const item = useNoteStore.getState().items.find((i) => i.id === id);
         set((state) => ({
           items: state.items.map((i) => (i.id === id ? { ...i, isDeleted: true } : i)),
           isNoteModalOpen: false,
           editingItem: null,
         }));
+        if (item) {
+          if (recordHistory) {
+            useNoteStore.getState().pushWorkspaceAction({
+              description: `Moved "${item.title}" to Trash`,
+              undo: () => useNoteStore.getState().restoreItem(id, false),
+              redo: () => useNoteStore.getState().deleteItem(id, false),
+            });
+          }
+          useUIStore.getState().showToast(`Moved "${item.title}" to Trash`);
+        }
       },
 
-      restoreItem: (id) => {
+      restoreItem: (id, recordHistory = true) => {
+        const item = useNoteStore.getState().items.find((i) => i.id === id);
         set((state) => ({
           items: state.items.map((i) => (i.id === id ? { ...i, isDeleted: false } : i)),
         }));
+        if (item) {
+          if (recordHistory) {
+            useNoteStore.getState().pushWorkspaceAction({
+              description: `Restored "${item.title}"`,
+              undo: () => useNoteStore.getState().deleteItem(id, false),
+              redo: () => useNoteStore.getState().restoreItem(id, false),
+            });
+          }
+          useUIStore.getState().showToast(`Restored "${item.title}"`);
+        }
       },
 
       permanentlyDeleteItem: (id) => {
+        const item = useNoteStore.getState().items.find((i) => i.id === id);
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
         }));
+        useUIStore.getState().showToast(`Permanently deleted "${item?.title || 'item'}"`);
       },
 
       toggleChecklistItem: (itemId, checkItemId) => {
@@ -511,20 +607,30 @@ export const useNoteStore = create<NoteStoreState>()(
       },
 
       toggleFavoriteItem: (id) => {
+        const item = useNoteStore.getState().items.find((i) => i.id === id);
+        if (!item) return;
+        const willBeFav = !item.isFavorite;
         set((state) => ({
           items: state.items.map((i) =>
             i.id === id
               ? {
                   ...i,
-                  isFavorite: !i.isFavorite,
+                  isFavorite: willBeFav,
                   updatedAt: new Date().toISOString(),
                 }
               : i
           ),
         }));
+        useUIStore.getState().showToast(willBeFav ? `Added "${item.title}" to Favorites` : `Removed "${item.title}" from Favorites`);
       },
 
-      moveNoteToFolder: (noteId, folderId) => {
+      moveNoteToFolder: (noteId, folderId, recordHistory = true) => {
+        const item = useNoteStore.getState().items.find((i) => i.id === noteId);
+        if (!item) return;
+        const prevFolderId = item.folderId;
+        const targetFolder = folderId ? useNoteStore.getState().folders.find((f) => f.id === folderId) : null;
+        const targetName = targetFolder ? targetFolder.name : 'Home';
+
         set((state) => ({
           items: state.items.map((i) =>
             i.id === noteId
@@ -536,6 +642,15 @@ export const useNoteStore = create<NoteStoreState>()(
               : i
           ),
         }));
+
+        if (recordHistory) {
+          useNoteStore.getState().pushWorkspaceAction({
+            description: `Moved "${item.title}" to ${targetName}`,
+            undo: () => useNoteStore.getState().moveNoteToFolder(noteId, prevFolderId, false),
+            redo: () => useNoteStore.getState().moveNoteToFolder(noteId, folderId, false),
+          });
+        }
+        useUIStore.getState().showToast(`Moved "${item.title}" to ${targetName}`);
       },
 
       duplicateItem: (noteId, targetFolderId) => {
@@ -565,7 +680,48 @@ export const useNoteStore = create<NoteStoreState>()(
             items: [createdItem, ...state.items],
           };
         });
+        if (createdItem) {
+          useUIStore.getState().showToast(`Duplicated "${(createdItem as Item).title}"`);
+        }
         return createdItem;
+      },
+
+      pushWorkspaceAction: (action) => {
+        const record: WorkspaceAction = {
+          ...action,
+          id: `act-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        };
+        const past = useNoteStore.getState().workspaceUndoStack;
+        set({
+          workspaceUndoStack: [...past.slice(-49), record],
+          workspaceRedoStack: [],
+        });
+      },
+
+      undoWorkspaceAction: () => {
+        const { workspaceUndoStack, workspaceRedoStack } = useNoteStore.getState();
+        if (workspaceUndoStack.length === 0) return false;
+        const lastAction = workspaceUndoStack[workspaceUndoStack.length - 1];
+        lastAction.undo();
+        set({
+          workspaceUndoStack: workspaceUndoStack.slice(0, -1),
+          workspaceRedoStack: [...workspaceRedoStack, lastAction],
+        });
+        useUIStore.getState().showToast(`Undo: ${lastAction.description}`);
+        return true;
+      },
+
+      redoWorkspaceAction: () => {
+        const { workspaceUndoStack, workspaceRedoStack } = useNoteStore.getState();
+        if (workspaceRedoStack.length === 0) return false;
+        const nextAction = workspaceRedoStack[workspaceRedoStack.length - 1];
+        nextAction.redo();
+        set({
+          workspaceUndoStack: [...workspaceUndoStack, nextAction],
+          workspaceRedoStack: workspaceRedoStack.slice(0, -1),
+        });
+        useUIStore.getState().showToast(`Redo: ${nextAction.description}`);
+        return true;
       },
 
       emptyTrash: () => {
@@ -573,6 +729,7 @@ export const useNoteStore = create<NoteStoreState>()(
           folders: state.folders.filter((f) => !f.isDeleted),
           items: state.items.filter((i) => !i.isDeleted),
         }));
+        useUIStore.getState().showToast('Trash emptied');
       },
 
       setSearchQuery: (query) => {
@@ -691,6 +848,13 @@ export const useNoteStore = create<NoteStoreState>()(
                       ? {
                           ...i,
                           ...(data || {}),
+                          checklistItems: data?.checklistItems
+                            ? data.checklistItems.map((ci) => ({
+                                ...ci,
+                                completed: ci.completed ?? ci.isCompleted ?? false,
+                                isCompleted: ci.isCompleted ?? ci.completed ?? false,
+                              }))
+                            : i.checklistItems,
                           id: conflict.existingId,
                           title: conflict.incomingName,
                           folderId: conflict.targetFolderId,
@@ -784,10 +948,17 @@ export const useNoteStore = create<NoteStoreState>()(
                     title: uniqueName,
                     type: data?.type || 'note',
                     folderId: conflict.targetFolderId,
+                    body: data?.content || '',
                     content: data?.content || '',
-                    checklistItems: data?.checklistItems || [],
+                    checklistItems: data?.checklistItems?.map((ci) => ({
+                      ...ci,
+                      completed: ci.completed ?? ci.isCompleted ?? false,
+                      isCompleted: ci.isCompleted ?? ci.completed ?? false,
+                    })) || [],
                     color: data?.color || DEFAULT_PASTEL_COLOR,
+                    isTrash: false,
                     isDeleted: false,
+                    deletedAt: null,
                     isFavorite: Boolean(data?.isFavorite),
                     createdAt: now,
                     updatedAt: now,
@@ -801,10 +972,12 @@ export const useNoteStore = create<NoteStoreState>()(
                     userId: 'user-demo',
                     name: uniqueName,
                     parentId: conflict.targetFolderId,
+                    isFavorite: false,
+                    isTrash: false,
                     isDeleted: false,
+                    deletedAt: null,
                     createdAt: now,
                     updatedAt: now,
-                    isFavorite: false,
                   };
                   updatedFolders = [...updatedFolders, createdFolder];
                   createdOrTargetId = createdFolder.id;
@@ -1112,3 +1285,11 @@ export const useNoteStore = create<NoteStoreState>()(
     }
   )
 );
+
+// Reset workspace content to default starter localstorage on logout
+if (typeof window !== 'undefined') {
+  window.addEventListener('noteeye:logout', () => {
+    useNoteStore.getState().resetToDefault();
+  });
+}
+

@@ -163,7 +163,7 @@ export const ContextMenu: React.FC = () => {
 
   const handlePaste = (destFolderId: string | null = activeFolderId) => {
     closeContextMenu();
-    if (clipboard && clipboard.items.length > 0) {
+    if (clipboard && clipboard.items && clipboard.items.length > 0) {
       executeTransfer(
         clipboard.items.map((i) => ({ ...i, action: clipboard.action })),
         destFolderId

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { GridSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
 import type { Folder, Item } from '../types';
@@ -417,6 +418,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
 
   // Batch Restore
   const handleBatchRestore = () => {
+    const count = selectedIds.size;
     selectedIds.forEach((id) => {
       if (trashedFolders.some((f) => f.id === id)) {
         restoreFolder(id);
@@ -425,6 +427,9 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
       }
     });
     setSelectedIds(new Set());
+    if (count > 1) {
+      useUIStore.getState().showToast(`Restored ${count} items`);
+    }
   };
 
   // Confirm delete handler
@@ -433,6 +438,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
       emptyTrash();
       setSelectedIds(new Set());
     } else if (confirmModal.type === 'batch_delete') {
+      const count = selectedIds.size;
       selectedIds.forEach((id) => {
         if (trashedFolders.some((f) => f.id === id)) {
           permanentlyDeleteFolder(id);
@@ -441,6 +447,9 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
         }
       });
       setSelectedIds(new Set());
+      if (count > 1) {
+        useUIStore.getState().showToast(`Permanently deleted ${count} items`);
+      }
     } else if (confirmModal.type === 'single_delete' && confirmModal.targetId) {
       if (confirmModal.targetKind === 'folder') {
         permanentlyDeleteFolder(confirmModal.targetId);

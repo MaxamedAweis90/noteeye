@@ -7,6 +7,7 @@ import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { cn } from '../utils/cn';
 import { createStackedDragGhost } from '../utils/dragGhost';
+import { htmlToPlainText } from '../utils/markdownToHtml';
 
 interface NoteCardProps {
   item: Item;
@@ -321,7 +322,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             </div>
           ) : (
             <p className="text-xs sm:text-sm text-slate-800/80 leading-relaxed line-clamp-2">
-              {item.content || <span className="italic text-slate-400">Empty note...</span>}
+              {htmlToPlainText(item.content) || <span className="italic text-slate-400">Empty note...</span>}
             </p>
           )}
         </div>

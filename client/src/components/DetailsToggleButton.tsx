@@ -19,11 +19,11 @@ export const DetailsToggleButton: React.FC<DetailsToggleButtonProps> = ({ classN
   return (
     <button
       type="button"
-      onClick={toggleDetailsPanel}
+      onClick={() => toggleDetailsPanel()}
       aria-label="Toggle details panel"
       title={isDetailsPanelOpen ? 'Hide details' : 'View details (Info)'}
       className={cn(
-        'w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs hover:scale-105 active:scale-95',
+        'hidden md:flex w-8 h-8 rounded-full items-center justify-center transition-all cursor-pointer shrink-0 shadow-2xs hover:scale-105 active:scale-95',
         isDetailsPanelOpen
           ? 'bg-[#C2E7FF] text-[#001D35] ring-2 ring-[#0B57D0]/30 font-bold'
           : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200/80',

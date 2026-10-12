@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
+import { useUserStore } from '../store/userStore';
+import { useAuthStore } from '../store/authStore';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { FolderCard } from '../components/FolderCard';
 import { NoteCard } from '../components/NoteCard';
@@ -44,8 +46,11 @@ export interface HomeProps {
  */
 export const Home: React.FC<HomeProps> = ({
   isLoading = false,
-  userName = 'Alex',
+  userName: propUserName,
 }) => {
+  const profileName = useUserStore((state) => state.user?.name);
+  const authUserName = useAuthStore((state) => state.user?.name);
+  const displayName = propUserName || (profileName && profileName !== 'Guest' ? profileName : null) || authUserName || 'there';
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -368,7 +373,7 @@ export const Home: React.FC<HomeProps> = ({
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>New Note</span>
             </button>
-            <DetailsToggleButton />
+            <DetailsToggleButton className="hidden md:flex" />
           </div>
         </div>
       )}
@@ -404,8 +409,8 @@ export const Home: React.FC<HomeProps> = ({
           )}
         >
           <div className="max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold text-[#1F1F1F] tracking-tight leading-tight">
-              Hi, {userName} —{' '}
+            <h1 className="text-xl sm:text-2xl md:text-[32px] font-bold text-[#1F1F1F] tracking-tight leading-tight">
+              Hi, {displayName} —{' '}
               <span className="italic font-normal text-[#FF6B4A]">
                 ready to capture your thoughts?
               </span>
@@ -421,8 +426,8 @@ export const Home: React.FC<HomeProps> = ({
             </p>
           </div>
 
-          {/* Details Toggle */}
-          <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+          {/* Details Toggle (Desktop only) */}
+          <div className="hidden md:flex items-center gap-2 self-start md:self-auto shrink-0">
             <DetailsToggleButton />
           </div>
         </header>
@@ -542,8 +547,8 @@ export const Home: React.FC<HomeProps> = ({
         {/* 6. CONTINUOUS GRID (Sidebar-aware responsive columns) */}
         {totalCollectionCount === 0 ? (
           /* Empty State */
-          <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-[#F8FAFD]/50 p-10 sm:p-14 text-center flex flex-col items-center justify-center max-w-xl mx-auto my-6 space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#EDF2FC] text-[#0B57D0] flex items-center justify-center shadow-2xs">
+          <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-[#F8FAFD]/50 p-6 sm:p-14 text-center flex flex-col items-center justify-center max-w-xl mx-auto my-3 sm:my-6 space-y-3 sm:space-y-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#EDF2FC] text-[#0B57D0] flex items-center justify-center shadow-2xs">
               <Sparkles className="w-7 h-7" />
             </div>
 

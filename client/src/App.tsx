@@ -1,6 +1,6 @@
 import React from 'react';
-import { AppRouter } from './router/AppRouter';
+import { HostRouter } from './routes/HostRouter';
 
 export default function App(): React.JSX.Element {
-  return <AppRouter />;
+  return <HostRouter />;
 }

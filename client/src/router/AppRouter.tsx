@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import { Home } from '../pages/Home';
 import { FolderDetail } from '../pages/FolderDetail';
@@ -7,6 +7,16 @@ import { Recents } from '../pages/Recents';
 import { Favorites } from '../pages/Favorites';
 import { Trash } from '../pages/Trash';
 import { NoteEditor } from '../pages/NoteEditor';
+import { Login } from '../pages/auth/Login';
+import { Register } from '../pages/auth/Register';
+import { Profile } from '../pages/Profile';
+import { Settings } from '../pages/Settings';
+import { LandingPage } from '../pages/LandingPage';
+import { SplashLoader } from '../components/SplashLoader';
+import { useAuthStore } from '../store/authStore';
+import { useUserStore } from '../store/userStore';
+import { useNotesStore } from '../store/notesStore';
+import { useFoldersStore } from '../store/foldersStore';
 
 // Scroll to top helper on navigation
 const ScrollToTop: React.FC = () => {
@@ -23,10 +33,65 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
+/**
+ * GuestRoute Guard
+ * If the user is already authenticated, prevents access to /login and /register
+ * and automatically redirects them to the workspace root ("/").
+ */
+const GuestRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+};
+
+/**
+ * ProtectedRoute Guard
+ * Protects sensitive user account pages (/profile, /settings).
+ * If the user is not authenticated, redirects them to /login.
+ */
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  return <>{children}</>;
+};
+
 export const AppRouter: React.FC = () => {
+  // Validate authentication session on initial app boot
+  useEffect(() => {
+    const token = localStorage.getItem('noteeye_auth_token');
+    if (token) {
+      useAuthStore
+        .getState()
+        .checkAuth()
+        .then((isValid) => {
+          if (isValid) {
+            useUserStore.getState().fetchProfile().catch(() => {});
+            useNotesStore.getState().fetchNotes().catch(() => {});
+            useFoldersStore.getState().fetchFolders().catch(() => {});
+          } else {
+            useUserStore.getState().resetUser();
+          }
+        })
+        .catch(() => {
+          useUserStore.getState().resetUser();
+        });
+    } else {
+      useUserStore.getState().resetUser();
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <ScrollToTop />
+      {/* Global Splash Transition Overlay for Login & Logout */}
+      <SplashLoader />
+
       <Routes>
         {/* Populated Drive Workspace Pages inside Noteeye AppShell */}
         <Route
@@ -94,9 +159,52 @@ export const AppRouter: React.FC = () => {
           }
         />
 
-        {/* Isolated App Shell Wireframe ("nothing to show!") as specified in plan */}
+        {/* Authentication Pages protected by GuestRoute Guard */}
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GuestRoute>
+              <Register />
+            </GuestRoute>
+          }
+        />
+
+        {/* Dedicated Account & Settings Pages protected by ProtectedRoute Guard */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <Profile />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <Settings />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Isolated App Shell Wireframe */}
         <Route path="/shell" element={<AppShell />} />
         <Route path="/empty" element={<AppShell />} />
+
+        {/* Landing Page Route (Available for preview & marketing on app domain) */}
+        <Route path="/landing" element={<LandingPage />} />
 
         {/* Catch-all fallback */}
         <Route
