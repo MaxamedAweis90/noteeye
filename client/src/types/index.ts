@@ -32,6 +32,18 @@ export const hexToColorKey = (hex: string): PastelColor => {
   return match ? match.key : 'peach';
 };
 
+/**
+ * Generates a valid 24-character hexadecimal MongoDB ObjectId
+ * Prevents ID drift, URL route desync, and 400 Bad Request errors across client and server
+ */
+export const generateMongoId = (): string => {
+  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+  const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) =>
+    b.toString(16).padStart(2, '0')
+  ).join('');
+  return (timestamp + randomBytes).slice(0, 24);
+};
+
 export interface ChecklistItem {
   id: string;
   text: string;

@@ -192,7 +192,7 @@ export const createFolder = async (
       return;
     }
 
-    const { name, parentId = null } = req.body;
+    const { id, name, parentId = null } = req.body;
     if (!name || !name.trim()) {
       res.status(400).json({ message: 'Folder name is required' });
       return;
@@ -219,7 +219,9 @@ export const createFolder = async (
       resolvedParentId = new mongoose.Types.ObjectId(parentId);
     }
 
+    const customFolderId = id && mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : undefined;
     const newFolder = new Folder({
+      ...(customFolderId ? { _id: customFolderId } : {}),
       userId: new mongoose.Types.ObjectId(userId),
       name: name.trim(),
       parentId: resolvedParentId,

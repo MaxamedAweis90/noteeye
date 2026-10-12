@@ -1,12 +1,25 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Folder, Item, ItemType, ChecklistItem } from '../types';
-import { STARTER_FOLDERS, STARTER_ITEMS, DEFAULT_PASTEL_COLOR } from '../types';
+import { STARTER_FOLDERS, STARTER_ITEMS, DEFAULT_PASTEL_COLOR, generateMongoId } from '../types';
 import { useUIStore } from './uiStore';
+import { useSyncStore } from './syncStore';
 import { notesApi } from '../api/notesApi';
 import { foldersApi } from '../api/foldersApi';
 export { useNotesStore } from './notesStore';
 export { useFoldersStore } from './foldersStore';
+
+// Instant sub-millisecond multi-tab / window sync channel
+const syncChannel =
+  typeof window !== 'undefined' && 'BroadcastChannel' in window
+    ? new BroadcastChannel('noteeye_workspace_sync')
+    : null;
+
+const notifySync = () => {
+  try {
+    syncChannel?.postMessage({ type: 'workspace_mutation', timestamp: Date.now() });
+  } catch {}
+};
 
 export interface ConflictRecord {
   incomingId: string;
@@ -227,14 +240,19 @@ export const useNoteStore = create<NoteStoreState>()(
             : null;
         if (!token) return;
 
+        // Never apply a pull while writes are in flight: the server snapshot would be stale
+        if (useSyncStore.getState().pending > 0) return;
+
         try {
+          // No per-request catch: if any request fails we throw and keep local state untouched
           const [activeNotes, trashedNotes, activeFolders, trashedFolders] =
             await Promise.all([
-              notesApi.getAll().catch(() => []),
-              notesApi.getAll({ isTrash: true }).catch(() => []),
-              foldersApi.getAll().catch(() => []),
-              foldersApi.getAll({ isTrash: true }).catch(() => []),
+              notesApi.getAll(),
+              notesApi.getAll({ isTrash: true }),
+              foldersApi.getAll(),
+              foldersApi.getAll({ isTrash: true }),
             ]);
+          if (useSyncStore.getState().pending > 0) return;
 
           const combinedNotes = [
             ...(Array.isArray(activeNotes) ? activeNotes : []),
@@ -301,12 +319,37 @@ export const useNoteStore = create<NoteStoreState>()(
             })
           );
 
-          set({
-            items: normalizedItems,
-            folders: normalizedFolders,
+          const currentItems = useNoteStore.getState().items;
+          const mergedItems = normalizedItems.map((serverItem) => {
+            const local = currentItems.find((i) => i.id === serverItem.id);
+            if (local && local.updatedAt && serverItem.updatedAt) {
+              const localTime = new Date(local.updatedAt).getTime();
+              const serverTime = new Date(serverItem.updatedAt).getTime();
+              if (localTime > serverTime) {
+                return local;
+              }
+            }
+            return serverItem;
           });
+
+          // Retain any newly created items that are still syncing to server (< 45s old)
+          const serverItemIds = new Set(normalizedItems.map((i) => i.id));
+          const pendingItems = currentItems.filter(
+            (i) => !serverItemIds.has(i.id) && Date.now() - new Date(i.createdAt).getTime() < 45000
+          );
+
+          const nextItems = [...mergedItems, ...pendingItems];
+          const cur = useNoteStore.getState();
+          // Only touch state when MongoDB data differs from what we already show
+          if (
+            JSON.stringify(nextItems) !== JSON.stringify(cur.items) ||
+            JSON.stringify(normalizedFolders) !== JSON.stringify(cur.folders)
+          ) {
+            set({ items: nextItems, folders: normalizedFolders });
+          }
         } catch (err: any) {
           console.warn('[useNoteStore] fetchWorkspaceData error:', err.message);
+          throw err;
         }
       },
 
@@ -314,6 +357,7 @@ export const useNoteStore = create<NoteStoreState>()(
         const trimmed = name.trim();
         const finalName = trimmed || 'Untitled Folder';
         const targetParentId = parentId ?? null;
+        const newFolderId = generateMongoId();
 
         const state = useNoteStore.getState();
         const existingFolder = state.folders.find(
@@ -330,7 +374,7 @@ export const useNoteStore = create<NoteStoreState>()(
               isOpen: true,
               conflicts: [
                 {
-                  incomingId: `folder-${Date.now()}`,
+                  incomingId: newFolderId,
                   incomingType: 'folder',
                   incomingName: finalName,
                   incomingUpdatedAt: new Date().toISOString(),
@@ -354,7 +398,7 @@ export const useNoteStore = create<NoteStoreState>()(
         }
 
         const newFolder: Folder = {
-          id: `folder-${Date.now()}`,
+          id: newFolderId,
           userId: 'user-demo',
           name: finalName,
           parentId: targetParentId,
@@ -370,11 +414,12 @@ export const useNoteStore = create<NoteStoreState>()(
           isFolderModalOpen: false,
         }));
         useUIStore.getState().showToast(`Created folder "${finalName}"`);
+        notifySync();
 
         // Background network sync
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
           foldersApi
-            .create(finalName, targetParentId)
+            .create(finalName, targetParentId, newFolderId)
             .then((serverFolder) => {
               if (serverFolder?.id) {
                 set((s) => ({
@@ -382,6 +427,7 @@ export const useNoteStore = create<NoteStoreState>()(
                     f.id === newFolder.id ? { ...f, ...serverFolder, id: serverFolder.id } : f
                   ),
                 }));
+                notifySync();
               }
             })
             .catch((err) => console.warn('[useNoteStore] createFolder sync error:', err.message));
@@ -398,6 +444,7 @@ export const useNoteStore = create<NoteStoreState>()(
             f.id === id ? { ...f, name: trimmed, updatedAt: new Date().toISOString() } : f
           ),
         }));
+        notifySync();
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
           foldersApi.rename(id, trimmed).catch((err) =>
@@ -420,6 +467,8 @@ export const useNoteStore = create<NoteStoreState>()(
             ),
           };
         });
+        notifySync();
+
         if (folder) {
           if (recordHistory) {
             useNoteStore.getState().pushWorkspaceAction({
@@ -452,6 +501,8 @@ export const useNoteStore = create<NoteStoreState>()(
             ),
           };
         });
+        notifySync();
+
         if (folder) {
           if (recordHistory) {
             useNoteStore.getState().pushWorkspaceAction({
@@ -480,6 +531,7 @@ export const useNoteStore = create<NoteStoreState>()(
             items: state.items.filter((i) => !i.folderId || !targetIds.has(i.folderId)),
           };
         });
+        notifySync();
         useUIStore.getState().showToast(`Permanently deleted folder "${folder?.name || 'folder'}"`);
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
@@ -508,6 +560,7 @@ export const useNoteStore = create<NoteStoreState>()(
               : f
           ),
         }));
+        notifySync();
         useUIStore.getState().showToast(willBeFav ? `Added folder "${folder.name}" to Favorites` : `Removed folder "${folder.name}" from Favorites`);
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
@@ -543,6 +596,7 @@ export const useNoteStore = create<NoteStoreState>()(
             ),
           };
         });
+        notifySync();
 
         if (recordHistory) {
           useNoteStore.getState().pushWorkspaceAction({
@@ -562,12 +616,12 @@ export const useNoteStore = create<NoteStoreState>()(
 
       duplicateFolder: (folderId, targetParentId) => {
         let createdFolder: Folder | null = null;
+        const newFolderId = generateMongoId();
         set((state) => {
           const original = state.folders.find((f) => f.id === folderId);
           if (!original) return state;
 
           const now = new Date().toISOString();
-          const newFolderId = `folder-${Date.now()}`;
           createdFolder = {
             ...original,
             id: newFolderId,
@@ -582,7 +636,7 @@ export const useNoteStore = create<NoteStoreState>()(
           const directNotes = state.items.filter((i) => i.folderId === folderId && !i.isDeleted);
           const duplicatedNotes: Item[] = directNotes.map((note) => ({
             ...note,
-            id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            id: generateMongoId(),
             folderId: newFolderId,
             createdAt: now,
             updatedAt: now,
@@ -590,7 +644,7 @@ export const useNoteStore = create<NoteStoreState>()(
             checklistItems: note.checklistItems
               ? note.checklistItems.map((ci) => ({
                   ...ci,
-                  id: `ci-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                  id: generateMongoId(),
                 }))
               : [],
           }));
@@ -600,6 +654,7 @@ export const useNoteStore = create<NoteStoreState>()(
             items: [...duplicatedNotes, ...state.items],
           };
         });
+        notifySync();
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
           foldersApi
@@ -611,6 +666,7 @@ export const useNoteStore = create<NoteStoreState>()(
                     f.id === (createdFolder as Folder).id ? { ...f, ...serverFolder, id: serverFolder.id } : f
                   ),
                 }));
+                notifySync();
               }
             })
             .catch((err) => console.warn('[useNoteStore] duplicateFolder sync error:', err.message));
@@ -622,6 +678,7 @@ export const useNoteStore = create<NoteStoreState>()(
       addItem: (data) => {
         const trimmedTitle = data.title.trim() || (data.type === 'checklist' ? 'Untitled Checklist' : 'Untitled Note');
         const targetFolderId = data.folderId ?? null;
+        const newNoteId = data.id && /^[0-9a-fA-F]{24}$/.test(data.id) ? data.id : generateMongoId();
 
         const state = useNoteStore.getState();
         const existingItem = state.items.find(
@@ -639,7 +696,7 @@ export const useNoteStore = create<NoteStoreState>()(
               isOpen: true,
               conflicts: [
                 {
-                  incomingId: data.id || `item-${Date.now()}`,
+                  incomingId: newNoteId,
                   incomingType: 'note',
                   incomingName: trimmedTitle,
                   incomingColor: data.color || DEFAULT_PASTEL_COLOR,
@@ -667,7 +724,7 @@ export const useNoteStore = create<NoteStoreState>()(
 
         const now = new Date().toISOString();
         const newItem: Item = {
-          id: data.id || `item-${Date.now()}`,
+          id: newNoteId,
           userId: 'user-demo',
           title: trimmedTitle,
           body: data.content || '',
@@ -692,10 +749,12 @@ export const useNoteStore = create<NoteStoreState>()(
           isNoteModalOpen: false,
           editingItem: null,
         }));
+        notifySync();
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
           notesApi
             .create({
+              id: newNoteId,
               title: trimmedTitle,
               body: data.content || '',
               type: data.type,
@@ -711,6 +770,7 @@ export const useNoteStore = create<NoteStoreState>()(
                     i.id === newItem.id ? { ...i, ...serverNote, id: serverNote.id } : i
                   ),
                 }));
+                notifySync();
               }
             })
             .catch((err) => console.warn('[useNoteStore] addItem sync error:', err.message));
@@ -733,6 +793,7 @@ export const useNoteStore = create<NoteStoreState>()(
           isNoteModalOpen: false,
           editingItem: null,
         }));
+        notifySync();
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
           const apiUpdates: Partial<Item> = { ...updates };
@@ -752,6 +813,8 @@ export const useNoteStore = create<NoteStoreState>()(
           isNoteModalOpen: false,
           editingItem: null,
         }));
+        notifySync();
+
         if (item) {
           if (recordHistory) {
             useNoteStore.getState().pushWorkspaceAction({
@@ -775,6 +838,8 @@ export const useNoteStore = create<NoteStoreState>()(
         set((state) => ({
           items: state.items.map((i) => (i.id === id ? { ...i, isDeleted: false, isTrash: false } : i)),
         }));
+        notifySync();
+
         if (item) {
           if (recordHistory) {
             useNoteStore.getState().pushWorkspaceAction({
@@ -798,6 +863,7 @@ export const useNoteStore = create<NoteStoreState>()(
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
         }));
+        notifySync();
         useUIStore.getState().showToast(`Permanently deleted "${item?.title || 'item'}"`);
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
@@ -828,6 +894,7 @@ export const useNoteStore = create<NoteStoreState>()(
             };
           }),
         }));
+        notifySync();
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token') && updatedList.length > 0) {
           notesApi
@@ -851,6 +918,7 @@ export const useNoteStore = create<NoteStoreState>()(
               : i
           ),
         }));
+        notifySync();
         useUIStore.getState().showToast(willBeFav ? `Added "${item.title}" to Favorites` : `Removed "${item.title}" from Favorites`);
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
@@ -878,6 +946,7 @@ export const useNoteStore = create<NoteStoreState>()(
               : i
           ),
         }));
+        notifySync();
 
         if (recordHistory) {
           useNoteStore.getState().pushWorkspaceAction({
@@ -897,6 +966,7 @@ export const useNoteStore = create<NoteStoreState>()(
 
       duplicateItem: (noteId, targetFolderId) => {
         let createdItem: Item | null = null;
+        const newDuplicateId = generateMongoId();
         set((state) => {
           const original = state.items.find((i) => i.id === noteId);
           if (!original) return state;
@@ -904,7 +974,7 @@ export const useNoteStore = create<NoteStoreState>()(
           const now = new Date().toISOString();
           createdItem = {
             ...original,
-            id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            id: newDuplicateId,
             title: `${original.title} (Copy)`,
             folderId: targetFolderId !== undefined ? targetFolderId : original.folderId,
             createdAt: now,
@@ -913,7 +983,7 @@ export const useNoteStore = create<NoteStoreState>()(
             checklistItems: original.checklistItems
               ? original.checklistItems.map((ci) => ({
                   ...ci,
-                  id: `ci-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                  id: generateMongoId(),
                 }))
               : [],
           };
@@ -922,6 +992,8 @@ export const useNoteStore = create<NoteStoreState>()(
             items: [createdItem, ...state.items],
           };
         });
+        notifySync();
+
         if (createdItem) {
           useUIStore.getState().showToast(`Duplicated "${(createdItem as Item).title}"`);
         }
@@ -936,6 +1008,7 @@ export const useNoteStore = create<NoteStoreState>()(
                     i.id === (createdItem as Item).id ? { ...i, ...serverNote, id: serverNote.id } : i
                   ),
                 }));
+                notifySync();
               }
             })
             .catch((err) => console.warn('[useNoteStore] duplicateItem sync error:', err.message));
@@ -987,6 +1060,7 @@ export const useNoteStore = create<NoteStoreState>()(
           folders: state.folders.filter((f) => !f.isDeleted && !f.isTrash),
           items: state.items.filter((i) => !i.isDeleted && !i.isTrash),
         }));
+        notifySync();
         useUIStore.getState().showToast('Trash emptied');
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
@@ -1154,7 +1228,7 @@ export const useNoteStore = create<NoteStoreState>()(
                       const now = new Date().toISOString();
                       const cloned: Item = {
                         ...incomingNote,
-                        id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                        id: generateMongoId(),
                         title: conflict.incomingName,
                         folderId: conflict.targetFolderId,
                         createdAt: now,
@@ -1178,7 +1252,7 @@ export const useNoteStore = create<NoteStoreState>()(
                     const incomingFolder = updatedFolders.find((f) => f.id === conflict.incomingId);
                     if (incomingFolder) {
                       const now = new Date().toISOString();
-                      const newFolderId = `folder-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+                      const newFolderId = generateMongoId();
                       const cloned: Folder = {
                         ...incomingFolder,
                         id: newFolderId,
@@ -1207,7 +1281,7 @@ export const useNoteStore = create<NoteStoreState>()(
                 if (conflict.incomingType === 'note') {
                   const data = conflict.incomingItemData;
                   const createdItem: Item = {
-                    id: conflict.incomingId || `item-${Date.now()}`,
+                    id: conflict.incomingId && /^[0-9a-fA-F]{24}$/.test(conflict.incomingId) ? conflict.incomingId : generateMongoId(),
                     userId: 'user-demo',
                     title: uniqueName,
                     type: data?.type || 'note',
@@ -1232,7 +1306,7 @@ export const useNoteStore = create<NoteStoreState>()(
                   createdOrTargetType = 'note';
                 } else {
                   const createdFolder: Folder = {
-                    id: conflict.incomingId || `folder-${Date.now()}`,
+                    id: conflict.incomingId && /^[0-9a-fA-F]{24}$/.test(conflict.incomingId) ? conflict.incomingId : generateMongoId(),
                     userId: 'user-demo',
                     name: uniqueName,
                     parentId: conflict.targetFolderId,
@@ -1261,7 +1335,7 @@ export const useNoteStore = create<NoteStoreState>()(
                       const now = new Date().toISOString();
                       const cloned: Item = {
                         ...incomingNote,
-                        id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                        id: generateMongoId(),
                         title: uniqueName,
                         folderId: conflict.targetFolderId,
                         createdAt: now,
@@ -1282,7 +1356,7 @@ export const useNoteStore = create<NoteStoreState>()(
                     const incomingFolder = updatedFolders.find((f) => f.id === conflict.incomingId);
                     if (incomingFolder) {
                       const now = new Date().toISOString();
-                      const newFolderId = `folder-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+                      const newFolderId = generateMongoId();
                       const cloned: Folder = {
                         ...incomingFolder,
                         id: newFolderId,
@@ -1301,6 +1375,7 @@ export const useNoteStore = create<NoteStoreState>()(
           }
 
           if (applyToAll || currentIndex + 1 >= conflicts.length) {
+            notifySync();
             useUIStore.getState().showToast(
               resolution === 'replace'
                 ? 'Item replaced successfully'
@@ -1400,7 +1475,7 @@ export const useNoteStore = create<NoteStoreState>()(
                       : f
                   );
                 } else {
-                  const newFolderId = `folder-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+                  const newFolderId = generateMongoId();
                   const now = new Date().toISOString();
                   const clonedFolder: Folder = {
                     ...folderToMove,
@@ -1414,7 +1489,7 @@ export const useNoteStore = create<NoteStoreState>()(
                   const directNotes = updatedItems.filter((i) => i.folderId === folderToMove.id && !i.isDeleted);
                   const clonedNotes: Item[] = directNotes.map((note) => ({
                     ...note,
-                    id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                    id: generateMongoId(),
                     folderId: newFolderId,
                     createdAt: now,
                     updatedAt: now,
@@ -1467,14 +1542,14 @@ export const useNoteStore = create<NoteStoreState>()(
                   const now = new Date().toISOString();
                   const clonedNote: Item = {
                     ...noteToMove,
-                    id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                    id: generateMongoId(),
                     title: noteToMove.title,
                     folderId: targetFolderId,
                     createdAt: now,
                     updatedAt: now,
                     isFavorite: false,
                     checklistItems: noteToMove.checklistItems
-                      ? noteToMove.checklistItems.map((ci) => ({ ...ci, id: `ci-${Date.now()}-${Math.random()}` }))
+                      ? noteToMove.checklistItems.map((ci) => ({ ...ci, id: generateMongoId() }))
                       : [],
                   };
                   updatedItems = [clonedNote, ...updatedItems];
@@ -1501,6 +1576,7 @@ export const useNoteStore = create<NoteStoreState>()(
           }
 
           if (transferredCount > 0) {
+            notifySync();
             const actionVerb = entries[0]?.action === 'copy' ? 'copied' : 'moved';
             useUIStore.getState().showToast(
               transferredCount === 1
@@ -1550,23 +1626,17 @@ export const useNoteStore = create<NoteStoreState>()(
   )
 );
 
-// Reset workspace content to default starter localstorage on logout or fetch on login
+// Reset workspace content on logout. Pulling (login, focus, polling, cross-tab) is driven
+// by TanStack Query in <WorkspaceSync />.
 if (typeof window !== 'undefined') {
   window.addEventListener('noteeye:logout', () => {
     useNoteStore.getState().resetToDefault();
   });
-  window.addEventListener('noteeye:login', () => {
-    useNoteStore.getState().fetchWorkspaceData();
-  });
-  // Auto-sync across multiple browser tabs / windows on focus or visibility change
-  window.addEventListener('focus', () => {
-    if (localStorage.getItem('noteeye_auth_token')) {
-      useNoteStore.getState().fetchWorkspaceData();
-    }
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && localStorage.getItem('noteeye_auth_token')) {
-      useNoteStore.getState().fetchWorkspaceData();
+
+  // Another tab mutated the workspace: ask the query layer to refetch once its write has landed
+  syncChannel?.addEventListener('message', (event) => {
+    if (event.data?.type === 'workspace_mutation' && localStorage.getItem('noteeye_auth_token')) {
+      setTimeout(() => window.dispatchEvent(new CustomEvent('noteeye:refetch-workspace')), 1500);
     }
   });
 }

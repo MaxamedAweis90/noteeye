@@ -184,7 +184,7 @@ export const uploadAvatar = async (req, res, next) => {
         const buffer = Buffer.from(base64Payload, 'base64');
         const extension = filename.split('.').pop()?.toLowerCase() || 'png';
         const blobFilename = `avatars/${user._id}-${Date.now()}.${extension}`;
-        // If Vercel Blob token is available in environment, upload to Vercel Blob
+        // Upload to the (public) Vercel Blob store; the returned CDN URL is stored directly
         const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
         if (blobToken) {
             try {
@@ -194,11 +194,10 @@ export const uploadAvatar = async (req, res, next) => {
                     token: blobToken,
                 });
                 avatarUrl = blob.url;
-                console.log(`[Vercel Blob] Uploaded avatar successfully to: ${avatarUrl}`);
+                console.log(`[Vercel Blob] Uploaded avatar: ${avatarUrl}`);
             }
-            catch (blobErr) {
-                console.warn('[Vercel Blob] Upload error, falling back to data URL:', blobErr.message);
-                // Fallback to storing data URL
+            catch (err) {
+                console.warn('[Vercel Blob] Upload error, falling back to data URL:', err.message);
                 avatarUrl = imageData;
             }
         }
@@ -208,6 +207,7 @@ export const uploadAvatar = async (req, res, next) => {
         }
         user.avatarUrl = avatarUrl;
         user.avatar = avatarUrl;
+        user.avatarBlobUrl = avatarUrl.startsWith('data:') ? undefined : avatarUrl;
         await user.save();
         res.status(200).json({
             message: 'Avatar uploaded successfully',
@@ -217,6 +217,45 @@ export const uploadAvatar = async (req, res, next) => {
     }
     catch (error) {
         next(error);
+    }
+};
+/**
+ * Stream user avatar (handles private blobs, public blobs, and data URLs)
+ * GET /api/user/avatar/:userId
+ */
+export const getAvatar = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const user = await User.findById(userId);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        const targetUrl = user.avatarBlobUrl || user.avatarUrl || user.avatar;
+        if (!targetUrl) {
+            res.status(404).json({ message: 'Avatar not found' });
+            return;
+        }
+        // If it's a data URL fallback
+        if (targetUrl.startsWith('data:')) {
+            const commaIdx = targetUrl.indexOf(',');
+            const meta = targetUrl.slice(0, commaIdx);
+            const mime = meta.match(/data:([^;]+)/)?.[1] || 'image/png';
+            const buffer = Buffer.from(targetUrl.slice(commaIdx + 1), 'base64');
+            res.setHeader('Content-Type', mime);
+            res.setHeader('Cache-Control', 'public, max-age=86400');
+            res.send(buffer);
+            return;
+        }
+        // Public blob: redirect straight to the CDN URL (avoid proxy loops)
+        if (targetUrl.includes(`/api/user/avatar/`)) {
+            res.status(404).json({ message: 'Avatar not found' });
+            return;
+        }
+        res.redirect(targetUrl);
+    }
+    catch (err) {
+        res.status(500).json({ message: 'Failed to retrieve avatar' });
     }
 };
 /**

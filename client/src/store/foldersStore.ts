@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { Folder } from '../types';
-import { STARTER_FOLDERS } from '../types';
+import { STARTER_FOLDERS, generateMongoId } from '../types';
 import { useUIStore } from './uiStore';
 import { useNotesStore } from './notesStore';
 import { foldersApi, type BreadcrumbItem } from '../api/foldersApi';
@@ -92,7 +92,7 @@ export const useFoldersStore = create<FoldersStoreState>()(
           const now = new Date().toISOString();
           const trimmed = name.trim();
           const finalName = trimmed || 'Untitled Folder';
-          const tempId = `folder-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+          const tempId = generateMongoId();
 
           const newFolder: Folder = {
             id: tempId,
@@ -116,7 +116,7 @@ export const useFoldersStore = create<FoldersStoreState>()(
 
           // Background network sync
           foldersApi
-            .create(finalName, parentId)
+            .create(finalName, parentId, tempId)
             .then((serverFolder) => {
               if (serverFolder && serverFolder.id) {
                 set((state) => ({
@@ -329,7 +329,7 @@ export const useFoldersStore = create<FoldersStoreState>()(
           const finalParentId =
             targetParentId !== undefined ? targetParentId : source.parentId;
           const copyName = `${source.name} (Copy)`;
-          const tempId = `folder-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+          const tempId = generateMongoId();
 
           const newFolder: Folder = {
             ...source,

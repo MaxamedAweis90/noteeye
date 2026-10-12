@@ -85,17 +85,9 @@ export const useUserStore = create<UserStoreState>()(
         },
 
         updateProfile: async (updates) => {
+          const previousUser = { ...get().user };
           try {
             set({ isLoading: true, error: null });
-            // Optimistic update
-            set((state) => ({
-              user: {
-                ...state.user,
-                ...updates,
-                ...(updates.email && updates.email !== state.user.email ? { isEmailVerified: false } : {}),
-              },
-            }));
-
             const res = await userApi.updateProfile(updates);
             if (res?.user) {
               set((state) => ({
@@ -108,41 +100,46 @@ export const useUserStore = create<UserStoreState>()(
               try {
                 useAuthStore.getState().updateUser(res.user);
               } catch {}
+              return true;
             }
-            return true;
+            throw new Error('Profile update not confirmed by MongoDB');
           } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+            // Revert to database ground truth
+            set({ user: previousUser, error: err.message, isLoading: false });
             return false;
           }
         },
 
         uploadAvatar: async (imageData, filename = 'avatar.png') => {
+          const previousAvatar = get().user.avatarUrl;
           try {
             set({ isLoading: true, error: null });
-            // Optimistic display
-            set((state) => ({
-              user: {
-                ...state.user,
-                avatarUrl: imageData,
-              },
-            }));
-
             const res = await userApi.uploadAvatar(imageData, filename);
             if (res?.avatarUrl) {
               set((state) => ({
                 user: {
                   ...state.user,
                   avatarUrl: res.avatarUrl,
+                  ...(res.user ? res.user : {}),
                 },
                 isLoading: false,
               }));
               try {
                 useAuthStore.getState().updateUser({ avatarUrl: res.avatarUrl });
               } catch {}
+              return true;
             }
-            return true;
+            throw new Error('Avatar update not confirmed by MongoDB');
           } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+            // Revert to database ground truth
+            set((state) => ({
+              user: {
+                ...state.user,
+                avatarUrl: previousAvatar,
+              },
+              error: err.message,
+              isLoading: false,
+            }));
             return false;
           }
         },
@@ -182,19 +179,9 @@ export const useUserStore = create<UserStoreState>()(
         },
 
         updateSettings: async (settingsUpdates) => {
+          const previousSettings = { ...get().user.settings };
           try {
             set({ isLoading: true, error: null });
-            // Optimistic update
-            set((state) => ({
-              user: {
-                ...state.user,
-                settings: {
-                  ...state.user.settings,
-                  ...settingsUpdates,
-                },
-              },
-            }));
-
             const res = await userApi.updateSettings(settingsUpdates);
             if (res?.settings) {
               set((state) => ({
@@ -207,27 +194,26 @@ export const useUserStore = create<UserStoreState>()(
                 },
                 isLoading: false,
               }));
+              return true;
             }
-            return true;
+            throw new Error('Settings update not confirmed by MongoDB');
           } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+            set((state) => ({
+              user: {
+                ...state.user,
+                settings: previousSettings,
+              },
+              error: err.message,
+              isLoading: false,
+            }));
             return false;
           }
         },
 
         deleteAccount: async () => {
+          const previousUser = { ...get().user };
           try {
             set({ isLoading: true, error: null });
-            // Immediate deletion schedule without confirmation
-            set((state) => ({
-              user: {
-                ...state.user,
-                isScheduledForDeletion: true,
-                deletionScheduledAt: new Date().toISOString(),
-                remainingRecoveryDays: 30,
-              },
-            }));
-
             const res = await userApi.deleteAccount();
             if (res) {
               set((state) => ({
@@ -239,26 +225,19 @@ export const useUserStore = create<UserStoreState>()(
                 },
                 isLoading: false,
               }));
+              return true;
             }
-            return true;
+            throw new Error('Delete account not confirmed by MongoDB');
           } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+            set({ user: previousUser, error: err.message, isLoading: false });
             return false;
           }
         },
 
         recoverAccount: async () => {
+          const previousUser = { ...get().user };
           try {
             set({ isLoading: true, error: null });
-            // Instant optimistic recovery
-            set((state) => ({
-              user: {
-                ...state.user,
-                isScheduledForDeletion: false,
-                deletionScheduledAt: null,
-              },
-            }));
-
             const res = await userApi.recoverAccount();
             if (res) {
               set((state) => ({
@@ -269,10 +248,11 @@ export const useUserStore = create<UserStoreState>()(
                 },
                 isLoading: false,
               }));
+              return true;
             }
-            return true;
+            throw new Error('Recover account not confirmed by MongoDB');
           } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+            set({ user: previousUser, error: err.message, isLoading: false });
             return false;
           }
         },

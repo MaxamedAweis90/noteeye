@@ -34,8 +34,9 @@ export const foldersApi = {
   /**
    * Create a new folder
    */
-  async create(name: string, parentId?: string | null): Promise<Folder> {
+  async create(name: string, parentId?: string | null, id?: string): Promise<Folder> {
     const response = await apiClient.post<{ folder: Folder }>('/folders', {
+      id,
       name,
       parentId,
     });

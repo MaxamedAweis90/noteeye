@@ -5,6 +5,7 @@ import {
   sendVerificationCode,
   verifyEmail,
   uploadAvatar,
+  getAvatar,
   updateSettings,
   deleteAccount,
   recoverAccount,
@@ -12,6 +13,9 @@ import {
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
+
+// Public avatar streaming route (must be unauthenticated so <img> tags load without Bearer tokens)
+router.get('/avatar/:userId', getAvatar);
 
 // All user profile and settings routes are authenticated
 router.use(authenticate);

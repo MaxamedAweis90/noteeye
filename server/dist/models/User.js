@@ -26,6 +26,10 @@ const userSchema = new Schema({
         type: String,
         default: '',
     },
+    avatarBlobUrl: {
+        type: String,
+        default: '',
+    },
     phoneNumber: {
         type: String,
         default: '',

@@ -132,6 +132,7 @@ export const createNote = async (
     }
 
     const {
+      id,
       title,
       body,
       content,
@@ -165,7 +166,9 @@ export const createNote = async (
       resolvedFolderId = new mongoose.Types.ObjectId(folderId);
     }
 
+    const customId = id && mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : undefined;
     const newNote = new Note({
+      ...(customId ? { _id: customId } : {}),
       userId: new mongoose.Types.ObjectId(userId),
       title: title ? title.trim() : 'Untitled',
       body: noteBody,

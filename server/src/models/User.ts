@@ -21,6 +21,7 @@ export interface IUser extends Document {
   passwordHash: string;
   avatarUrl?: string;
   avatar?: string;
+  avatarBlobUrl?: string;
   phoneNumber?: string;
   isEmailVerified: boolean;
   verificationCode?: string;
@@ -58,6 +59,10 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Password hash is required'],
     },
     avatarUrl: {
+      type: String,
+      default: '',
+    },
+    avatarBlobUrl: {
       type: String,
       default: '',
     },

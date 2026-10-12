@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { Note, ChecklistItem } from '../types';
-import { STARTER_NOTES } from '../types';
+import { STARTER_NOTES, generateMongoId } from '../types';
 import { useUIStore } from './uiStore';
 import { notesApi } from '../api/notesApi';
 
@@ -50,7 +50,7 @@ export const useNotesStore = create<NotesStoreState>()(
           const body = payload.body || payload.content || '';
           const color = payload.color || 'peach';
           const folderId = payload.folderId !== undefined ? payload.folderId : null;
-          const tempId = payload.id || `note-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+          const tempId = payload.id && /^[0-9a-fA-F]{24}$/.test(payload.id) ? payload.id : generateMongoId();
 
           const newNote: Note = {
             id: tempId,
@@ -80,6 +80,7 @@ export const useNotesStore = create<NotesStoreState>()(
           // Background network sync
           notesApi
             .create({
+              id: tempId,
               title,
               body,
               type,
@@ -287,7 +288,7 @@ export const useNotesStore = create<NotesStoreState>()(
           const targetFolder =
             destinationFolderId !== undefined ? destinationFolderId : target.folderId;
           const duplicateName = `${target.title} (Copy)`;
-          const tempId = `note-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+          const tempId = generateMongoId();
 
           const newNote: Note = {
             ...target,
@@ -301,7 +302,7 @@ export const useNotesStore = create<NotesStoreState>()(
             updatedAt: now,
             checklistItems: target.checklistItems?.map((ci) => ({
               ...ci,
-              id: `cl-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+              id: generateMongoId(),
             })),
           };
 

@@ -106,7 +106,7 @@ export const createNote = async (req, res, next) => {
             res.status(401).json({ message: 'Authentication required' });
             return;
         }
-        const { title, body, content, type = 'note', checklistItems = [], color = 'peach', folderId = null, isFavorite = false, } = req.body;
+        const { id, title, body, content, type = 'note', checklistItems = [], color = 'peach', folderId = null, isFavorite = false, } = req.body;
         const noteBody = body !== undefined ? body : content !== undefined ? content : '';
         let resolvedFolderId = null;
         if (folderId && folderId !== 'root' && folderId !== 'null') {
@@ -125,7 +125,9 @@ export const createNote = async (req, res, next) => {
             }
             resolvedFolderId = new mongoose.Types.ObjectId(folderId);
         }
+        const customId = id && mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : undefined;
         const newNote = new Note({
+            ...(customId ? { _id: customId } : {}),
             userId: new mongoose.Types.ObjectId(userId),
             title: title ? title.trim() : 'Untitled',
             body: noteBody,
