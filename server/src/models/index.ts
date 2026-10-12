@@ -1,3 +1,8 @@
-export { User, IUser } from './User.js';
-export { Folder, IFolder } from './Folder.js';
-export { Note, INote, IChecklistItem, PastelColor } from './Note.js';
+export { User } from './User.js';
+export type { IUser } from './User.js';
+
+export { Folder } from './Folder.js';
+export type { IFolder } from './Folder.js';
+
+export { Note, PastelColor } from './Note.js';
+export type { INote, IChecklistItem } from './Note.js';

@@ -7,6 +7,7 @@ export interface AuthenticatedRequest extends Request {
     email?: string;
   };
 }
+export const AuthenticatedRequest = {} as unknown as AuthenticatedRequest;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-noteeye-2026';
 
