@@ -64,6 +64,38 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export const AppRouter: React.FC = () => {
   // Validate authentication session on initial app boot
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isLogoutAction =
+        searchParams.get('action') === 'logout' || searchParams.get('logout') === 'true';
+
+      if (isLogoutAction) {
+        useAuthStore.getState().logout();
+        useUserStore.getState().resetUser();
+        searchParams.delete('action');
+        searchParams.delete('logout');
+        const cleanSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
+        window.history.replaceState(
+          {},
+          '',
+          `${window.location.pathname}${cleanSearch}${window.location.hash}`
+        );
+        return;
+      }
+
+      const tokenFromUrl = searchParams.get('auth_token');
+      if (tokenFromUrl) {
+        localStorage.setItem('noteeye_auth_token', tokenFromUrl);
+        searchParams.delete('auth_token');
+        const cleanSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
+        window.history.replaceState(
+          {},
+          '',
+          `${window.location.pathname}${cleanSearch}${window.location.hash}`
+        );
+      }
+    }
+
     const token = localStorage.getItem('noteeye_auth_token');
     if (token) {
       useAuthStore
@@ -85,6 +117,7 @@ export const AppRouter: React.FC = () => {
       useUserStore.getState().resetUser();
     }
   }, []);
+
 
   return (
     <BrowserRouter>
