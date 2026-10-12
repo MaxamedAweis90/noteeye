@@ -1,34 +1,58 @@
 import mongoose from 'mongoose';
 import { seedInitialUser } from '../controllers/authController.js';
 
-/**
- * Connect to MongoDB database
- */
-export const connectDB = async (): Promise<typeof mongoose> => {
-  try {
-    const uri = process.env.MONGODB_URI;
-    if (!uri) {
-      throw new Error('MONGODB_URI environment variable is not defined');
-    }
+let isConnecting = false;
 
-    const conn = await mongoose.connect(uri);
+/**
+ * Connect to MongoDB database with serverless connection pooling & caching
+ */
+export const connectDB = async (): Promise<typeof mongoose | undefined> => {
+  // If connection is already open, reuse it immediately
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose;
+  }
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.error('[MongoDB Error] MONGODB_URI environment variable is not defined!');
+    return;
+  }
+
+  if (isConnecting) {
+    return;
+  }
+
+  try {
+    isConnecting = true;
+    const conn = await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log(`[MongoDB] Connected successfully: ${conn.connection.host} (Database: ${conn.connection.name})`);
 
-    // Seed initial user on startup if not already seeded
-    await seedInitialUser();
+    // Seed initial user asynchronously without blocking
+    seedInitialUser().catch((err) => {
+      console.error('[MongoDB] Seeding check error:', err?.message || err);
+    });
 
     return conn;
   } catch (error: any) {
     console.error(`[MongoDB] Connection Error: ${error.message}`);
-    process.exit(1);
+    // Never crash the serverless container on Vercel
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
+  } finally {
+    isConnecting = false;
   }
 };
 
-// Graceful shutdown handling
+// Graceful shutdown handling for standalone server
 const handleGracefulShutdown = async (signal: string) => {
   try {
-    await mongoose.connection.close();
-    console.log(`[MongoDB] Connection closed gracefully on ${signal}`);
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+      console.log(`[MongoDB] Connection closed gracefully on ${signal}`);
+    }
     process.exit(0);
   } catch (error: any) {
     console.error(`[MongoDB] Error during graceful shutdown on ${signal}: ${error.message}`);
@@ -36,5 +60,7 @@ const handleGracefulShutdown = async (signal: string) => {
   }
 };
 
-process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
+if (!process.env.VERCEL) {
+  process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
+}

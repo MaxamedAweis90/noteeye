@@ -15,13 +15,76 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// 1. Production CORS & Preflight OPTIONS Handler
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const origin = req.headers.origin;
+
+  // Dynamically allow requesting origin (or fallback to wildcard)
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token, X-Api-Version'
+  );
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  // Fast preflight response for OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
+  next();
+});
+
+// 2. Standard CORS package fallback
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-CSRF-Token',
+      'X-Api-Version',
+    ],
+  })
+);
+app.options('*', cors());
+
+// 3. Request body parsing
 app.use(express.json({ limit: '10mb' }));
+
+// 4. Serverless MongoDB connection middleware
+app.use(async (_req: Request, _res: Response, next: NextFunction) => {
+  try {
+    await connectDB();
+  } catch (err: any) {
+    console.error('[DB Middleware Error]', err?.message || err);
+  }
+  next();
+});
 
 // Health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok', app: 'Noteeye API (TypeScript)', timestamp: new Date().toISOString() });
+  res.status(200).json({
+    status: 'ok',
+    app: 'Noteeye API (TypeScript)',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production',
+  });
 });
 
 // Core API Routes
@@ -49,19 +112,21 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-// Connect to MongoDB and start HTTP server
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`[Server] Noteeye API running on port ${PORT}`);
-    });
-  } catch (error: any) {
-    console.error(`[Server] Startup aborted: ${error.message}`);
-    process.exit(1);
-  }
-};
+// Only start standalone HTTP listener when not running on Vercel
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+  const startServer = async () => {
+    try {
+      await connectDB();
+      app.listen(PORT, () => {
+        console.log(`[Server] Noteeye API running on port ${PORT}`);
+      });
+    } catch (error: any) {
+      console.error(`[Server] Startup aborted: ${error.message}`);
+      process.exit(1);
+    }
+  };
 
-startServer();
+  startServer();
+}
 
 export default app;
