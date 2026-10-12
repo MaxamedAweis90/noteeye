@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Folder, Item, ItemType, ChecklistItem } from '../types';
 import { STARTER_FOLDERS, STARTER_ITEMS, DEFAULT_PASTEL_COLOR } from '../types';
 import { useUIStore } from './uiStore';
+import { notesApi } from '../api/notesApi';
+import { foldersApi } from '../api/foldersApi';
 export { useNotesStore } from './notesStore';
 export { useFoldersStore } from './foldersStore';
 
@@ -193,6 +195,9 @@ interface NoteStoreState {
   closeDeleteDialog: () => void;
   toggleMobileSidebar: (open?: boolean) => void;
   resetToDefault: () => void;
+
+  // Network Sync & Hydration
+  fetchWorkspaceData: () => Promise<void>;
 }
 
 export const useNoteStore = create<NoteStoreState>()(
@@ -214,6 +219,96 @@ export const useNoteStore = create<NoteStoreState>()(
       conflictDialogData: null,
       workspaceUndoStack: [],
       workspaceRedoStack: [],
+
+      fetchWorkspaceData: async () => {
+        const token =
+          typeof window !== 'undefined'
+            ? localStorage.getItem('noteeye_auth_token')
+            : null;
+        if (!token) return;
+
+        try {
+          const [activeNotes, trashedNotes, activeFolders, trashedFolders] =
+            await Promise.all([
+              notesApi.getAll().catch(() => []),
+              notesApi.getAll({ isTrash: true }).catch(() => []),
+              foldersApi.getAll().catch(() => []),
+              foldersApi.getAll({ isTrash: true }).catch(() => []),
+            ]);
+
+          const combinedNotes = [
+            ...(Array.isArray(activeNotes) ? activeNotes : []),
+            ...(Array.isArray(trashedNotes) ? trashedNotes : []),
+          ];
+          const combinedFolders = [
+            ...(Array.isArray(activeFolders) ? activeFolders : []),
+            ...(Array.isArray(trashedFolders) ? trashedFolders : []),
+          ];
+
+          // Deduplicate notes by ID
+          const notesMap = new Map<string, any>();
+          for (const n of combinedNotes) {
+            const raw = n as any;
+            const id = raw.id || raw._id;
+            if (id) notesMap.set(id, n);
+          }
+
+          // Deduplicate folders by ID
+          const foldersMap = new Map<string, any>();
+          for (const f of combinedFolders) {
+            const raw = f as any;
+            const id = raw.id || raw._id;
+            if (id) foldersMap.set(id, f);
+          }
+
+          const normalizedItems: Item[] = Array.from(notesMap.values()).map(
+            (sn: any) => ({
+              id: sn.id || sn._id,
+              userId: sn.userId,
+              title: sn.title || 'Untitled Note',
+              body: sn.body || sn.content || '',
+              content: sn.content || sn.body || '',
+              type: sn.type || 'note',
+              checklistItems: (sn.checklistItems || []).map((ci: any) => ({
+                id: ci.id || ci._id,
+                text: ci.text || '',
+                completed: ci.completed ?? ci.isCompleted ?? false,
+                isCompleted: ci.isCompleted ?? ci.completed ?? false,
+              })),
+              color: sn.color || DEFAULT_PASTEL_COLOR,
+              folderId: sn.folderId || null,
+              isFavorite: Boolean(sn.isFavorite),
+              isTrash: Boolean(sn.isTrash ?? sn.isDeleted),
+              isDeleted: Boolean(sn.isDeleted ?? sn.isTrash),
+              deletedAt: sn.deletedAt || null,
+              createdAt: sn.createdAt || new Date().toISOString(),
+              updatedAt: sn.updatedAt || new Date().toISOString(),
+            })
+          );
+
+          const normalizedFolders: Folder[] = Array.from(foldersMap.values()).map(
+            (sf: any) => ({
+              id: sf.id || sf._id,
+              userId: sf.userId,
+              name: sf.name || 'Untitled Folder',
+              parentId: sf.parentId || null,
+              isFavorite: Boolean(sf.isFavorite),
+              isTrash: Boolean(sf.isTrash ?? sf.isDeleted),
+              isDeleted: Boolean(sf.isDeleted ?? sf.isTrash),
+              deletedAt: sf.deletedAt || null,
+              createdAt: sf.createdAt || new Date().toISOString(),
+              updatedAt: sf.updatedAt || new Date().toISOString(),
+            })
+          );
+
+          set({
+            items: normalizedItems,
+            folders: normalizedFolders,
+          });
+        } catch (err: any) {
+          console.warn('[useNoteStore] fetchWorkspaceData error:', err.message);
+        }
+      },
 
       addFolder: (name, parentId = null) => {
         const trimmed = name.trim();
@@ -275,6 +370,23 @@ export const useNoteStore = create<NoteStoreState>()(
           isFolderModalOpen: false,
         }));
         useUIStore.getState().showToast(`Created folder "${finalName}"`);
+
+        // Background network sync
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi
+            .create(finalName, targetParentId)
+            .then((serverFolder) => {
+              if (serverFolder?.id) {
+                set((s) => ({
+                  folders: s.folders.map((f) =>
+                    f.id === newFolder.id ? { ...f, ...serverFolder, id: serverFolder.id } : f
+                  ),
+                }));
+              }
+            })
+            .catch((err) => console.warn('[useNoteStore] createFolder sync error:', err.message));
+        }
+
         return newFolder;
       },
 
@@ -286,6 +398,12 @@ export const useNoteStore = create<NoteStoreState>()(
             f.id === id ? { ...f, name: trimmed, updatedAt: new Date().toISOString() } : f
           ),
         }));
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi.rename(id, trimmed).catch((err) =>
+            console.warn('[useNoteStore] renameFolder sync error:', err.message)
+          );
+        }
       },
 
       deleteFolder: (id, recordHistory = true) => {
@@ -295,10 +413,10 @@ export const useNoteStore = create<NoteStoreState>()(
           const targetIds = getAllDescendantFolderIds(state.folders, id);
           return {
             folders: state.folders.map((f) =>
-              targetIds.has(f.id) ? { ...f, isDeleted: true } : f
+              targetIds.has(f.id) ? { ...f, isDeleted: true, isTrash: true } : f
             ),
             items: state.items.map((i) =>
-              i.folderId && targetIds.has(i.folderId) ? { ...i, isDeleted: true } : i
+              i.folderId && targetIds.has(i.folderId) ? { ...i, isDeleted: true, isTrash: true } : i
             ),
           };
         });
@@ -312,6 +430,12 @@ export const useNoteStore = create<NoteStoreState>()(
           }
           useUIStore.getState().showToast(`Moved folder "${folder.name}" to Trash`);
         }
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi.softDelete(id).catch((err) =>
+            console.warn('[useNoteStore] softDelete folder sync error:', err.message)
+          );
+        }
       },
 
       restoreFolder: (id, recordHistory = true) => {
@@ -321,10 +445,10 @@ export const useNoteStore = create<NoteStoreState>()(
           const targetIds = getAllDescendantFolderIds(state.folders, id);
           return {
             folders: state.folders.map((f) =>
-              targetIds.has(f.id) ? { ...f, isDeleted: false } : f
+              targetIds.has(f.id) ? { ...f, isDeleted: false, isTrash: false } : f
             ),
             items: state.items.map((i) =>
-              i.folderId && targetIds.has(i.folderId) ? { ...i, isDeleted: false } : i
+              i.folderId && targetIds.has(i.folderId) ? { ...i, isDeleted: false, isTrash: false } : i
             ),
           };
         });
@@ -337,6 +461,12 @@ export const useNoteStore = create<NoteStoreState>()(
             });
           }
           useUIStore.getState().showToast(`Restored folder "${folder.name}"`);
+        }
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi.restore(id).catch((err) =>
+            console.warn('[useNoteStore] restore folder sync error:', err.message)
+          );
         }
       },
 
@@ -351,6 +481,12 @@ export const useNoteStore = create<NoteStoreState>()(
           };
         });
         useUIStore.getState().showToast(`Permanently deleted folder "${folder?.name || 'folder'}"`);
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi.deleteForever(id).catch((err) =>
+            console.warn('[useNoteStore] deleteForever folder sync error:', err.message)
+          );
+        }
       },
 
       setCurrentFolder: (folderId) => {
@@ -373,6 +509,12 @@ export const useNoteStore = create<NoteStoreState>()(
           ),
         }));
         useUIStore.getState().showToast(willBeFav ? `Added folder "${folder.name}" to Favorites` : `Removed folder "${folder.name}" from Favorites`);
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi.toggleFavorite(id, willBeFav).catch((err) =>
+            console.warn('[useNoteStore] toggleFavoriteFolder sync error:', err.message)
+          );
+        }
       },
 
       moveFolderToFolder: (folderId, targetFolderId, recordHistory = true) => {
@@ -410,6 +552,12 @@ export const useNoteStore = create<NoteStoreState>()(
           });
         }
         useUIStore.getState().showToast(`Moved folder "${folder.name}" to ${targetName}`);
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi.update(folderId, { parentId: targetFolderId }).catch((err) =>
+            console.warn('[useNoteStore] moveFolderToFolder sync error:', err.message)
+          );
+        }
       },
 
       duplicateFolder: (folderId, targetParentId) => {
@@ -452,6 +600,22 @@ export const useNoteStore = create<NoteStoreState>()(
             items: [...duplicatedNotes, ...state.items],
           };
         });
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          foldersApi
+            .duplicate(folderId, targetParentId)
+            .then((serverFolder) => {
+              if (serverFolder?.id && createdFolder) {
+                set((s) => ({
+                  folders: s.folders.map((f) =>
+                    f.id === (createdFolder as Folder).id ? { ...f, ...serverFolder, id: serverFolder.id } : f
+                  ),
+                }));
+              }
+            })
+            .catch((err) => console.warn('[useNoteStore] duplicateFolder sync error:', err.message));
+        }
+
         return createdFolder;
       },
 
@@ -528,6 +692,30 @@ export const useNoteStore = create<NoteStoreState>()(
           isNoteModalOpen: false,
           editingItem: null,
         }));
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .create({
+              title: trimmedTitle,
+              body: data.content || '',
+              type: data.type,
+              checklistItems: newItem.checklistItems,
+              color: newItem.color,
+              folderId: targetFolderId,
+              isFavorite: newItem.isFavorite,
+            })
+            .then((serverNote) => {
+              if (serverNote?.id) {
+                set((s) => ({
+                  items: s.items.map((i) =>
+                    i.id === newItem.id ? { ...i, ...serverNote, id: serverNote.id } : i
+                  ),
+                }));
+              }
+            })
+            .catch((err) => console.warn('[useNoteStore] addItem sync error:', err.message));
+        }
+
         return newItem;
       },
 
@@ -545,12 +733,22 @@ export const useNoteStore = create<NoteStoreState>()(
           isNoteModalOpen: false,
           editingItem: null,
         }));
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          const apiUpdates: Partial<Item> = { ...updates };
+          if (updates.content !== undefined && updates.body === undefined) {
+            apiUpdates.body = updates.content;
+          }
+          notesApi
+            .update(id, apiUpdates)
+            .catch((err) => console.warn('[useNoteStore] updateItem sync error:', err.message));
+        }
       },
 
       deleteItem: (id, recordHistory = true) => {
         const item = useNoteStore.getState().items.find((i) => i.id === id);
         set((state) => ({
-          items: state.items.map((i) => (i.id === id ? { ...i, isDeleted: true } : i)),
+          items: state.items.map((i) => (i.id === id ? { ...i, isDeleted: true, isTrash: true } : i)),
           isNoteModalOpen: false,
           editingItem: null,
         }));
@@ -564,12 +762,18 @@ export const useNoteStore = create<NoteStoreState>()(
           }
           useUIStore.getState().showToast(`Moved "${item.title}" to Trash`);
         }
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .softDelete(id)
+            .catch((err) => console.warn('[useNoteStore] softDelete sync error:', err.message));
+        }
       },
 
       restoreItem: (id, recordHistory = true) => {
         const item = useNoteStore.getState().items.find((i) => i.id === id);
         set((state) => ({
-          items: state.items.map((i) => (i.id === id ? { ...i, isDeleted: false } : i)),
+          items: state.items.map((i) => (i.id === id ? { ...i, isDeleted: false, isTrash: false } : i)),
         }));
         if (item) {
           if (recordHistory) {
@@ -581,6 +785,12 @@ export const useNoteStore = create<NoteStoreState>()(
           }
           useUIStore.getState().showToast(`Restored "${item.title}"`);
         }
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .restore(id)
+            .catch((err) => console.warn('[useNoteStore] restore sync error:', err.message));
+        }
       },
 
       permanentlyDeleteItem: (id) => {
@@ -589,21 +799,41 @@ export const useNoteStore = create<NoteStoreState>()(
           items: state.items.filter((i) => i.id !== id),
         }));
         useUIStore.getState().showToast(`Permanently deleted "${item?.title || 'item'}"`);
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .deleteForever(id)
+            .catch((err) => console.warn('[useNoteStore] deleteForever sync error:', err.message));
+        }
       },
 
       toggleChecklistItem: (itemId, checkItemId) => {
+        let updatedList: ChecklistItem[] = [];
         set((state) => ({
           items: state.items.map((item) => {
             if (item.id !== itemId || !item.checklistItems) return item;
+            updatedList = item.checklistItems.map((ci) =>
+              ci.id === checkItemId
+                ? {
+                    ...ci,
+                    isCompleted: !ci.isCompleted,
+                    completed: !ci.completed,
+                  }
+                : ci
+            );
             return {
               ...item,
               updatedAt: new Date().toISOString(),
-              checklistItems: item.checklistItems.map((ci) =>
-                ci.id === checkItemId ? { ...ci, isCompleted: !ci.isCompleted } : ci
-              ),
+              checklistItems: updatedList,
             };
           }),
         }));
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token') && updatedList.length > 0) {
+          notesApi
+            .update(itemId, { checklistItems: updatedList })
+            .catch((err) => console.warn('[useNoteStore] toggleChecklistItem sync error:', err.message));
+        }
       },
 
       toggleFavoriteItem: (id) => {
@@ -622,6 +852,12 @@ export const useNoteStore = create<NoteStoreState>()(
           ),
         }));
         useUIStore.getState().showToast(willBeFav ? `Added "${item.title}" to Favorites` : `Removed "${item.title}" from Favorites`);
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .update(id, { isFavorite: willBeFav })
+            .catch((err) => console.warn('[useNoteStore] toggleFavoriteItem sync error:', err.message));
+        }
       },
 
       moveNoteToFolder: (noteId, folderId, recordHistory = true) => {
@@ -651,6 +887,12 @@ export const useNoteStore = create<NoteStoreState>()(
           });
         }
         useUIStore.getState().showToast(`Moved "${item.title}" to ${targetName}`);
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .update(noteId, { folderId })
+            .catch((err) => console.warn('[useNoteStore] moveNoteToFolder sync error:', err.message));
+        }
       },
 
       duplicateItem: (noteId, targetFolderId) => {
@@ -683,6 +925,22 @@ export const useNoteStore = create<NoteStoreState>()(
         if (createdItem) {
           useUIStore.getState().showToast(`Duplicated "${(createdItem as Item).title}"`);
         }
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .duplicate(noteId, targetFolderId)
+            .then((serverNote) => {
+              if (serverNote?.id && createdItem) {
+                set((s) => ({
+                  items: s.items.map((i) =>
+                    i.id === (createdItem as Item).id ? { ...i, ...serverNote, id: serverNote.id } : i
+                  ),
+                }));
+              }
+            })
+            .catch((err) => console.warn('[useNoteStore] duplicateItem sync error:', err.message));
+        }
+
         return createdItem;
       },
 
@@ -726,10 +984,16 @@ export const useNoteStore = create<NoteStoreState>()(
 
       emptyTrash: () => {
         set((state) => ({
-          folders: state.folders.filter((f) => !f.isDeleted),
-          items: state.items.filter((i) => !i.isDeleted),
+          folders: state.folders.filter((f) => !f.isDeleted && !f.isTrash),
+          items: state.items.filter((i) => !i.isDeleted && !i.isTrash),
         }));
         useUIStore.getState().showToast('Trash emptied');
+
+        if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
+          notesApi
+            .emptyTrash()
+            .catch((err) => console.warn('[useNoteStore] emptyTrash sync error:', err.message));
+        }
       },
 
       setSearchQuery: (query) => {
@@ -1286,10 +1550,24 @@ export const useNoteStore = create<NoteStoreState>()(
   )
 );
 
-// Reset workspace content to default starter localstorage on logout
+// Reset workspace content to default starter localstorage on logout or fetch on login
 if (typeof window !== 'undefined') {
   window.addEventListener('noteeye:logout', () => {
     useNoteStore.getState().resetToDefault();
+  });
+  window.addEventListener('noteeye:login', () => {
+    useNoteStore.getState().fetchWorkspaceData();
+  });
+  // Auto-sync across multiple browser tabs / windows on focus or visibility change
+  window.addEventListener('focus', () => {
+    if (localStorage.getItem('noteeye_auth_token')) {
+      useNoteStore.getState().fetchWorkspaceData();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && localStorage.getItem('noteeye_auth_token')) {
+      useNoteStore.getState().fetchWorkspaceData();
+    }
   });
 }
 

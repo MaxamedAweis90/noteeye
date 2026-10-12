@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { User, Settings, LogOut, X, ChevronDown, Clock, LogIn } from "lucide-react";
+import { User, Settings, LogOut, X, ChevronDown, Clock, LogIn, Camera, Loader2 } from "lucide-react";
 import { useUserStore } from "../store/userStore";
 import { useUIStore } from "../store/uiStore";
 import { useAuthStore } from "../store/authStore";
@@ -25,13 +25,16 @@ const springTransition = {
  */
 export const UserMenu: React.FC<UserMenuProps> = ({ className = "", onMobileAvatarClick }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const logout = useAuthStore((state) => state.logout);
   const triggerLogoutSplash = useSplashStore((state) => state.triggerLogoutSplash);
 
   const user = useUserStore((state) => state.user);
+  const uploadAvatar = useUserStore((state) => state.uploadAvatar);
   const openProfileModal = useUIStore((state) => state.openProfileModal);
   const openSettingsModal = useUIStore((state) => state.openSettingsModal);
   const showToast = useUIStore((state) => state.showToast);
@@ -184,13 +187,65 @@ export const UserMenu: React.FC<UserMenuProps> = ({ className = "", onMobileAvat
               {/* User Header Summary */}
               <div className="flex items-center justify-between pb-2 mb-1">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shadow-xs shrink-0 overflow-hidden">
-                    {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-                    ) : (
-                      <span>{initials}</span>
-                    )}
+                  <div
+                    className="relative group/avatar cursor-pointer shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    title="Change avatar"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shadow-xs overflow-hidden">
+                      {isUploadingAvatar ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-600" />
+                      ) : user.avatarUrl ? (
+                        <img src={user.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{initials}</span>
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity">
+                      <Camera className="w-3.5 h-3.5 text-white" />
+                    </div>
                   </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (!file.type.startsWith('image/')) {
+                        showToast('Please select a valid image file');
+                        return;
+                      }
+                      if (file.size > 5 * 1024 * 1024) {
+                        showToast('Image size exceeds 5MB limit');
+                        return;
+                      }
+                      setIsUploadingAvatar(true);
+                      const reader = new FileReader();
+                      reader.onload = async () => {
+                        const dataUrl = reader.result as string;
+                        const success = await uploadAvatar(dataUrl, file.name);
+                        setIsUploadingAvatar(false);
+                        if (success) {
+                          showToast('Avatar updated successfully');
+                        } else {
+                          showToast('Failed to upload avatar');
+                        }
+                      };
+                      reader.onerror = () => {
+                        setIsUploadingAvatar(false);
+                        showToast('Failed to read image file');
+                      };
+                      reader.readAsDataURL(file);
+                      e.target.value = '';
+                    }}
+                  />
+
                   <div className="flex flex-col min-w-0">
                     <span className="text-xs font-semibold text-[#1F1F1F] truncate">
                       {displayName}

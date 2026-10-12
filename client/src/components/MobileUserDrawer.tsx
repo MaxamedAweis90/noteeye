@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock, Camera, Loader2 } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
@@ -18,12 +18,16 @@ interface MobileUserDrawerProps {
  */
 export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onClose }) => {
   const user = useUserStore((state) => state.user);
+  const uploadAvatar = useUserStore((state) => state.uploadAvatar);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const logout = useAuthStore((state) => state.logout);
   const openProfileModal = useUIStore((state) => state.openProfileModal);
   const openSettingsModal = useUIStore((state) => state.openSettingsModal);
   const showToast = useUIStore((state) => state.showToast);
   const triggerLogoutSplash = useSplashStore((state) => state.triggerLogoutSplash);
+
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Time-based greeting helper (matching reference: "Good Morning, Dimitar!")
   const getGreeting = () => {
@@ -91,13 +95,59 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
             {/* User Greeting & Identity Section */}
             <div className="p-5 flex flex-col gap-4 bg-[#F8FAFD] border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center font-bold text-slate-700 text-sm shrink-0">
-                  {user.avatarUrl ? (
+                <div
+                  className="relative group cursor-pointer w-14 h-14 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center font-bold text-slate-700 text-sm shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Upload avatar"
+                >
+                  {isUploadingAvatar ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-slate-600" />
+                  ) : user.avatarUrl ? (
                     <img src={user.avatarUrl} alt={displayName} className="w-full h-full object-cover" />
                   ) : (
                     <span>{getInitials(displayName)}</span>
                   )}
+                  <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <Camera className="w-4 h-4 text-white" />
+                  </div>
                 </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith('image/')) {
+                      showToast('Please select a valid image file');
+                      return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      showToast('Image size exceeds 5MB limit');
+                      return;
+                    }
+                    setIsUploadingAvatar(true);
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                      const dataUrl = reader.result as string;
+                      const success = await uploadAvatar(dataUrl, file.name);
+                      setIsUploadingAvatar(false);
+                      if (success) {
+                        showToast('Avatar updated successfully');
+                      } else {
+                        showToast('Failed to upload avatar');
+                      }
+                    };
+                    reader.onerror = () => {
+                      setIsUploadingAvatar(false);
+                      showToast('Failed to read image file');
+                    };
+                    reader.readAsDataURL(file);
+                    e.target.value = '';
+                  }}
+                />
                 <div className="flex flex-col min-w-0">
                   <h3 className="text-base font-bold text-[#1F1F1F] truncate leading-tight">
                     {greeting}

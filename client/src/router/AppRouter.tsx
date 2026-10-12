@@ -15,6 +15,7 @@ import { LandingPage } from '../pages/LandingPage';
 import { SplashLoader } from '../components/SplashLoader';
 import { useAuthStore } from '../store/authStore';
 import { useUserStore } from '../store/userStore';
+import { useNoteStore } from '../store/useNoteStore';
 import { useNotesStore } from '../store/notesStore';
 import { useFoldersStore } from '../store/foldersStore';
 
@@ -104,6 +105,7 @@ export const AppRouter: React.FC = () => {
         .then((isValid) => {
           if (isValid) {
             useUserStore.getState().fetchProfile().catch(() => {});
+            useNoteStore.getState().fetchWorkspaceData().catch(() => {});
             useNotesStore.getState().fetchNotes().catch(() => {});
             useFoldersStore.getState().fetchFolders().catch(() => {});
           } else {

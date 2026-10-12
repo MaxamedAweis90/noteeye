@@ -25,8 +25,14 @@ export const getNotes = async (
 
     const filter: Record<string, any> = {
       userId: new mongoose.Types.ObjectId(userId),
-      isTrash: isTrash !== undefined ? isTrash === 'true' : false,
     };
+    if (isTrash === 'all') {
+      // Return both active and trash
+    } else if (isTrash !== undefined) {
+      filter.isTrash = isTrash === 'true';
+    } else {
+      filter.isTrash = false;
+    }
 
     // Filter by folder
     if (folderId !== undefined) {

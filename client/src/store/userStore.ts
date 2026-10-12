@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { UserProfile, UserSettings } from '../types';
 import { userApi } from '../api';
+import { useAuthStore } from './authStore';
 
 export const GUEST_USER: UserProfile = {
   id: 'guest',
@@ -104,6 +105,9 @@ export const useUserStore = create<UserStoreState>()(
                 },
                 isLoading: false,
               }));
+              try {
+                useAuthStore.getState().updateUser(res.user);
+              } catch {}
             }
             return true;
           } catch (err: any) {
@@ -132,6 +136,9 @@ export const useUserStore = create<UserStoreState>()(
                 },
                 isLoading: false,
               }));
+              try {
+                useAuthStore.getState().updateUser({ avatarUrl: res.avatarUrl });
+              } catch {}
             }
             return true;
           } catch (err: any) {

@@ -55,8 +55,14 @@ export const getFolders = async (
 
     const matchQuery: Record<string, any> = {
       userId: new mongoose.Types.ObjectId(userId),
-      isTrash: isTrash !== undefined ? isTrash === 'true' : false,
     };
+    if (isTrash === 'all') {
+      // Return both active and trash
+    } else if (isTrash !== undefined) {
+      matchQuery.isTrash = isTrash === 'true';
+    } else {
+      matchQuery.isTrash = false;
+    }
 
     if (parentId !== undefined) {
       if (parentId === 'root' || parentId === 'null' || parentId === '') {

@@ -213,31 +213,37 @@ export const uploadAvatar = async (
 
     let avatarUrl = imageData;
 
-    // Detect format and parse data URL
+    // Detect format and parse data URL safely
     let contentType = 'image/png';
     let base64Payload = imageData;
 
     if (typeof imageData === 'string' && imageData.startsWith('data:')) {
-      const matches = imageData.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
-      if (matches && matches.length === 3) {
-        contentType = matches[1];
-        base64Payload = matches[2];
+      const commaIdx = imageData.indexOf(',');
+      if (commaIdx !== -1) {
+        const meta = imageData.slice(0, commaIdx);
+        base64Payload = imageData.slice(commaIdx + 1);
+        const mimeMatch = meta.match(/data:([^;]+)/);
+        if (mimeMatch) {
+          contentType = mimeMatch[1];
+        }
       }
     }
 
     const buffer = Buffer.from(base64Payload, 'base64');
-    const extension = filename.split('.').pop() || 'png';
+    const extension = filename.split('.').pop()?.toLowerCase() || 'png';
     const blobFilename = `avatars/${user._id}-${Date.now()}.${extension}`;
 
     // If Vercel Blob token is available in environment, upload to Vercel Blob
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    if (blobToken) {
       try {
         const blob = await put(blobFilename, buffer, {
           access: 'public',
           contentType,
+          token: blobToken,
         });
         avatarUrl = blob.url;
-        console.log(`[Vercel Blob] Uploaded avatar to: ${avatarUrl}`);
+        console.log(`[Vercel Blob] Uploaded avatar successfully to: ${avatarUrl}`);
       } catch (blobErr: any) {
         console.warn('[Vercel Blob] Upload error, falling back to data URL:', blobErr.message);
         // Fallback to storing data URL
@@ -249,6 +255,7 @@ export const uploadAvatar = async (
     }
 
     user.avatarUrl = avatarUrl;
+    user.avatar = avatarUrl;
     await user.save();
 
     res.status(200).json({

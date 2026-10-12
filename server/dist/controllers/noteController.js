@@ -16,8 +16,16 @@ export const getNotes = async (req, res, next) => {
         const { folderId, isFavorite, isTrash, type, color, q } = req.query;
         const filter = {
             userId: new mongoose.Types.ObjectId(userId),
-            isTrash: isTrash !== undefined ? isTrash === 'true' : false,
         };
+        if (isTrash === 'all') {
+            // Return both active and trash
+        }
+        else if (isTrash !== undefined) {
+            filter.isTrash = isTrash === 'true';
+        }
+        else {
+            filter.isTrash = false;
+        }
         // Filter by folder
         if (folderId !== undefined) {
             if (folderId === 'root' || folderId === 'null' || folderId === '') {
