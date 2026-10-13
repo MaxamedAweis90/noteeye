@@ -44,6 +44,7 @@ export interface UIStoreState {
   isProfileOpen: boolean;
   isSettingsOpen: boolean;
   isSessionsOpen: boolean;
+  isFeedbackOpen: boolean;
   activeSettingsSection: string | null;
 
   // Inspector Panel
@@ -88,6 +89,8 @@ export interface UIStoreState {
   closeSettingsModal: () => void;
   openSessionsModal: () => void;
   closeSessionsModal: () => void;
+  openFeedbackModal: () => void;
+  closeFeedbackModal: () => void;
 
   // Actions - Selection & Inspector
   selectItem: (type: 'note' | 'folder', id: string) => void;
@@ -146,6 +149,7 @@ export const useUIStore = create<UIStoreState>()(
         isProfileOpen: false,
         isSettingsOpen: false,
         isSessionsOpen: false,
+        isFeedbackOpen: false,
         activeSettingsSection: null,
 
         // Initial Inspector & Selection
@@ -252,11 +256,25 @@ export const useUIStore = create<UIStoreState>()(
             isSessionsOpen: true,
             isProfileOpen: false,
             isSettingsOpen: false,
+            isFeedbackOpen: false,
           }),
 
         closeSessionsModal: () =>
           set({
             isSessionsOpen: false,
+          }),
+
+        openFeedbackModal: () =>
+          set({
+            isFeedbackOpen: true,
+            isProfileOpen: false,
+            isSettingsOpen: false,
+            isSessionsOpen: false,
+          }),
+
+        closeFeedbackModal: () =>
+          set({
+            isFeedbackOpen: false,
           }),
 
         // Selection Actions

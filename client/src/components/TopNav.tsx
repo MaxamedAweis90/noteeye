@@ -213,21 +213,19 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
             </div>
           </div>
 
-          {/* 2b. Center: Mobile Morphing Search Trigger Button (< md) */}
-          <div className="flex md:hidden flex-1 items-center justify-center min-w-0 px-1">
+          {/* 3. Right Section: Mobile Search Icon (< md) + User Menu */}
+          <div className="flex items-center justify-end shrink-0 gap-2">
+            {/* Mobile Search Icon: Same size as avatar pill (w-9 h-9 rounded-full), immediately to its left */}
             <button
               type="button"
               onClick={() => setIsMobileSearchOpen(true)}
-              className="w-full max-w-[220px] sm:max-w-[280px] h-10 px-3.5 rounded-full bg-[#EDF2FC] hover:bg-[#E2E8F4] border border-slate-200/60 flex items-center gap-2.5 text-xs text-slate-500 font-medium transition-all shadow-2xs active:scale-98 cursor-pointer"
+              className="flex md:hidden w-9 h-9 rounded-full bg-[#EDF2FC] hover:bg-[#E2E8F4] border border-slate-200/80 items-center justify-center text-slate-600 shadow-2xs active:scale-95 transition-transform cursor-pointer shrink-0"
               aria-label="Open search popup"
+              title="Search in Noteeye"
             >
-              <Search className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="truncate">Search notes...</span>
+              <Search className="w-4 h-4 text-slate-600 shrink-0" />
             </button>
-          </div>
 
-          {/* 3. Right Section: User Menu (Desktop popup + Mobile drawer trigger) */}
-          <div className="flex items-center justify-end shrink-0">
             <UserMenu onMobileAvatarClick={() => setIsMobileUserDrawerOpen(true)} />
           </div>
         </div>

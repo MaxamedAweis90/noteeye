@@ -9,6 +9,7 @@ import folderRoutes from './routes/folderRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import trashRoutes from './routes/trashRoutes.js';
 import sessionRoutes from './routes/sessionRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 // Load environment variables
 dotenv.config();
 const app = express();
@@ -80,6 +81,7 @@ app.use('/api/folders', folderRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/trash', trashRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/feedback', feedbackRoutes);
 // Backward compatibility alias: /api/items -> noteRoutes
 app.use('/api/items', noteRoutes);
 // 404 Route Handler

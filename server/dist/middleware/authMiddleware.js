@@ -76,5 +76,27 @@ export const authMiddleware = async (req, res, next) => {
     }
     res.status(401).json({ message: 'Authentication required. Please sign in to continue.' });
 };
+/**
+ * Optional Authentication Middleware
+ * If a valid JWT token is provided, attaches req.user without blocking guest requests.
+ */
+export const optionalAuthMiddleware = async (req, _res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                if (decoded && decoded.id) {
+                    req.user = { id: decoded.id, email: decoded.email };
+                }
+            }
+            catch {
+                // Ignore token errors for optional auth
+            }
+        }
+    }
+    next();
+};
 export const authenticate = authMiddleware;
 export default authMiddleware;

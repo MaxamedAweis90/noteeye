@@ -8,6 +8,8 @@ import { FolderModal, QuickEditModal, DeleteDialog, ConflictDialog } from './mod
 import { ProfileModal } from './profile/ProfileModal';
 import { SettingsModal } from './settings/SettingsModal';
 import { SessionsModal } from './settings/SessionsModal';
+import { FeedbackModal } from './feedback/FeedbackModal';
+import { FloatingFeedbackButton } from './feedback/FloatingFeedbackButton';
 import { ContextMenu } from './ContextMenu';
 import { DetailsPanel } from './DetailsPanel';
 import { MobileBottomNav } from './MobileBottomNav';
@@ -333,6 +335,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       <ProfileModal />
       <SettingsModal />
       <SessionsModal />
+      <FeedbackModal />
+
+      {/* Floating Bottom-Right Feedback & Report Trigger Button */}
+      <FloatingFeedbackButton />
 
       {/* Mobile Bottom Navigation Bar (< 768px) */}
       <MobileBottomNav />
