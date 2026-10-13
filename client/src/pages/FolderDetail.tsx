@@ -26,7 +26,6 @@ import { NoteCard } from "../components/NoteCard";
 import { FolderCard } from "../components/FolderCard";
 import { GridSkeleton } from "../components/skeletons";
 import { DetailsToggleButton } from "../components/DetailsToggleButton";
-import { SyncStatusBadge } from "../components/SyncStatusBadge";
 import type { Folder, Item } from "../types";
 import { cn } from "../utils/cn";
 import {
@@ -792,8 +791,6 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                 <span className="text-xs text-slate-400 font-medium">
                   Updated {formattedFolderDate}
                 </span>
-                <span className="text-slate-300 text-xs">•</span>
-                <SyncStatusBadge />
               </div>
             </div>
           </div>

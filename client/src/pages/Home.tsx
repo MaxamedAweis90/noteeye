@@ -27,7 +27,6 @@ import { FolderCard } from '../components/FolderCard';
 import { NoteCard } from '../components/NoteCard';
 import { GridSkeleton, NoteCardSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
-import { SyncStatusBadge } from '../components/SyncStatusBadge';
 import { cn } from '../utils/cn';
 
 export interface HomeProps {
@@ -416,11 +415,8 @@ export const Home: React.FC<HomeProps> = ({
                 ready to capture your thoughts?
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-2 flex flex-wrap items-center gap-2 leading-relaxed">
-              <span>
-                You have {activeItems.length} active notes and {activeFolders.length} folders synchronized across your workspace.
-              </span>
-              <SyncStatusBadge />
+            <p className="text-xs sm:text-sm text-slate-500 mt-2 leading-relaxed">
+              You have {activeItems.length} active notes and {activeFolders.length} folders synchronized across your workspace.
             </p>
           </div>
 

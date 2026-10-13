@@ -15,6 +15,28 @@ const syncChannel =
     ? new BroadcastChannel('noteeye_workspace_sync')
     : null;
 
+if (syncChannel) {
+  syncChannel.onmessage = (event) => {
+    if (event.data?.type === 'workspace_mutation') {
+      useNoteStore.getState().fetchWorkspaceData().catch(() => null);
+    } else if (event.data?.type === 'note_moved') {
+      const { noteId, folderId, updatedAt } = event.data;
+      useNoteStore.setState((state) => ({
+        items: state.items.map((i) =>
+          i.id === noteId ? { ...i, folderId, updatedAt: updatedAt || new Date().toISOString() } : i
+        ),
+      }));
+    } else if (event.data?.type === 'folder_moved') {
+      const { folderId, parentId, updatedAt } = event.data;
+      useNoteStore.setState((state) => ({
+        folders: state.folders.map((f) =>
+          f.id === folderId ? { ...f, parentId, updatedAt: updatedAt || new Date().toISOString() } : f
+        ),
+      }));
+    }
+  };
+}
+
 const notifySync = () => {
   try {
     syncChannel?.postMessage({ type: 'workspace_mutation', timestamp: Date.now() });
@@ -320,35 +342,33 @@ export const useNoteStore = create<NoteStoreState>()(
           );
 
           const currentItems = useNoteStore.getState().items;
-          const mergedItems = normalizedItems.map((serverItem) => {
-            const local = currentItems.find((i) => i.id === serverItem.id);
-            if (local && local.updatedAt && serverItem.updatedAt) {
-              const localTime = new Date(local.updatedAt).getTime();
-              const serverTime = new Date(serverItem.updatedAt).getTime();
-              if (localTime > serverTime) {
-                return local;
-              }
-            }
-            return serverItem;
-          });
-
           // Retain any newly created items that are still syncing to server (< 45s old)
           const serverItemIds = new Set(normalizedItems.map((i) => i.id));
           const pendingItems = currentItems.filter(
             (i) => !serverItemIds.has(i.id) && Date.now() - new Date(i.createdAt).getTime() < 45000
           );
+          const nextItems = [...normalizedItems, ...pendingItems];
 
-          const nextItems = [...mergedItems, ...pendingItems];
+          const currentFolders = useNoteStore.getState().folders;
+          // Retain any newly created folders that are still syncing to server (< 45s old)
+          const serverFolderIds = new Set(normalizedFolders.map((f) => f.id));
+          const pendingFolders = currentFolders.filter(
+            (f) => !serverFolderIds.has(f.id) && Date.now() - new Date(f.createdAt).getTime() < 45000
+          );
+          const nextFolders = [...normalizedFolders, ...pendingFolders];
+
           const cur = useNoteStore.getState();
           // Only touch state when MongoDB data differs from what we already show (incoming changes from another device/browser)
           const hasChanges =
             JSON.stringify(nextItems) !== JSON.stringify(cur.items) ||
-            JSON.stringify(normalizedFolders) !== JSON.stringify(cur.folders);
+            JSON.stringify(nextFolders) !== JSON.stringify(cur.folders);
 
           if (hasChanges) {
             useSyncStore.getState().startReceivingChanges();
-            set({ items: nextItems, folders: normalizedFolders });
-            useSyncStore.getState().finishReceivingChanges();
+            set({ items: nextItems, folders: nextFolders });
+            setTimeout(() => {
+              useSyncStore.getState().finishReceivingChanges();
+            }, 600);
           }
         } catch (err: any) {
           console.warn('[useNoteStore] fetchWorkspaceData error:', err.message);
@@ -581,6 +601,7 @@ export const useNoteStore = create<NoteStoreState>()(
         const targetParent = targetFolderId ? useNoteStore.getState().folders.find((f) => f.id === targetFolderId) : null;
         const targetName = targetParent ? targetParent.name : 'Home';
 
+        const nowIso = new Date().toISOString();
         set((state) => {
           // Prevent cyclical moves: targetFolderId cannot be a descendant of folderId
           if (targetFolderId) {
@@ -593,12 +614,20 @@ export const useNoteStore = create<NoteStoreState>()(
                 ? {
                     ...f,
                     parentId: targetFolderId,
-                    updatedAt: new Date().toISOString(),
+                    updatedAt: nowIso,
                   }
                 : f
             ),
           };
         });
+        try {
+          syncChannel?.postMessage({
+            type: 'folder_moved',
+            folderId,
+            parentId: targetFolderId,
+            updatedAt: nowIso,
+          });
+        } catch {}
         notifySync();
 
         if (recordHistory) {
@@ -611,9 +640,15 @@ export const useNoteStore = create<NoteStoreState>()(
         useUIStore.getState().showToast(`Moved folder "${folder.name}" to ${targetName}`);
 
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
-          foldersApi.update(folderId, { parentId: targetFolderId }).catch((err) =>
-            console.warn('[useNoteStore] moveFolderToFolder sync error:', err.message)
-          );
+          foldersApi
+            .update(folderId, { parentId: targetFolderId })
+            .then(() => {
+              window.dispatchEvent(new CustomEvent('noteeye:refetch-workspace'));
+              notifySync();
+            })
+            .catch((err) =>
+              console.warn('[useNoteStore] moveFolderToFolder sync error:', err.message)
+            );
         }
       },
 
@@ -948,17 +983,26 @@ export const useNoteStore = create<NoteStoreState>()(
         const targetFolder = folderId ? useNoteStore.getState().folders.find((f) => f.id === folderId) : null;
         const targetName = targetFolder ? targetFolder.name : 'Home';
 
+        const nowIso = new Date().toISOString();
         set((state) => ({
           items: state.items.map((i) =>
             i.id === noteId
               ? {
                   ...i,
                   folderId,
-                  updatedAt: new Date().toISOString(),
+                  updatedAt: nowIso,
                 }
               : i
           ),
         }));
+        try {
+          syncChannel?.postMessage({
+            type: 'note_moved',
+            noteId,
+            folderId,
+            updatedAt: nowIso,
+          });
+        } catch {}
         notifySync();
 
         if (recordHistory) {
@@ -973,6 +1017,10 @@ export const useNoteStore = create<NoteStoreState>()(
         if (typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')) {
           notesApi
             .update(noteId, { folderId })
+            .then(() => {
+              window.dispatchEvent(new CustomEvent('noteeye:refetch-workspace'));
+              notifySync();
+            })
             .catch((err) => console.warn('[useNoteStore] moveNoteToFolder sync error:', err.message));
         }
       },
@@ -1431,6 +1479,13 @@ export const useNoteStore = create<NoteStoreState>()(
       },
 
       executeTransfer: (entries, targetFolderId) => {
+        const operationsToSync: Array<
+          | { type: 'note'; action: 'cut'; id: string; targetFolderId: string | null }
+          | { type: 'folder'; action: 'cut'; id: string; targetFolderId: string | null }
+          | { type: 'note'; action: 'copy'; clonedNote: Item }
+          | { type: 'folder'; action: 'copy'; clonedFolder: Folder; clonedNotes: Item[] }
+        > = [];
+
         set((state) => {
           const conflicts: ConflictRecord[] = [];
           let updatedItems = [...state.items];
@@ -1482,11 +1537,26 @@ export const useNoteStore = create<NoteStoreState>()(
                 });
               } else {
                 if (entry.action === 'cut') {
+                  const nowIso = new Date().toISOString();
                   updatedFolders = updatedFolders.map((f) =>
                     f.id === entry.id
-                      ? { ...f, parentId: targetFolderId, updatedAt: new Date().toISOString() }
+                      ? { ...f, parentId: targetFolderId, updatedAt: nowIso }
                       : f
                   );
+                  operationsToSync.push({
+                    type: 'folder',
+                    action: 'cut',
+                    id: entry.id,
+                    targetFolderId,
+                  });
+                  try {
+                    syncChannel?.postMessage({
+                      type: 'folder_moved',
+                      folderId: entry.id,
+                      parentId: targetFolderId,
+                      updatedAt: nowIso,
+                    });
+                  } catch {}
                 } else {
                   const newFolderId = generateMongoId();
                   const now = new Date().toISOString();
@@ -1510,6 +1580,12 @@ export const useNoteStore = create<NoteStoreState>()(
                   }));
                   updatedFolders.push(clonedFolder);
                   updatedItems.push(...clonedNotes);
+                  operationsToSync.push({
+                    type: 'folder',
+                    action: 'copy',
+                    clonedFolder,
+                    clonedNotes,
+                  });
                 }
                 transferredCount++;
               }
@@ -1546,11 +1622,26 @@ export const useNoteStore = create<NoteStoreState>()(
                 });
               } else {
                 if (entry.action === 'cut') {
+                  const nowIso = new Date().toISOString();
                   updatedItems = updatedItems.map((i) =>
                     i.id === entry.id
-                      ? { ...i, folderId: targetFolderId, updatedAt: new Date().toISOString() }
+                      ? { ...i, folderId: targetFolderId, updatedAt: nowIso }
                       : i
                   );
+                  operationsToSync.push({
+                    type: 'note',
+                    action: 'cut',
+                    id: entry.id,
+                    targetFolderId,
+                  });
+                  try {
+                    syncChannel?.postMessage({
+                      type: 'note_moved',
+                      noteId: entry.id,
+                      folderId: targetFolderId,
+                      updatedAt: nowIso,
+                    });
+                  } catch {}
                 } else {
                   const now = new Date().toISOString();
                   const clonedNote: Item = {
@@ -1566,6 +1657,11 @@ export const useNoteStore = create<NoteStoreState>()(
                       : [],
                   };
                   updatedItems = [clonedNote, ...updatedItems];
+                  operationsToSync.push({
+                    type: 'note',
+                    action: 'copy',
+                    clonedNote,
+                  });
                 }
                 transferredCount++;
               }
@@ -1606,6 +1702,66 @@ export const useNoteStore = create<NoteStoreState>()(
             folders: updatedFolders,
           };
         });
+
+        // Persist all executed transfers to MongoDB in background
+        if (
+          operationsToSync.length > 0 &&
+          typeof window !== 'undefined' &&
+          localStorage.getItem('noteeye_auth_token')
+        ) {
+          Promise.allSettled(
+            operationsToSync.map(async (op) => {
+              if (op.action === 'cut') {
+                if (op.type === 'note') {
+                  return notesApi.update(op.id, { folderId: op.targetFolderId });
+                } else {
+                  return foldersApi.update(op.id, { parentId: op.targetFolderId });
+                }
+              } else {
+                if (op.type === 'note') {
+                  return notesApi.create({
+                    id: op.clonedNote.id,
+                    title: op.clonedNote.title,
+                    body: op.clonedNote.content || '',
+                    type: op.clonedNote.type,
+                    checklistItems: op.clonedNote.checklistItems,
+                    color: op.clonedNote.color,
+                    folderId: op.clonedNote.folderId,
+                    isFavorite: false,
+                  });
+                } else {
+                  const createdFolder = await foldersApi.create(
+                    op.clonedFolder.name,
+                    op.clonedFolder.parentId,
+                    op.clonedFolder.id
+                  );
+                  if (op.clonedNotes?.length) {
+                    await Promise.all(
+                      op.clonedNotes.map((cn) =>
+                        notesApi.create({
+                          id: cn.id,
+                          title: cn.title,
+                          body: cn.content || '',
+                          type: cn.type,
+                          checklistItems: cn.checklistItems,
+                          color: cn.color,
+                          folderId: createdFolder.id,
+                          isFavorite: false,
+                        })
+                      )
+                    );
+                  }
+                  return createdFolder;
+                }
+              }
+            })
+          )
+            .then(() => {
+              window.dispatchEvent(new CustomEvent('noteeye:refetch-workspace'));
+              notifySync();
+            })
+            .catch((err) => console.warn('[useNoteStore] executeTransfer sync error:', err));
+        }
       },
 
       toggleMobileSidebar: (open) => {

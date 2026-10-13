@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, CloudOff, Loader2, TriangleAlert } from 'lucide-react';
@@ -12,7 +12,7 @@ import { flushOutboxQueue } from '../lib/offlineDb';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5_000,
+      staleTime: 3_000,
       retry: 2,
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
@@ -20,7 +20,8 @@ export const queryClient = new QueryClient({
   },
 });
 
-const POLL_MS = 10_000;
+// Smooth, responsive 3.5-second polling when tab is active
+const POLL_MS = 3_500;
 
 /**
  * Pulls the MongoDB source of truth into the local stores (workspace + profile).
@@ -44,7 +45,7 @@ const WorkspaceSync: React.FC = () => {
     queryKey: ['profile'],
     enabled: isAuthenticated,
     refetchInterval: () =>
-      typeof document !== 'undefined' && document.hidden ? false : POLL_MS * 2,
+      typeof document !== 'undefined' && document.hidden ? false : POLL_MS * 3,
     queryFn: async () => {
       const data = await userApi.getProfile();
       if (data?.user) {
@@ -110,17 +111,38 @@ const WorkspaceSync: React.FC = () => {
   return null;
 };
 
-/** Small animated pill telling the user when changes are saving, saved, or incoming from other devices, then self-hiding. */
+/**
+ * Centered Bottom Sync Pill
+ * Suppressed inside NoteEditor (which has its own header indicator).
+ * On browse screens, alerts ONLY for incoming cloud updates, offline state, or sync errors.
+ */
 export const SyncIndicator: React.FC = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const status = useSyncStore((s) => s.status);
   const error = useSyncStore((s) => s.error);
 
-  if (!isAuthenticated) return null;
+  const [pathname, setPathname] = useState(() =>
+    typeof window !== 'undefined' ? window.location.pathname : ''
+  );
 
+  useEffect(() => {
+    const updatePath = () => {
+      if (typeof window !== 'undefined') setPathname(window.location.pathname);
+    };
+    window.addEventListener('popstate', updatePath);
+    const interval = setInterval(updatePath, 400);
+    return () => {
+      window.removeEventListener('popstate', updatePath);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Suppress completely inside note editor (note editor has its own header pill)
+  const isEditor = pathname.includes('/notes') || pathname.includes('/note/');
+  if (!isAuthenticated || isEditor) return null;
+
+  // Only show for cross-device incoming changes, errors, or offline (routine local writes save silently)
   const isVisible =
-    status === 'saving' ||
-    status === 'saved' ||
     status === 'loading_changes' ||
     status === 'loaded_changes' ||
     status === 'error' ||
@@ -130,35 +152,25 @@ export const SyncIndicator: React.FC = () => {
     string,
     { icon: React.ReactNode; text: string; cls: string }
   > = {
-    saving: {
-      icon: <Loader2 size={13} className="animate-spin shrink-0 text-[#0B57D0]" />,
-      text: 'Saving...',
-      cls: 'bg-[#E8F0FE] text-[#0B57D0] border-blue-200/70',
-    },
-    saved: {
-      icon: <Check size={13} className="shrink-0 text-[#137333]" />,
-      text: 'Saved',
-      cls: 'bg-[#E6F4EA] text-[#137333] border-emerald-200/70',
-    },
     loading_changes: {
       icon: <Loader2 size={13} className="animate-spin shrink-0 text-indigo-600" />,
-      text: 'Loading changes...',
-      cls: 'bg-indigo-50 text-indigo-700 border-indigo-200/70',
+      text: 'Updating from cloud...',
+      cls: 'bg-indigo-50/95 text-indigo-700 border-indigo-200/80 shadow-md',
     },
     loaded_changes: {
-      icon: <Check size={13} className="shrink-0 text-emerald-600" />,
-      text: 'Loaded changes',
-      cls: 'bg-emerald-50 text-emerald-700 border-emerald-200/70',
+      icon: <Check size={13} className="shrink-0 text-emerald-600 stroke-[3]" />,
+      text: 'Updated from cloud',
+      cls: 'bg-emerald-50/95 text-emerald-700 border-emerald-200/80 shadow-md',
     },
     error: {
       icon: <TriangleAlert size={13} className="shrink-0 text-[#B3261E]" />,
       text: error?.startsWith('Sync') ? error : `Not saved · ${error || 'Retry'}`,
-      cls: 'bg-[#FCE8E6] text-[#B3261E] border-rose-200/70',
+      cls: 'bg-[#FCE8E6]/95 text-[#B3261E] border-rose-200/80 shadow-md',
     },
     offline: {
       icon: <CloudOff size={13} className="shrink-0 text-[#B06000]" />,
       text: 'Offline · Changes queued',
-      cls: 'bg-[#FEF7E0] text-[#B06000] border-amber-200/70',
+      cls: 'bg-[#FEF7E0]/95 text-[#B06000] border-amber-200/80 shadow-md',
     },
   };
 
@@ -178,7 +190,7 @@ export const SyncIndicator: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.92 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium shadow-lg border backdrop-blur-xs select-none ${cfg.cls}`}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border backdrop-blur-md select-none ${cfg.cls}`}
           >
             {cfg.icon}
             <span className="truncate max-w-[70vw]">{cfg.text}</span>

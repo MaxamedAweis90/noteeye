@@ -27,7 +27,6 @@ import { useNoteStore } from '../store/useNoteStore';
 import { NoteCard } from '../components/NoteCard';
 import { NoteCardSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
-import { SyncStatusBadge } from '../components/SyncStatusBadge';
 import type { Item } from '../types';
 import { cn } from '../utils/cn';
 
@@ -324,9 +323,8 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
               {totalNotesCount} {totalNotesCount === 1 ? 'Note' : 'Notes'}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 flex flex-wrap items-center gap-2">
-            <span>All your active notes organized by activity timeline (excluding folders)</span>
-            <SyncStatusBadge />
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            All your active notes organized by activity timeline (excluding folders)
           </p>
         </div>
 

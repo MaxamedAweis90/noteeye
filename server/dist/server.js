@@ -24,7 +24,7 @@ app.use((req, res, next) => {
     }
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token, X-Api-Version');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token, X-Api-Version, Idempotency-Key, idempotency-key, *');
     res.setHeader('Access-Control-Max-Age', '86400');
     // Fast preflight response for OPTIONS requests
     if (req.method === 'OPTIONS') {
@@ -45,6 +45,8 @@ app.use(cors({
         'Authorization',
         'X-CSRF-Token',
         'X-Api-Version',
+        'Idempotency-Key',
+        'idempotency-key',
     ],
 }));
 app.options('*', cors());
@@ -92,12 +94,48 @@ app.use((err, _req, res, _next) => {
 });
 // Standalone HTTP listener (Local development ONLY, never on Vercel serverless)
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL && !process.env.VERCEL_ENV) {
+    const killStaleProcess = async (port) => {
+        try {
+            const { execSync } = await import('node:child_process');
+            const stdout = execSync(`netstat -ano | findstr :${port}`).toString();
+            const lines = stdout.split('\n').filter((l) => l.includes('LISTENING') || l.includes('Listen'));
+            const pids = new Set();
+            for (const line of lines) {
+                const parts = line.trim().split(/\s+/);
+                const pid = parts[parts.length - 1]?.trim();
+                if (pid && pid !== '0' && pid !== String(process.pid)) {
+                    pids.add(pid);
+                }
+            }
+            for (const pid of pids) {
+                try {
+                    execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+                    console.log(`[Server] Automatically cleared stale process ${pid} on port ${port}`);
+                }
+                catch { }
+            }
+        }
+        catch { }
+    };
     const startServer = async () => {
         try {
             await connectDB();
-            app.listen(PORT, () => {
-                console.log(`[Server] Noteeye API running on port ${PORT}`);
-            });
+            const tryListen = (attemptsLeft = 2) => {
+                const server = app.listen(PORT, () => {
+                    console.log(`[Server] Noteeye API running on port ${PORT}`);
+                });
+                server.on('error', async (err) => {
+                    if (err.code === 'EADDRINUSE' && attemptsLeft > 0) {
+                        console.warn(`[Server] Port ${PORT} was occupied. Automatically clearing stale process...`);
+                        await killStaleProcess(PORT);
+                        setTimeout(() => tryListen(attemptsLeft - 1), 500);
+                    }
+                    else {
+                        console.error('[Server] Listen error:', err.message);
+                    }
+                });
+            };
+            tryListen();
         }
         catch (error) {
             console.error(`[Server] Startup error: ${error.message}`);

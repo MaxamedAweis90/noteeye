@@ -162,11 +162,37 @@ export const NoteEditor: React.FC = () => {
 
   // Loaded ID ref to prevent autosave state feedback overwrite while typing
   const loadedIdRef = useRef<string | null>(null);
+  const isLocallyDirtyRef = useRef(false);
+
+  // Latest synchronous values ref — prevents stale closure data loss in autosave timeouts
+  const latestValuesRef = useRef({
+    title,
+    type,
+    folderId,
+    content,
+    checklistItems,
+    color,
+    isFavorite,
+    activeId,
+  });
+
+  // Keep latestValuesRef synchronized on every render
+  latestValuesRef.current = {
+    title,
+    type,
+    folderId,
+    content,
+    checklistItems,
+    color,
+    isFavorite,
+    activeId,
+  };
 
   // Initialize state from existing item or query params
   useEffect(() => {
     if (existingItem && existingItem.id !== loadedIdRef.current) {
       loadedIdRef.current = existingItem.id;
+      isLocallyDirtyRef.current = false;
       setTitle(existingItem.title);
       setType(existingItem.type);
       const convertedHtml = markdownToHtml(existingItem.content || "");
@@ -189,8 +215,50 @@ export const NoteEditor: React.FC = () => {
           ? format(new Date(existingItem.updatedAt), "h:mm a")
           : "Just now",
       );
+    } else if (
+      existingItem &&
+      existingItem.id === loadedIdRef.current &&
+      saveStatus === "saved" &&
+      syncPending === 0 &&
+      !isLocallyDirtyRef.current
+    ) {
+      // Smoothly reflect external updates (e.g. text/folder edits arriving from another device/browser)
+      const incomingHtml = markdownToHtml(existingItem.content || "");
+      const currentEditorHtml = editorRef.current?.innerHTML || content;
+
+      if (existingItem.title !== title) {
+        setTitle(existingItem.title);
+        latestValuesRef.current.title = existingItem.title;
+      }
+      if (incomingHtml !== currentEditorHtml) {
+        setContent(incomingHtml);
+        latestValuesRef.current.content = incomingHtml;
+        if (editorRef.current) {
+          editorRef.current.innerHTML = incomingHtml;
+        }
+      }
+      if (JSON.stringify(existingItem.checklistItems || []) !== JSON.stringify(checklistItems)) {
+        setChecklistItems(existingItem.checklistItems || []);
+        latestValuesRef.current.checklistItems = existingItem.checklistItems || [];
+      }
+      if (existingItem.folderId !== folderId) {
+        setFolderId(existingItem.folderId);
+        latestValuesRef.current.folderId = existingItem.folderId;
+      }
+      if (Boolean(existingItem.isFavorite) !== isFavorite) {
+        setIsFavorite(Boolean(existingItem.isFavorite));
+        latestValuesRef.current.isFavorite = Boolean(existingItem.isFavorite);
+      }
+      if (existingItem.color && existingItem.color !== color) {
+        setColor(existingItem.color);
+        latestValuesRef.current.color = existingItem.color;
+      }
+      if (existingItem.updatedAt) {
+        setLastSavedTime(format(new Date(existingItem.updatedAt), "h:mm a"));
+      }
     } else if (isNewRoute && loadedIdRef.current !== "new") {
       loadedIdRef.current = "new";
+      isLocallyDirtyRef.current = false;
       const paramType =
         searchParams.get("type") === "checklist" ? "checklist" : "note";
       const paramFolder = searchParams.get("folder") || currentFolderId || null;
@@ -213,7 +281,20 @@ export const NoteEditor: React.FC = () => {
       setSaveStatus("saved");
       setLastSavedTime("Just now");
     }
-  }, [existingItem, isNewRoute, searchParams, currentFolderId]);
+  }, [
+    existingItem,
+    isNewRoute,
+    searchParams,
+    currentFolderId,
+    saveStatus,
+    syncPending,
+    folderId,
+    isFavorite,
+    color,
+    title,
+    content,
+    checklistItems,
+  ]);
 
   // Sync content into editorRef when mounted
   useEffect(() => {
@@ -234,30 +315,51 @@ export const NoteEditor: React.FC = () => {
   const performSave = useCallback(() => {
     if (!hasLoadedRef.current) return;
 
-    const trimmedTitle = title.trim();
+    // Read directly from latest values ref (guaranteed freshest state, zero closure staleness)
+    const {
+      title: curTitle,
+      type: curType,
+      folderId: curFolder,
+      checklistItems: curChecklist,
+      color: curColor,
+      isFavorite: curFav,
+      activeId: curActiveId,
+    } = latestValuesRef.current;
+
+    // For rich text notes, read directly from editorRef.current.innerHTML to capture every typed character
+    const finalContent =
+      curType === "note" && editorRef.current
+        ? editorRef.current.innerHTML
+        : latestValuesRef.current.content;
+
+    latestValuesRef.current.content = finalContent;
+
+    const trimmedTitle = curTitle.trim();
     const hasData =
       trimmedTitle.length > 0 ||
-      content.trim().length > 0 ||
-      checklistItems.length > 0;
+      finalContent.trim().length > 0 ||
+      curChecklist.length > 0;
     const fallbackTitle =
-      type === "checklist" ? "Untitled Checklist" : "Untitled Note";
+      curType === "checklist" ? "Untitled Checklist" : "Untitled Note";
 
-    if (!activeId) {
+    if (!curActiveId) {
       // Create new note only if there is meaningful content or title
       if (hasData) {
         setSaveStatus("saving");
         const newItem = addItem({
           title: trimmedTitle || fallbackTitle,
-          type,
-          folderId,
-          content,
-          checklistItems,
-          color,
-          isFavorite,
+          type: curType,
+          folderId: curFolder,
+          content: finalContent,
+          checklistItems: curChecklist,
+          color: curColor,
+          isFavorite: curFav,
         });
         if (newItem) {
+          isLocallyDirtyRef.current = false;
           loadedIdRef.current = newItem.id;
           setCreatedItemId(newItem.id);
+          latestValuesRef.current.activeId = newItem.id;
           setSaveStatus("saved");
           setLastSavedTime(format(new Date(), "h:mm:ss a"));
           navigate(`/notes/${newItem.id}`, { replace: true });
@@ -268,31 +370,20 @@ export const NoteEditor: React.FC = () => {
     } else {
       // Update existing item
       setSaveStatus("saving");
-      updateItem(activeId, {
+      updateItem(curActiveId, {
         title: trimmedTitle || fallbackTitle,
-        type,
-        folderId,
-        content,
-        checklistItems,
-        color,
-        isFavorite,
+        type: curType,
+        folderId: curFolder,
+        content: finalContent,
+        checklistItems: curChecklist,
+        color: curColor,
+        isFavorite: curFav,
       });
+      isLocallyDirtyRef.current = false;
       setSaveStatus("saved");
       setLastSavedTime(format(new Date(), "h:mm:ss a"));
     }
-  }, [
-    activeId,
-    title,
-    type,
-    folderId,
-    content,
-    checklistItems,
-    color,
-    isFavorite,
-    addItem,
-    updateItem,
-    navigate,
-  ]);
+  }, [addItem, updateItem, navigate]);
 
   // Trigger debounced autosave on value changes
   const triggerAutosave = useCallback(() => {
@@ -302,24 +393,60 @@ export const NoteEditor: React.FC = () => {
     }
     saveTimeoutRef.current = setTimeout(() => {
       performSave();
-    }, 500);
+    }, 450);
   }, [performSave]);
 
   // Flush save on unmount or before navigating
   const flushSave = useCallback(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
-      performSave();
+      saveTimeoutRef.current = null;
     }
+    performSave();
   }, [performSave]);
 
+  // Flush on unmount, page reload, tab switch, app backgrounding, or Ctrl+S / Cmd+S
   useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+    const handleBeforeUnload = () => {
+      flushSave();
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        flushSave();
       }
     };
-  }, []);
+
+    const handlePageHide = () => {
+      flushSave();
+    };
+
+    const handleWindowBlur = () => {
+      flushSave();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        flushSave();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('keydown', handleKeyDown);
+      flushSave();
+    };
+  }, [flushSave]);
 
   // Back Navigation Handler
   const handleBack = () => {
@@ -349,42 +476,63 @@ export const NoteEditor: React.FC = () => {
     }
   }, [items, activeId, isNewRoute, navigate]);
 
-  // Star Toggle Handler
+  // Star Toggle Handler (immediate sync)
   const handleToggleStar = () => {
     const next = !isFavorite;
     setIsFavorite(next);
     if (activeId) {
       toggleFavoriteItem(activeId);
     }
-    triggerAutosave();
+    setTimeout(() => performSave(), 10);
   };
 
-  // Folder Reassignment Handler
+  // Folder Reassignment Handler (immediate sync)
   const handleSelectFolder = (newFolderId: string | null) => {
     setFolderId(newFolderId);
     setIsFolderDropdownOpen(false);
-    triggerAutosave();
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    if (activeId) {
+      useNoteStore.getState().moveNoteToFolder(activeId, newFolderId);
+      setSaveStatus("saved");
+      setLastSavedTime(format(new Date(), "h:mm a"));
+    } else {
+      setTimeout(() => performSave(), 10);
+    }
   };
 
   // Checklist Item Actions
   const handleToggleChecklistItem = (itemId: string) => {
-    setChecklistItems((prev) =>
-      prev.map((c) =>
-        c.id === itemId ? { ...c, isCompleted: !c.isCompleted } : c,
-      ),
-    );
+    isLocallyDirtyRef.current = true;
+    setChecklistItems((prev) => {
+      const next = prev.map((c) =>
+        c.id === itemId ? { ...c, isCompleted: !c.isCompleted, completed: !c.isCompleted } : c
+      );
+      latestValuesRef.current.checklistItems = next;
+      return next;
+    });
     triggerAutosave();
   };
 
   const handleUpdateChecklistItemText = (itemId: string, text: string) => {
-    setChecklistItems((prev) =>
-      prev.map((c) => (c.id === itemId ? { ...c, text } : c)),
-    );
+    isLocallyDirtyRef.current = true;
+    setChecklistItems((prev) => {
+      const next = prev.map((c) => (c.id === itemId ? { ...c, text } : c));
+      latestValuesRef.current.checklistItems = next;
+      return next;
+    });
     triggerAutosave();
   };
 
   const handleDeleteChecklistItem = (itemId: string) => {
-    setChecklistItems((prev) => prev.filter((c) => c.id !== itemId));
+    isLocallyDirtyRef.current = true;
+    setChecklistItems((prev) => {
+      const next = prev.filter((c) => c.id !== itemId);
+      latestValuesRef.current.checklistItems = next;
+      return next;
+    });
     triggerAutosave();
   };
 
@@ -398,7 +546,12 @@ export const NoteEditor: React.FC = () => {
         completed: false,
         isCompleted: false,
       };
-      setChecklistItems((prev) => [...prev, newItem]);
+      isLocallyDirtyRef.current = true;
+      setChecklistItems((prev) => {
+        const next = [...prev, newItem];
+        latestValuesRef.current.checklistItems = next;
+        return next;
+      });
       setNewChecklistText("");
       triggerAutosave();
       setTimeout(() => {
@@ -565,6 +718,8 @@ export const NoteEditor: React.FC = () => {
   const handleEditorInput = useCallback(() => {
     if (editorRef.current) {
       const html = editorRef.current.innerHTML;
+      latestValuesRef.current.content = html;
+      isLocallyDirtyRef.current = true;
       setContent(html);
       triggerAutosave();
 
@@ -1496,9 +1651,13 @@ export const NoteEditor: React.FC = () => {
           type="text"
           value={title}
           onChange={(e) => {
-            setTitle(e.target.value);
+            const val = e.target.value;
+            latestValuesRef.current.title = val;
+            isLocallyDirtyRef.current = true;
+            setTitle(val);
             triggerAutosave();
           }}
+          onBlur={flushSave}
           placeholder={
             type === "checklist" ? "Untitled Checklist" : "Untitled Note"
           }
@@ -1518,38 +1677,6 @@ export const NoteEditor: React.FC = () => {
             </span>
             <span>•</span>
             <span className="font-medium">{wordCount} words</span>
-            <span>•</span>
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-md border text-xs",
-                isSaving && "bg-blue-50/80 text-[#0B57D0] border-blue-200/50",
-                !isSaving && !isSyncError && !isOffline && "bg-emerald-50/80 text-emerald-700 border-emerald-200/50",
-                isSyncError && "bg-rose-50/80 text-rose-700 border-rose-200/50",
-                isOffline && "bg-amber-50/80 text-amber-700 border-amber-200/50"
-              )}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin text-[#0B57D0]" />
-                  <span>Saving...</span>
-                </>
-              ) : isSyncError ? (
-                <>
-                  <AlertCircle className="w-3 h-3 text-rose-600" />
-                  <span>Not saved</span>
-                </>
-              ) : isOffline ? (
-                <>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  <span>Offline</span>
-                </>
-              ) : (
-                <>
-                  <Check className="w-3 h-3 stroke-[2.5]" />
-                  <span>Saved to cloud</span>
-                </>
-              )}
-            </span>
           </div>
 
           {/* Mode Badge Indicator */}
@@ -1579,6 +1706,7 @@ export const NoteEditor: React.FC = () => {
               data-editor-canvas
               onContextMenu={handleEditorContextMenu}
               onInput={handleEditorInput}
+              onBlur={flushSave}
               onClick={handleEditorInteraction}
               onKeyDown={handleEditorKeyDown}
               onKeyUp={handleEditorInteraction}
