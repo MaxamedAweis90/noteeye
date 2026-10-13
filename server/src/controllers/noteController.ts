@@ -12,6 +12,11 @@ const HEX_TO_KEY: Record<string, string> = {
   '#e5defa': 'lavender',
   '#fcddec': 'rose',
   '#fef3c7': 'yellow',
+  // Alternate & legacy swatches
+  '#f7d8fa': 'lavender',
+  '#d1f4d9': 'mint',
+  '#fff3c4': 'yellow',
+  '#fcd5ce': 'rose',
 };
 /** Accepts a palette key or its hex value; returns a valid key or null */
 const normalizeColor = (c: unknown): string | null => {

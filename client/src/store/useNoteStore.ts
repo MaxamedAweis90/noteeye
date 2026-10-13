@@ -802,6 +802,16 @@ export const useNoteStore = create<NoteStoreState>()(
           }
           notesApi
             .update(id, apiUpdates)
+            .then((serverNote) => {
+              if (serverNote?.id) {
+                set((s) => ({
+                  items: s.items.map((i) =>
+                    i.id === id ? { ...i, ...serverNote, id: serverNote.id } : i
+                  ),
+                }));
+                notifySync();
+              }
+            })
             .catch((err) => console.warn('[useNoteStore] updateItem sync error:', err.message));
         }
       },

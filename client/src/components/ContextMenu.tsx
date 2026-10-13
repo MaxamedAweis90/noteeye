@@ -22,15 +22,7 @@ import {
 import { useUIStore } from '../store/uiStore';
 import { useNoteStore } from '../store/useNoteStore';
 import { cn } from '../utils/cn';
-
-const PASTEL_PALETTE = [
-  { name: 'Peach', hex: '#FDE3C9' },
-  { name: 'Sky', hex: '#CEEBFD' },
-  { name: 'Mint', hex: '#D1F4D9' },
-  { name: 'Lavender', hex: '#F7D8FA' },
-  { name: 'Lemon', hex: '#FFF3C4' },
-  { name: 'Coral', hex: '#FCD5CE' },
-];
+import { PASTEL_PALETTE } from '../types';
 
 /**
  * ContextMenu Component — Google Drive & Desktop-Grade Custom Context Menu
@@ -379,22 +371,33 @@ export const ContextMenu: React.FC = () => {
                     <Palette className="w-3 h-3 text-slate-400" />
                     Color
                   </span>
-                  <span>{targetNote.color || 'Default'}</span>
+                  <span>
+                    {PASTEL_PALETTE.find(
+                      (p) =>
+                        p.hex.toLowerCase() === (targetNote.color || '').toLowerCase() ||
+                        p.key === targetNote.color
+                    )?.name || 'Warm Peach'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between gap-1">
-                  {PASTEL_PALETTE.map((p) => (
-                    <button
-                      key={p.hex}
-                      type="button"
-                      onClick={() => handleSelectColor(p.hex)}
-                      title={p.name}
-                      style={{ backgroundColor: p.hex }}
-                      className={cn(
-                        'w-5 h-5 rounded-full border border-black/15 transition-transform hover:scale-125 cursor-pointer shadow-2xs',
-                        targetNote.color === p.hex && 'ring-2 ring-[#0B57D0] scale-110'
-                      )}
-                    />
-                  ))}
+                  {PASTEL_PALETTE.map((p) => {
+                    const isSelected =
+                      (targetNote.color || '').toLowerCase() === p.hex.toLowerCase() ||
+                      targetNote.color === p.key;
+                    return (
+                      <button
+                        key={p.hex}
+                        type="button"
+                        onClick={() => handleSelectColor(p.hex)}
+                        title={p.name}
+                        style={{ backgroundColor: p.hex }}
+                        className={cn(
+                          'w-5 h-5 rounded-full border border-black/15 transition-transform hover:scale-125 cursor-pointer shadow-2xs',
+                          isSelected && 'ring-2 ring-[#0B57D0] scale-110'
+                        )}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}

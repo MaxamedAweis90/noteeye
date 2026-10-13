@@ -23,6 +23,7 @@ import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { GridSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
+import { SyncStatusBadge } from '../components/SyncStatusBadge';
 import type { Folder, Item } from '../types';
 import { cn } from '../utils/cn';
 import { cardDropVariants, listRowDropVariants, cardLayoutTransition } from '../utils/animations';
@@ -512,8 +513,9 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                 {totalTrashCount} {totalTrashCount === 1 ? 'item' : 'items'}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Items in trash can be restored back to your workspace or permanently deleted.
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+              <span>Items in trash can be restored back to your workspace or permanently deleted.</span>
+              <SyncStatusBadge />
             </p>
           </div>
 

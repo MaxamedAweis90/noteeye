@@ -27,9 +27,20 @@ export const colorKeyToHex = (color: PastelColor | string): string => {
   return match ? match.hex : color;
 };
 
+const COLOR_HEX_ALIASES: Record<string, PastelColor> = {
+  '#f7d8fa': 'lavender',
+  '#d1f4d9': 'mint',
+  '#fff3c4': 'yellow',
+  '#fcd5ce': 'rose',
+};
+
 export const hexToColorKey = (hex: string): PastelColor => {
-  const match = PASTEL_PALETTE.find((p) => p.hex.toLowerCase() === hex.toLowerCase());
-  return match ? match.key : 'peach';
+  if (!hex) return 'peach';
+  const clean = hex.trim().toLowerCase();
+  const match = PASTEL_PALETTE.find((p) => p.hex.toLowerCase() === clean);
+  if (match) return match.key;
+  if (COLOR_HEX_ALIASES[clean]) return COLOR_HEX_ALIASES[clean];
+  return 'peach';
 };
 
 /**

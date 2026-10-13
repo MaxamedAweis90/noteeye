@@ -21,11 +21,13 @@ import {
   Clock,
   AlertCircle,
   Home,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNoteStore } from "../store/useNoteStore";
 import { useUIStore } from "../store/uiStore";
 import { useUserStore } from "../store/userStore";
+import { useSyncStore } from "../store/syncStore";
 import { DEFAULT_PASTEL_COLOR, colorKeyToHex } from "../types";
 import type { ItemType, ChecklistItem } from "../types";
 import { Table as TableIcon } from "lucide-react";
@@ -91,6 +93,14 @@ export const NoteEditor: React.FC = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
   const [lastSavedTime, setLastSavedTime] = useState<string>("Just now");
+
+  const syncStatus = useSyncStore((s) => s.status);
+  const syncPending = useSyncStore((s) => s.pending);
+  const syncError = useSyncStore((s) => s.error);
+
+  const isSaving = saveStatus === "saving" || syncPending > 0 || syncStatus === "saving";
+  const isSyncError = syncStatus === "error" && !isSaving;
+  const isOffline = syncStatus === "offline" && !isSaving;
 
   // Folder dropdown open state
   const [isFolderDropdownOpen, setIsFolderDropdownOpen] = useState(false);
@@ -1361,18 +1371,38 @@ export const NoteEditor: React.FC = () => {
             </div>
           )}
 
-          {/* Reassuring Auto-Save Status Pill */}
-          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-slate-50 border border-slate-200/60 shadow-2xs transition-all text-xs">
-            {saveStatus === "saving" ? (
-              <div className="flex items-center gap-1.5 text-amber-700 font-medium">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                </span>
+          {/* Database-Connected Auto-Save Status Pill */}
+          <button
+            type="button"
+            onClick={() => performSave()}
+            title={
+              isSaving
+                ? "Saving changes to database..."
+                : isSyncError
+                ? `Save failed: ${syncError || "Error"}. Click to retry.`
+                : isOffline
+                ? "Offline mode. Changes saved locally."
+                : "All changes confirmed in database. Click to save again."
+            }
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-slate-50 hover:bg-slate-100/80 border border-slate-200/60 shadow-2xs transition-all text-xs cursor-pointer active:scale-95"
+          >
+            {isSaving ? (
+              <div className="flex items-center gap-1.5 text-blue-700 font-medium">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0B57D0]" />
                 <span className="hidden sm:inline font-semibold">
-                  Saving changes...
+                  Saving to database...
                 </span>
                 <span className="sm:hidden font-semibold">Saving...</span>
+              </div>
+            ) : isSyncError ? (
+              <div className="flex items-center gap-1.5 text-rose-700 font-medium animate-fade-in">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                <span className="font-semibold">Not saved · Click to retry</span>
+              </div>
+            ) : isOffline ? (
+              <div className="flex items-center gap-1.5 text-amber-700 font-medium animate-fade-in">
+                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                <span className="font-semibold">Offline</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 text-emerald-700 font-medium animate-fade-in">
@@ -1380,10 +1410,10 @@ export const NoteEditor: React.FC = () => {
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
                 <span className="hidden md:inline font-semibold">
-                  All changes saved automatically
+                  Saved to database
                 </span>
                 <span className="hidden sm:inline md:hidden font-semibold">
-                  Auto-saved
+                  Saved
                 </span>
                 <span className="sm:hidden font-semibold">Saved</span>
                 <span className="text-slate-400 text-[10px] hidden lg:inline">
@@ -1391,7 +1421,7 @@ export const NoteEditor: React.FC = () => {
                 </span>
               </div>
             )}
-          </div>
+          </button>
 
           {/* Table Customization Pill in Top Navigation (Word / Canva Style) */}
           <AnimatePresence>
@@ -1489,9 +1519,36 @@ export const NoteEditor: React.FC = () => {
             <span>•</span>
             <span className="font-medium">{wordCount} words</span>
             <span>•</span>
-            <span className="inline-flex items-center gap-1 text-emerald-700 font-medium bg-emerald-50/80 px-2 py-0.5 rounded-md border border-emerald-200/50">
-              <Check className="w-3 h-3 stroke-[2.5]" />
-              <span>Auto-saved</span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-md border text-xs",
+                isSaving && "bg-blue-50/80 text-[#0B57D0] border-blue-200/50",
+                !isSaving && !isSyncError && !isOffline && "bg-emerald-50/80 text-emerald-700 border-emerald-200/50",
+                isSyncError && "bg-rose-50/80 text-rose-700 border-rose-200/50",
+                isOffline && "bg-amber-50/80 text-amber-700 border-amber-200/50"
+              )}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin text-[#0B57D0]" />
+                  <span>Saving...</span>
+                </>
+              ) : isSyncError ? (
+                <>
+                  <AlertCircle className="w-3 h-3 text-rose-600" />
+                  <span>Not saved</span>
+                </>
+              ) : isOffline ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span>Offline</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3 h-3 stroke-[2.5]" />
+                  <span>Saved to cloud</span>
+                </>
+              )}
             </span>
           </div>
 
