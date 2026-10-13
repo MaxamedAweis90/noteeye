@@ -2,9 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User.js';
+import { Session } from '../models/Session.js';
 import { Note } from '../models/Note.js';
 import { Folder } from '../models/Folder.js';
 import type { AuthenticatedRequest } from '../middleware/authMiddleware.js';
+import { hashToken, getClientIp, parseUserAgent } from '../utils/userAgent.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-noteeye-2026';
 
@@ -80,6 +82,24 @@ export const register = async (
       expiresIn: '30d',
     });
 
+    // Record initial active session in MongoDB
+    try {
+      const tokenHash = hashToken(token);
+      const ipAddress = getClientIp(req);
+      const { deviceType, browserName, osName } = parseUserAgent(req.headers['user-agent']);
+      await Session.create({
+        userId: user._id,
+        tokenHash,
+        ipAddress,
+        deviceType,
+        browserName,
+        osName,
+        lastActiveAt: new Date(),
+      });
+    } catch (sessionErr: any) {
+      console.warn('[authController] Failed to record registration session:', sessionErr?.message);
+    }
+
     res.status(201).json({
       message: 'Account created successfully',
       token,
@@ -122,6 +142,24 @@ export const login = async (
     const token = jwt.sign({ id: user._id.toString(), email: user.email }, JWT_SECRET, {
       expiresIn: '30d',
     });
+
+    // Record new active login session in MongoDB
+    try {
+      const tokenHash = hashToken(token);
+      const ipAddress = getClientIp(req);
+      const { deviceType, browserName, osName } = parseUserAgent(req.headers['user-agent']);
+      await Session.create({
+        userId: user._id,
+        tokenHash,
+        ipAddress,
+        deviceType,
+        browserName,
+        osName,
+        lastActiveAt: new Date(),
+      });
+    } catch (sessionErr: any) {
+      console.warn('[authController] Failed to record login session:', sessionErr?.message);
+    }
 
     res.status(200).json({
       message: 'Welcome back to Noteeye',

@@ -42,6 +42,7 @@ import { PASTEL_PALETTE } from '../../types';
 export const SettingsModal: React.FC = () => {
   const isSettingsOpen = useUIStore((state) => state.isSettingsOpen);
   const closeSettingsModal = useUIStore((state) => state.closeSettingsModal);
+  const activeSettingsSection = useUIStore((state) => state.activeSettingsSection);
   const showToast = useUIStore((state) => state.showToast);
 
   const user = useUserStore((state) => state.user);
@@ -88,7 +89,6 @@ export const SettingsModal: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
-  // Browser Notification state
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
   useEffect(() => {
@@ -96,6 +96,17 @@ export const SettingsModal: React.FC = () => {
       setNotificationPermission(Notification.permission);
     }
   }, [isSettingsOpen]);
+
+  // Auto-scroll to section if requested (e.g. from user menu -> active sessions)
+  useEffect(() => {
+    if (isSettingsOpen && activeSettingsSection === 'sessions') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('active-sessions');
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [isSettingsOpen, activeSettingsSection]);
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
@@ -305,16 +316,21 @@ export const SettingsModal: React.FC = () => {
       >
         {/* Sticky Top Header Bar: Close 'X' on TOP-LEFT, Title on TOP-RIGHT */}
         <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70">
-          {/* Top-Left: Close X Button */}
-          <button
-            type="button"
-            onClick={requestClose}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
-            aria-label="Close Settings screen"
-            title="Close (Esc)"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {/* Top-Left: Close X Button + Desktop Esc Hint */}
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={requestClose}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
+              aria-label="Close Settings screen"
+              title="Close (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <span className="hidden sm:inline text-xs text-slate-400 font-normal select-none">
+              Press Esc to close
+            </span>
+          </div>
 
           {/* Top-Right: Title */}
           <div className="flex items-center gap-2">

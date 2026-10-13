@@ -249,16 +249,21 @@ export const ProfileModal: React.FC = () => {
       >
         {/* Sticky Top Header Bar: Close 'X' on TOP-LEFT, Title on TOP-RIGHT */}
         <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70">
-          {/* Top-Left: Close X Button */}
-          <button
-            type="button"
-            onClick={requestClose}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
-            aria-label="Close Profile screen"
-            title="Close (Esc)"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {/* Top-Left: Close X Button + Desktop Esc Hint */}
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={requestClose}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
+              aria-label="Close Profile screen"
+              title="Close (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <span className="hidden sm:inline text-xs text-slate-400 font-normal select-none">
+              Press Esc to close
+            </span>
+          </div>
 
           {/* Top-Right: Title */}
           <div className="flex items-center gap-2">

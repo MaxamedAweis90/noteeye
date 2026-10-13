@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { UserProfile } from '../types';
 import { authApi, type UserStats } from '../api';
+import { useUIStore } from './uiStore';
 
 export interface AuthState {
   user: UserProfile | null;
@@ -132,7 +133,10 @@ export const useAuthStore = create<AuthState>()(
 
 // Listen to global 401 unauthorized event
 if (typeof window !== 'undefined') {
-  window.addEventListener('noteeye:unauthorized', () => {
+  window.addEventListener('noteeye:unauthorized', (event: any) => {
     useAuthStore.getState().logout();
+    if (event?.detail?.isRevoked) {
+      useUIStore.getState().showToast('This session was signed out from another device.');
+    }
   });
 }

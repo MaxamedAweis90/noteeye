@@ -43,6 +43,8 @@ export interface UIStoreState {
   noteModalType: 'note' | 'checklist';
   isProfileOpen: boolean;
   isSettingsOpen: boolean;
+  isSessionsOpen: boolean;
+  activeSettingsSection: string | null;
 
   // Inspector Panel
   selectedItem: { type: 'note' | 'folder'; id: string } | null;
@@ -82,8 +84,10 @@ export interface UIStoreState {
   closeNoteModal: () => void;
   openProfileModal: () => void;
   closeProfileModal: () => void;
-  openSettingsModal: () => void;
+  openSettingsModal: (initialSection?: string) => void;
   closeSettingsModal: () => void;
+  openSessionsModal: () => void;
+  closeSessionsModal: () => void;
 
   // Actions - Selection & Inspector
   selectItem: (type: 'note' | 'folder', id: string) => void;
@@ -141,6 +145,8 @@ export const useUIStore = create<UIStoreState>()(
         noteModalType: 'note',
         isProfileOpen: false,
         isSettingsOpen: false,
+        isSessionsOpen: false,
+        activeSettingsSection: null,
 
         // Initial Inspector & Selection
         selectedItem: null,
@@ -219,6 +225,7 @@ export const useUIStore = create<UIStoreState>()(
           set({
             isProfileOpen: true,
             isSettingsOpen: false,
+            isSessionsOpen: false,
           }),
 
         closeProfileModal: () =>
@@ -226,15 +233,30 @@ export const useUIStore = create<UIStoreState>()(
             isProfileOpen: false,
           }),
 
-        openSettingsModal: () =>
+        openSettingsModal: (initialSection?: string) =>
           set({
             isSettingsOpen: true,
             isProfileOpen: false,
+            isSessionsOpen: false,
+            activeSettingsSection: initialSection || null,
           }),
 
         closeSettingsModal: () =>
           set({
             isSettingsOpen: false,
+            activeSettingsSection: null,
+          }),
+
+        openSessionsModal: () =>
+          set({
+            isSessionsOpen: true,
+            isProfileOpen: false,
+            isSettingsOpen: false,
+          }),
+
+        closeSessionsModal: () =>
+          set({
+            isSessionsOpen: false,
           }),
 
         // Selection Actions

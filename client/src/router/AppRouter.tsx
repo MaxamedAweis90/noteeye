@@ -233,6 +233,16 @@ export const AppRouter: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/sessions"
+          element={
+            <ProtectedRoute>
+              <AppShell>
+                <Settings />
+              </AppShell>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Isolated App Shell Wireframe */}
         <Route path="/shell" element={<AppShell />} />

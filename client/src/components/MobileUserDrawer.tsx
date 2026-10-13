@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock, Camera, Loader2 } from 'lucide-react';
+import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock, Camera, Loader2, Laptop } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
@@ -23,6 +23,7 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
   const logout = useAuthStore((state) => state.logout);
   const openProfileModal = useUIStore((state) => state.openProfileModal);
   const openSettingsModal = useUIStore((state) => state.openSettingsModal);
+  const openSessionsModal = useUIStore((state) => state.openSessionsModal);
   const showToast = useUIStore((state) => state.showToast);
   const triggerLogoutSplash = useSplashStore((state) => state.triggerLogoutSplash);
 
@@ -214,6 +215,20 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
                   <Settings className="w-4 h-4" />
                 </div>
                 <span>Preferences & Shortcuts</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  openSessionsModal();
+                }}
+                className="w-full p-3 rounded-2xl hover:bg-slate-100 flex items-center gap-3 text-sm font-medium text-slate-800 transition-colors cursor-pointer text-left"
+              >
+                <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                  <Laptop className="w-4 h-4" />
+                </div>
+                <span>Active Sessions & Devices</span>
               </button>
             </div>
 

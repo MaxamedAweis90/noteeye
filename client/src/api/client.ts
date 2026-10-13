@@ -104,8 +104,12 @@ apiClient.interceptors.response.use(
       // Don't auto-redirect or clear if it's a failed login attempt
       if (!url.includes('/auth/login') && !url.includes('/auth/register')) {
         try {
+          const message = error.response?.data?.message || '';
+          const isRevoked = typeof message === 'string' && message.toLowerCase().includes('revoked');
           localStorage.removeItem('noteeye_auth_token');
-          window.dispatchEvent(new CustomEvent('noteeye:unauthorized'));
+          window.dispatchEvent(
+            new CustomEvent('noteeye:unauthorized', { detail: { isRevoked, message } })
+          );
         } catch {
           // Ignore
         }

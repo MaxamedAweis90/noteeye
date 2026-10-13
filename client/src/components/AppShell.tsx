@@ -7,6 +7,7 @@ import { NoteModal } from './NoteModal';
 import { FolderModal, QuickEditModal, DeleteDialog, ConflictDialog } from './modals';
 import { ProfileModal } from './profile/ProfileModal';
 import { SettingsModal } from './settings/SettingsModal';
+import { SessionsModal } from './settings/SessionsModal';
 import { ContextMenu } from './ContextMenu';
 import { DetailsPanel } from './DetailsPanel';
 import { MobileBottomNav } from './MobileBottomNav';
@@ -331,6 +332,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       <ConflictDialog />
       <ProfileModal />
       <SettingsModal />
+      <SessionsModal />
 
       {/* Mobile Bottom Navigation Bar (< 768px) */}
       <MobileBottomNav />

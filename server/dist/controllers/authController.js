@@ -1,8 +1,10 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
+import { Session } from '../models/Session.js';
 import { Note } from '../models/Note.js';
 import { Folder } from '../models/Folder.js';
+import { hashToken, getClientIp, parseUserAgent } from '../utils/userAgent.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-noteeye-2026';
 /**
  * Seed initial user if not already existing
@@ -62,6 +64,24 @@ export const register = async (req, res, next) => {
         const token = jwt.sign({ id: user._id.toString(), email: user.email }, JWT_SECRET, {
             expiresIn: '30d',
         });
+        // Record initial active session in MongoDB
+        try {
+            const tokenHash = hashToken(token);
+            const ipAddress = getClientIp(req);
+            const { deviceType, browserName, osName } = parseUserAgent(req.headers['user-agent']);
+            await Session.create({
+                userId: user._id,
+                tokenHash,
+                ipAddress,
+                deviceType,
+                browserName,
+                osName,
+                lastActiveAt: new Date(),
+            });
+        }
+        catch (sessionErr) {
+            console.warn('[authController] Failed to record registration session:', sessionErr?.message);
+        }
         res.status(201).json({
             message: 'Account created successfully',
             token,
@@ -96,6 +116,24 @@ export const login = async (req, res, next) => {
         const token = jwt.sign({ id: user._id.toString(), email: user.email }, JWT_SECRET, {
             expiresIn: '30d',
         });
+        // Record new active login session in MongoDB
+        try {
+            const tokenHash = hashToken(token);
+            const ipAddress = getClientIp(req);
+            const { deviceType, browserName, osName } = parseUserAgent(req.headers['user-agent']);
+            await Session.create({
+                userId: user._id,
+                tokenHash,
+                ipAddress,
+                deviceType,
+                browserName,
+                osName,
+                lastActiveAt: new Date(),
+            });
+        }
+        catch (sessionErr) {
+            console.warn('[authController] Failed to record login session:', sessionErr?.message);
+        }
         res.status(200).json({
             message: 'Welcome back to Noteeye',
             token,

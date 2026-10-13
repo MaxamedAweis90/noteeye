@@ -88,6 +88,13 @@ export const Settings: React.FC = () => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setNotificationPermission(Notification.permission);
     }
+    if (typeof window !== 'undefined' && window.location.hash === '#sessions') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('active-sessions');
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
   }, [fetchProfile]);
 
   useEffect(() => {

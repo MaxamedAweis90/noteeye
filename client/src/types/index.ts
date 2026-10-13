@@ -145,4 +145,16 @@ export interface UserProfile {
   updatedAt?: string;
 }
 
+export interface UserSession {
+  id: string;
+  deviceType: 'desktop' | 'mobile' | 'tablet' | string;
+  browserName: string;
+  osName: string;
+  ipAddress: string;
+  lastActiveAt: string;
+  createdAt: string;
+  isCurrent: boolean;
+  isMainDevice?: boolean;
+}
+
 
