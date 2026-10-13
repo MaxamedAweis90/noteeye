@@ -1,13 +1,27 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useSyncStore } from '../store/syncStore';
+import { addToOutbox } from '../lib/offlineDb';
 
 const isWrite = (method?: string) =>
   !!method && ['post', 'put', 'patch', 'delete'].includes(method.toLowerCase());
 const isTracked = (config?: { method?: string; url?: string }) =>
   isWrite(config?.method) && !(config?.url || '').includes('/auth/');
 
-const RAW_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-export const BASE_URL = RAW_URL.endsWith('/') ? RAW_URL.slice(0, -1) : RAW_URL;
+export const getBaseUrl = (): string => {
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1'
+  ) {
+    // In production on Vercel, use same-origin /api (Vercel rewrites proxy to noteeye-server)
+    // This avoids cross-domain CORS preflight drops and 3rd-party cookie/header restrictions on mobile devices
+    return `${window.location.origin}/api`;
+  }
+  const raw = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  return raw.endsWith('/') ? raw.slice(0, -1) : raw;
+};
+
+export const BASE_URL = getBaseUrl();
 
 export const APP_URL =
   import.meta.env.VITE_APP_URL ||
@@ -28,7 +42,7 @@ export const apiClient = axios.create({
   timeout: 15000,
 });
 
-// Request Interceptor: Attach bearer token if present in localStorage
+// Request Interceptor: Attach bearer token and idempotency key
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     try {
@@ -39,6 +53,16 @@ apiClient.interceptors.request.use(
     } catch {
       // Ignore localStorage access issues in restricted environments
     }
+
+    // Attach Idempotency-Key on mutating requests
+    if (isWrite(config.method) && config.headers && !config.headers.get('Idempotency-Key')) {
+      const key =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `idemp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+      config.headers.set('Idempotency-Key', key);
+    }
+
     if (isTracked(config)) useSyncStore.getState().beginWrite();
     return config;
   },
@@ -53,9 +77,27 @@ apiClient.interceptors.response.use(
   },
   (error: AxiosError<{ message?: string }>) => {
     if (isTracked(error.config)) {
+      const isNetworkIssue =
+        (typeof navigator !== 'undefined' && !navigator.onLine) ||
+        !error.response ||
+        error.code === 'ERR_NETWORK';
+
+      if (isNetworkIssue && error.config) {
+        addToOutbox({
+          endpoint: error.config.url || '',
+          method: (error.config.method?.toUpperCase() || 'POST') as any,
+          payload: error.config.data
+            ? typeof error.config.data === 'string'
+              ? JSON.parse(error.config.data)
+              : error.config.data
+            : undefined,
+          type: 'MUTATION',
+        }).catch(() => null);
+      }
+
       useSyncStore
         .getState()
-        .endWrite(false, error.response?.data?.message || error.message);
+        .endWrite(false, error.response?.data?.message || (isNetworkIssue ? 'Saved offline. Will sync when reconnected.' : error.message));
     }
     if (error.response?.status === 401) {
       const url = error.config?.url || '';

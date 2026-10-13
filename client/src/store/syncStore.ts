@@ -12,14 +12,22 @@ interface SyncState {
   endWrite: (ok: boolean, error?: string) => void;
   markPulled: () => void;
   markPullFailed: (error: string) => void;
+  resetToIdle: () => void;
 }
 
-// A write failed during the current batch of requests, or a failed write is unresolved
 let writeFailure: string | null = null;
+let dismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+const clearDismissTimer = () => {
+  if (dismissTimer) {
+    clearTimeout(dismissTimer);
+    dismissTimer = null;
+  }
+};
 
 /**
- * Tracks whether the user's changes have been confirmed by the database.
- * Fed by axios interceptors (writes) and the TanStack Query workspace poller (reads).
+ * Tracks whether the user's changes have been confirmed by MongoDB.
+ * Features automatic 2.5-second dismissal from 'saved' back to 'idle'.
  */
 export const useSyncStore = create<SyncState>((set, get) => ({
   pending: 0,
@@ -27,18 +35,31 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   lastSyncedAt: null,
   error: null,
 
-  beginWrite: () => set((s) => ({ pending: s.pending + 1, status: 'saving', error: null })),
+  beginWrite: () => {
+    clearDismissTimer();
+    set((s) => ({ pending: s.pending + 1, status: 'saving', error: null }));
+  },
 
   endWrite: (ok, error) => {
     if (!ok) writeFailure = error || 'Failed to save changes';
     set((s) => {
       const pending = Math.max(0, s.pending - 1);
       if (pending > 0) return { pending };
+
       if (writeFailure) {
         const msg = writeFailure;
         writeFailure = null;
         return { pending, status: 'error', error: msg };
       }
+
+      // Schedule auto-dismiss to 'idle' after 2500ms
+      clearDismissTimer();
+      dismissTimer = setTimeout(() => {
+        if (get().status === 'saved' && get().pending === 0) {
+          set({ status: 'idle' });
+        }
+      }, 2500);
+
       return { pending, status: 'saved', lastSyncedAt: Date.now(), error: null };
     });
   },
@@ -46,9 +67,25 @@ export const useSyncStore = create<SyncState>((set, get) => ({
   markPulled: () => {
     const s = get();
     if (s.pending > 0) return;
-    // A failed save must stay visible until the next successful write
+    // Do not overwrite an active write error with a routine pull result
     if (s.status === 'error' && s.error && !s.error.startsWith('Sync')) return;
-    set({ lastSyncedAt: Date.now(), status: 'saved', error: null });
+
+    // Background pull only updates timestamp; doesn't force a visible 'saved' popup if idle
+    if (s.status === 'idle') {
+      set({ lastSyncedAt: Date.now(), error: null });
+      return;
+    }
+
+    if (s.status === 'offline' || s.status === 'error') {
+      // Reconnected and pull succeeded
+      clearDismissTimer();
+      dismissTimer = setTimeout(() => {
+        if (get().status === 'saved' && get().pending === 0) {
+          set({ status: 'idle' });
+        }
+      }, 2500);
+      set({ status: 'saved', lastSyncedAt: Date.now(), error: null });
+    }
   },
 
   markPullFailed: (error) => {
@@ -56,6 +93,12 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     if (s.pending > 0) return;
     if (s.status === 'error' && s.error && !s.error.startsWith('Sync')) return;
     const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+    clearDismissTimer();
     set({ status: offline ? 'offline' : 'error', error: `Sync failed · ${error}` });
+  },
+
+  resetToIdle: () => {
+    clearDismissTimer();
+    set({ status: 'idle' });
   },
 }));

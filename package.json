@@ -2,7 +2,9 @@
   "name": "noteeye",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
+    "predev": "node scripts/predev.js",
     "dev": "pnpm -r --parallel dev",
     "dev:client": "pnpm --filter client dev",
     "dev:server": "pnpm --filter noteeye-server dev",
