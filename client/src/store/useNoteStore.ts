@@ -340,12 +340,15 @@ export const useNoteStore = create<NoteStoreState>()(
 
           const nextItems = [...mergedItems, ...pendingItems];
           const cur = useNoteStore.getState();
-          // Only touch state when MongoDB data differs from what we already show
-          if (
+          // Only touch state when MongoDB data differs from what we already show (incoming changes from another device/browser)
+          const hasChanges =
             JSON.stringify(nextItems) !== JSON.stringify(cur.items) ||
-            JSON.stringify(normalizedFolders) !== JSON.stringify(cur.folders)
-          ) {
+            JSON.stringify(normalizedFolders) !== JSON.stringify(cur.folders);
+
+          if (hasChanges) {
+            useSyncStore.getState().startReceivingChanges();
             set({ items: nextItems, folders: normalizedFolders });
+            useSyncStore.getState().finishReceivingChanges();
           }
         } catch (err: any) {
           console.warn('[useNoteStore] fetchWorkspaceData error:', err.message);

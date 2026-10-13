@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 
-export type SyncStatus = 'idle' | 'saving' | 'saved' | 'error' | 'offline';
+export type SyncStatus =
+  | 'idle'
+  | 'saving'
+  | 'saved'
+  | 'loading_changes'
+  | 'loaded_changes'
+  | 'error'
+  | 'offline';
 
 interface SyncState {
   /** Number of write requests (POST/PUT/PATCH/DELETE) currently in flight to MongoDB */
@@ -10,6 +17,8 @@ interface SyncState {
   error: string | null;
   beginWrite: () => void;
   endWrite: (ok: boolean, error?: string) => void;
+  startReceivingChanges: () => void;
+  finishReceivingChanges: () => void;
   markPulled: () => void;
   markPullFailed: (error: string) => void;
   resetToIdle: () => void;
@@ -27,7 +36,7 @@ const clearDismissTimer = () => {
 
 /**
  * Tracks whether the user's changes have been confirmed by MongoDB.
- * Features automatic 2.5-second dismissal from 'saved' back to 'idle'.
+ * Features automatic 2.5-second dismissal from 'saved' / 'loaded_changes' back to 'idle'.
  */
 export const useSyncStore = create<SyncState>((set, get) => ({
   pending: 0,
@@ -64,6 +73,23 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     });
   },
 
+  startReceivingChanges: () => {
+    if (get().pending > 0) return;
+    clearDismissTimer();
+    set({ status: 'loading_changes', error: null });
+  },
+
+  finishReceivingChanges: () => {
+    if (get().pending > 0) return;
+    clearDismissTimer();
+    set({ status: 'loaded_changes', lastSyncedAt: Date.now(), error: null });
+    dismissTimer = setTimeout(() => {
+      if (get().status === 'loaded_changes' && get().pending === 0) {
+        set({ status: 'idle' });
+      }
+    }, 2500);
+  },
+
   markPulled: () => {
     const s = get();
     if (s.pending > 0) return;
@@ -80,7 +106,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
       // Reconnected and pull succeeded
       clearDismissTimer();
       dismissTimer = setTimeout(() => {
-        if (get().status === 'saved' && get().pending === 0) {
+        if ((get().status === 'saved' || get().status === 'loaded_changes') && get().pending === 0) {
           set({ status: 'idle' });
         }
       }, 2500);

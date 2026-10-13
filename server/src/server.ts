@@ -33,7 +33,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   );
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token, X-Api-Version'
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-CSRF-Token, X-Api-Version, Idempotency-Key, idempotency-key, *'
   );
   res.setHeader('Access-Control-Max-Age', '86400');
 
@@ -59,6 +59,8 @@ app.use(
       'Authorization',
       'X-CSRF-Token',
       'X-Api-Version',
+      'Idempotency-Key',
+      'idempotency-key',
     ],
   })
 );

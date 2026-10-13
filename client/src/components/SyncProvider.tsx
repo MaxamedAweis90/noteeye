@@ -110,7 +110,7 @@ const WorkspaceSync: React.FC = () => {
   return null;
 };
 
-/** Small animated pill telling the user when changes are saving and saved, then self-hiding. */
+/** Small animated pill telling the user when changes are saving, saved, or incoming from other devices, then self-hiding. */
 export const SyncIndicator: React.FC = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const status = useSyncStore((s) => s.status);
@@ -118,39 +118,70 @@ export const SyncIndicator: React.FC = () => {
 
   if (!isAuthenticated) return null;
 
-  const isVisible = status === 'saving' || status === 'saved' || status === 'error' || status === 'offline';
+  const isVisible =
+    status === 'saving' ||
+    status === 'saved' ||
+    status === 'loading_changes' ||
+    status === 'loaded_changes' ||
+    status === 'error' ||
+    status === 'offline';
+
+  const configMap: Record<
+    string,
+    { icon: React.ReactNode; text: string; cls: string }
+  > = {
+    saving: {
+      icon: <Loader2 size={13} className="animate-spin shrink-0 text-[#0B57D0]" />,
+      text: 'Saving...',
+      cls: 'bg-[#E8F0FE] text-[#0B57D0] border-blue-200/70',
+    },
+    saved: {
+      icon: <Check size={13} className="shrink-0 text-[#137333]" />,
+      text: 'Saved',
+      cls: 'bg-[#E6F4EA] text-[#137333] border-emerald-200/70',
+    },
+    loading_changes: {
+      icon: <Loader2 size={13} className="animate-spin shrink-0 text-indigo-600" />,
+      text: 'Loading changes...',
+      cls: 'bg-indigo-50 text-indigo-700 border-indigo-200/70',
+    },
+    loaded_changes: {
+      icon: <Check size={13} className="shrink-0 text-emerald-600" />,
+      text: 'Loaded changes',
+      cls: 'bg-emerald-50 text-emerald-700 border-emerald-200/70',
+    },
+    error: {
+      icon: <TriangleAlert size={13} className="shrink-0 text-[#B3261E]" />,
+      text: error?.startsWith('Sync') ? error : `Not saved · ${error || 'Retry'}`,
+      cls: 'bg-[#FCE8E6] text-[#B3261E] border-rose-200/70',
+    },
+    offline: {
+      icon: <CloudOff size={13} className="shrink-0 text-[#B06000]" />,
+      text: 'Offline · Changes queued',
+      cls: 'bg-[#FEF7E0] text-[#B06000] border-amber-200/70',
+    },
+  };
+
+  const cfg = configMap[status];
 
   return (
-    <div className="fixed bottom-20 md:bottom-5 right-5 z-40 pointer-events-none" aria-live="polite" id="sync-indicator">
+    <div
+      className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+      aria-live="polite"
+      id="sync-indicator"
+    >
       <AnimatePresence mode="wait">
-        {isVisible && (
+        {isVisible && cfg && (
           <motion.div
             key={status}
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            initial={{ opacity: 0, y: 16, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.95 }}
+            exit={{ opacity: 0, y: 16, scale: 0.92 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium shadow-md border border-black/5 select-none ${
-              status === 'saving'
-                ? 'bg-[#E8F0FE] text-[#0B57D0]'
-                : status === 'saved'
-                ? 'bg-[#E6F4EA] text-[#137333]'
-                : status === 'error'
-                ? 'bg-[#FCE8E6] text-[#B3261E]'
-                : 'bg-[#FEF7E0] text-[#B06000]'
-            }`}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium shadow-lg border backdrop-blur-xs select-none ${cfg.cls}`}
           >
-            {status === 'saving' && <Loader2 size={13} className="animate-spin shrink-0 text-[#0B57D0]" />}
-            {status === 'saved' && <Check size={13} className="shrink-0 text-[#137333]" />}
-            {status === 'error' && <TriangleAlert size={13} className="shrink-0 text-[#B3261E]" />}
-            {status === 'offline' && <CloudOff size={13} className="shrink-0 text-[#B06000]" />}
-
-            <span className="truncate">
-              {status === 'saving' && 'Saving...'}
-              {status === 'saved' && 'Saved'}
-              {status === 'error' && (error?.startsWith('Sync') ? error : `Not saved · ${error || 'Retry'}`)}
-              {status === 'offline' && 'Offline · Changes queued'}
-            </span>
+            {cfg.icon}
+            <span className="truncate max-w-[70vw]">{cfg.text}</span>
           </motion.div>
         )}
       </AnimatePresence>

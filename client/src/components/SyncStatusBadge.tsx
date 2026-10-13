@@ -59,10 +59,12 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
 
   const isSaving = status === 'saving' || pending > 0 || isManualSyncing;
   const isSaved = status === 'saved' && !isSaving;
+  const isLoadingChanges = status === 'loading_changes' && !isSaving;
+  const isLoadedChanges = status === 'loaded_changes' && !isSaving;
   const isError = status === 'error' && !isSaving;
   const isOffline = status === 'offline' && !isSaving;
 
-  const isVisible = isSaving || isSaved || isError || isOffline;
+  const isVisible = isSaving || isSaved || isLoadingChanges || isLoadedChanges || isError || isOffline;
 
   return (
     <AnimatePresence>
@@ -80,6 +82,10 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
               ? 'Saving changes to MongoDB cloud...'
               : isSaved
               ? 'All changes saved to cloud.'
+              : isLoadingChanges
+              ? 'Receiving changes from another device...'
+              : isLoadedChanges
+              ? 'Updated with latest changes from cloud.'
               : isError
               ? `Save failed: ${error || 'Unknown error'}. Click to retry.`
               : 'You are offline. Changes will sync once reconnected.'
@@ -89,6 +95,8 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
             'group inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all select-none cursor-pointer border shadow-2xs hover:shadow-xs active:scale-95',
             isSaving && 'bg-blue-50 text-[#0B57D0] border-blue-200/70',
             isSaved && 'bg-emerald-50 text-emerald-700 border-emerald-200/70',
+            isLoadingChanges && 'bg-indigo-50 text-indigo-700 border-indigo-200/70',
+            isLoadedChanges && 'bg-emerald-50 text-emerald-700 border-emerald-200/70',
             isError && 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200/80',
             isOffline && 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200/80',
             className
@@ -103,6 +111,16 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({
             <div className="flex items-center gap-1.5">
               <Check className="w-3 h-3 text-emerald-600 shrink-0" />
               <span className={cn('truncate', showIconOnlyOnMobile && 'hidden sm:inline')}>Saved</span>
+            </div>
+          ) : isLoadingChanges ? (
+            <div className="flex items-center gap-1.5">
+              <Loader2 className="w-3 h-3 animate-spin text-indigo-600 shrink-0" />
+              <span className={cn('truncate', showIconOnlyOnMobile && 'hidden sm:inline')}>Loading changes...</span>
+            </div>
+          ) : isLoadedChanges ? (
+            <div className="flex items-center gap-1.5">
+              <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span className={cn('truncate', showIconOnlyOnMobile && 'hidden sm:inline')}>Loaded changes</span>
             </div>
           ) : isError ? (
             <div className="flex items-center gap-1.5">
