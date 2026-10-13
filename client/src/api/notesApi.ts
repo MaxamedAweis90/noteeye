@@ -1,5 +1,13 @@
 import apiClient from './client';
 import type { Note } from '../types';
+import { colorKeyToHex, hexToColorKey, PASTEL_PALETTE } from '../types';
+
+/** Server stores palette keys ('mint'); the UI renders hex values. */
+const fromServer = (n: Note): Note => (n && n.color ? { ...n, color: colorKeyToHex(n.color) } : n);
+const toServerColor = (c: string): string =>
+  PASTEL_PALETTE.some((p) => p.key === c) ? c : hexToColorKey(c);
+const toServer = <T extends Partial<Note>>(p: T): T =>
+  p && typeof p.color === 'string' ? { ...p, color: toServerColor(p.color) } : p;
 
 export interface GetNotesParams {
   folderId?: string | null;
@@ -18,7 +26,7 @@ export const notesApi = {
     const response = await apiClient.get<{ notes: Note[]; total: number }>('/notes', {
       params,
     });
-    return response.data.notes;
+    return response.data.notes.map(fromServer);
   },
 
   /**
@@ -26,23 +34,23 @@ export const notesApi = {
    */
   async getById(id: string): Promise<Note> {
     const response = await apiClient.get<{ note: Note }>(`/notes/${id}`);
-    return response.data.note;
+    return fromServer(response.data.note);
   },
 
   /**
    * Create a new note or checklist
    */
   async create(payload: Partial<Note>): Promise<Note> {
-    const response = await apiClient.post<{ note: Note }>('/notes', payload);
-    return response.data.note;
+    const response = await apiClient.post<{ note: Note }>('/notes', toServer(payload));
+    return fromServer(response.data.note);
   },
 
   /**
    * Partially update a note
    */
   async update(id: string, updates: Partial<Note>): Promise<Note> {
-    const response = await apiClient.patch<{ note: Note }>(`/notes/${id}`, updates);
-    return response.data.note;
+    const response = await apiClient.patch<{ note: Note }>(`/notes/${id}`, toServer(updates));
+    return fromServer(response.data.note);
   },
 
   /**
@@ -50,7 +58,7 @@ export const notesApi = {
    */
   async softDelete(id: string): Promise<Note> {
     const response = await apiClient.patch<{ note: Note }>(`/notes/${id}/trash`);
-    return response.data.note;
+    return fromServer(response.data.note);
   },
 
   /**
@@ -58,7 +66,7 @@ export const notesApi = {
    */
   async restore(id: string): Promise<Note> {
     const response = await apiClient.patch<{ note: Note }>(`/notes/${id}/restore`);
-    return response.data.note;
+    return fromServer(response.data.note);
   },
 
   /**
@@ -84,7 +92,7 @@ export const notesApi = {
     const response = await apiClient.post<{ note: Note }>(`/notes/${id}/duplicate`, {
       destinationFolderId,
     });
-    return response.data.note;
+    return fromServer(response.data.note);
   },
 };
 

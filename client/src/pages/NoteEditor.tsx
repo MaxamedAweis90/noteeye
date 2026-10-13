@@ -25,7 +25,8 @@ import {
 import { format } from "date-fns";
 import { useNoteStore } from "../store/useNoteStore";
 import { useUIStore } from "../store/uiStore";
-import { DEFAULT_PASTEL_COLOR } from "../types";
+import { useUserStore } from "../store/userStore";
+import { DEFAULT_PASTEL_COLOR, colorKeyToHex } from "../types";
 import type { ItemType, ChecklistItem } from "../types";
 import { Table as TableIcon } from "lucide-react";
 import { cn } from "../utils/cn";
@@ -190,7 +191,13 @@ export const NoteEditor: React.FC = () => {
         editorRef.current.innerHTML = "";
       }
       setChecklistItems([]);
-      setColor(paramType === "checklist" ? "#CEEBFD" : DEFAULT_PASTEL_COLOR);
+      const prefKey = useUserStore.getState().user.settings?.defaultNoteColor;
+      const prefHex = prefKey ? colorKeyToHex(prefKey) : DEFAULT_PASTEL_COLOR;
+      setColor(
+        paramType === "checklist" && (!prefKey || prefKey === "peach")
+          ? "#CEEBFD"
+          : prefHex,
+      );
       setFolderId(paramFolder);
       setIsFavorite(false);
       setSaveStatus("saved");

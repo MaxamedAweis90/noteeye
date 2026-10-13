@@ -4,6 +4,23 @@ import { Note } from '../models/Note.js';
 import { Folder } from '../models/Folder.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 
+const COLOR_KEYS = ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'];
+const HEX_TO_KEY: Record<string, string> = {
+  '#fde3c9': 'peach',
+  '#c7f3de': 'mint',
+  '#ceebfd': 'sky',
+  '#e5defa': 'lavender',
+  '#fcddec': 'rose',
+  '#fef3c7': 'yellow',
+};
+/** Accepts a palette key or its hex value; returns a valid key or null */
+const normalizeColor = (c: unknown): string | null => {
+  if (typeof c !== 'string') return null;
+  const v = c.trim().toLowerCase();
+  if (COLOR_KEYS.includes(v)) return v;
+  return HEX_TO_KEY[v] || null;
+};
+
 /**
  * Get notes with optional filters (strictly scoped to authenticated user)
  * GET /api/notes
@@ -57,8 +74,9 @@ export const getNotes = async (
     }
 
     // Filter by pastel color
-    if (color && ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(color as string)) {
-      filter.color = color;
+    const queryColor = normalizeColor(color);
+    if (queryColor) {
+      filter.color = queryColor;
     }
 
     // Filter by text search query
@@ -180,9 +198,7 @@ export const createNote = async (
             completed: Boolean(ci.completed ?? ci.isCompleted),
           }))
         : [],
-      color: ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(color)
-        ? color
-        : 'peach',
+      color: normalizeColor(color) || 'peach',
       folderId: resolvedFolderId,
       isFavorite: Boolean(isFavorite),
       isTrash: false,
@@ -248,8 +264,9 @@ export const updateNote = async (
       }));
     }
 
-    if (color !== undefined && ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(color)) {
-      updates.color = color;
+    const normalizedColor = color !== undefined ? normalizeColor(color) : null;
+    if (normalizedColor) {
+      updates.color = normalizedColor;
     }
 
     if (folderId !== undefined) {

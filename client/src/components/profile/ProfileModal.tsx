@@ -14,6 +14,7 @@ import {
   FileText,
   Folder as FolderIcon,
   Calendar,
+  RotateCcw,
 } from 'lucide-react';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
@@ -44,11 +45,14 @@ export const ProfileModal: React.FC = () => {
   const authStats = useAuthStore((state) => state.stats);
   const setStats = useAuthStore((state) => state.setStats);
 
-  // Form states
+  // Form states (local draft — nothing is persisted until Save)
   const [name, setName] = useState(user.name || '');
   const [email, setEmail] = useState(user.email || '');
   const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber || '');
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  // Avatar draft: pending new image (data URL, NOT uploaded yet) or pending removal
+  const [avatarDraft, setAvatarDraft] = useState<
+    { kind: 'new'; dataUrl: string; filename: string } | { kind: 'removed' } | null
+  >(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Verification flow state
@@ -60,13 +64,20 @@ export const ProfileModal: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync state when modal opens or user updates
+  const resetDraft = () => {
+    const u = useUserStore.getState().user;
+    setName(u.name || '');
+    setEmail(u.email || '');
+    setPhoneNumber(u.phoneNumber || '');
+    setAvatarDraft(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Initialise the draft ONLY when the modal opens (background syncs must not clobber edits)
   useEffect(() => {
     if (isProfileOpen) {
-      fetchProfile();
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setPhoneNumber(user.phoneNumber || '');
+      fetchProfile().then(resetDraft).catch(() => {});
+      resetDraft();
       setIsVerifying(false);
       setVerificationCode('');
       setCodeHint(null);
@@ -76,18 +87,34 @@ export const ProfileModal: React.FC = () => {
         if (res?.stats) setStats(res.stats);
       }).catch(() => {});
     }
-  }, [isProfileOpen, user.name, user.email, user.phoneNumber, fetchProfile, setStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProfileOpen]);
+
+  const isDirty =
+    name.trim() !== (user.name || '') ||
+    email.trim() !== (user.email || '') ||
+    phoneNumber.trim() !== (user.phoneNumber || '') ||
+    avatarDraft !== null;
+
+  const requestClose = () => {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard them?')) return;
+    resetDraft();
+    closeProfileModal();
+  };
 
   // Escape key closes modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isProfileOpen) {
-        closeProfileModal();
+        requestClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isProfileOpen, closeProfileModal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isProfileOpen, isDirty]);
+
+
 
   if (!isProfileOpen) return null;
 
@@ -100,7 +127,7 @@ export const ProfileModal: React.FC = () => {
     return (text || '').slice(0, 2).toUpperCase() || 'UG';
   };
 
-  // Handle avatar file selection
+  // Avatar selection only stages a local preview — no upload until Save
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -115,33 +142,21 @@ export const ProfileModal: React.FC = () => {
       return;
     }
 
-    setIsUploadingAvatar(true);
     const reader = new FileReader();
-    reader.onload = async () => {
-      const dataUrl = reader.result as string;
-      const success = await uploadAvatar(dataUrl, file.name);
-      setIsUploadingAvatar(false);
-      if (success) {
-        showToast('Avatar updated');
-      } else {
-        showToast('Failed to upload avatar');
-      }
+    reader.onload = () => {
+      setAvatarDraft({ kind: 'new', dataUrl: reader.result as string, filename: file.name });
     };
-    reader.onerror = () => {
-      setIsUploadingAvatar(false);
-      showToast('Error reading image file');
-    };
+    reader.onerror = () => showToast('Error reading image file');
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveAvatar = async () => {
-    setIsUploadingAvatar(true);
-    const success = await updateProfile({ avatarUrl: '' });
-    setIsUploadingAvatar(false);
-    if (success) {
-      showToast('Avatar removed');
-    }
+  const handleRemoveAvatar = () => {
+    setAvatarDraft({ kind: 'removed' });
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const avatarPreview =
+    avatarDraft?.kind === 'new' ? avatarDraft.dataUrl : avatarDraft?.kind === 'removed' ? '' : user.avatarUrl;
 
   // Trigger sending verification code
   const handleSendCode = async () => {
@@ -176,19 +191,38 @@ export const ProfileModal: React.FC = () => {
     }
   };
 
-  // Save general profile details
+  // Persist the draft: avatar goes to Vercel Blob only now, then text fields
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isDirty || isSaving) return;
     setIsSaving(true);
 
-    const success = await updateProfile({
-      name: name.trim(),
-      email: email.trim(),
-      phoneNumber: phoneNumber.trim(),
-    });
+    let ok = true;
+
+    if (avatarDraft?.kind === 'new') {
+      ok = await uploadAvatar(avatarDraft.dataUrl, avatarDraft.filename);
+      if (ok) setAvatarDraft(null);
+    }
+
+    const fieldsChanged =
+      name.trim() !== (user.name || '') ||
+      email.trim() !== (user.email || '') ||
+      phoneNumber.trim() !== (user.phoneNumber || '') ||
+      avatarDraft?.kind === 'removed';
+
+    if (ok && fieldsChanged) {
+      ok = await updateProfile({
+        name: name.trim(),
+        email: email.trim(),
+        phoneNumber: phoneNumber.trim(),
+        ...(avatarDraft?.kind === 'removed' ? { avatarUrl: '' } : {}),
+      });
+    }
 
     setIsSaving(false);
-    if (success) {
+    if (ok) {
+      setAvatarDraft(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       showToast('Profile saved');
     } else {
       showToast('Error saving profile changes');
@@ -218,7 +252,7 @@ export const ProfileModal: React.FC = () => {
           {/* Top-Left: Close X Button */}
           <button
             type="button"
-            onClick={closeProfileModal}
+            onClick={requestClose}
             className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
             aria-label="Close Profile screen"
             title="Close (Esc)"
@@ -244,9 +278,9 @@ export const ProfileModal: React.FC = () => {
             <div className="flex items-center gap-5">
               <div className="relative group shrink-0">
                 <div className="w-20 h-20 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-slate-100 text-slate-700 font-semibold text-xl select-none">
-                  {user.avatarUrl ? (
+                  {avatarPreview ? (
                     <img
-                      src={user.avatarUrl}
+                      src={avatarPreview}
                       alt={user.name}
                       className="w-full h-full object-cover"
                     />
@@ -255,7 +289,7 @@ export const ProfileModal: React.FC = () => {
                   )}
                 </div>
 
-                {isUploadingAvatar && (
+                {isSaving && avatarDraft?.kind === 'new' && (
                   <div className="absolute inset-0 rounded-full bg-black/30 backdrop-blur-xs flex items-center justify-center text-white">
                     <Loader2 className="w-5 h-5 animate-spin" />
                   </div>
@@ -270,7 +304,11 @@ export const ProfileModal: React.FC = () => {
                   {user.email || 'No email provided'}
                 </span>
                 <span className="text-[11px] text-slate-400 mt-0.5">
-                  Vercel Blob cloud storage
+                  {avatarDraft?.kind === 'new'
+                    ? 'New image selected — click Save Changes to upload'
+                    : avatarDraft?.kind === 'removed'
+                    ? 'Avatar will be removed when you save'
+                    : 'Vercel Blob cloud storage'}
                 </span>
               </div>
             </div>
@@ -286,18 +324,18 @@ export const ProfileModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAvatar}
+                disabled={isSaving}
                 className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer border border-slate-200/60 disabled:opacity-50"
               >
                 <Camera className="w-3.5 h-3.5" />
                 <span>Upload new image</span>
               </button>
 
-              {user.avatarUrl && (
+              {avatarPreview && (
                 <button
                   type="button"
                   onClick={handleRemoveAvatar}
-                  disabled={isUploadingAvatar}
+                  disabled={isSaving}
                   className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-transparent hover:border-rose-200"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -446,17 +484,22 @@ export const ProfileModal: React.FC = () => {
 
             {/* Actions */}
             <div className="flex items-center justify-end gap-2.5 pt-2">
+              <span className="mr-auto text-[11px] text-slate-400">
+                {isDirty ? 'You have unsaved changes' : 'All changes saved'}
+              </span>
               <button
                 type="button"
-                onClick={closeProfileModal}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                onClick={resetDraft}
+                disabled={!isDirty || isSaving}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
               >
-                Cancel
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Discard</span>
               </button>
               <button
                 type="submit"
-                disabled={isSaving}
-                className="px-5 py-2 rounded-xl bg-[#1F1F1F] text-white hover:bg-black text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs disabled:opacity-60"
+                disabled={!isDirty || isSaving}
+                className="px-5 py-2 rounded-xl bg-[#1F1F1F] text-white hover:bg-black text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
               >
                 {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>Save Changes</span>

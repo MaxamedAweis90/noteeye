@@ -269,7 +269,7 @@ export const updateSettings = async (req, res, next) => {
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        const { shortcutsEnabled, modifierKey, customShortcuts, notificationsEnabled, dailyReminderEnabled, dailyReminderTime, soundEffectsEnabled, } = req.body;
+        const { shortcutsEnabled, modifierKey, customShortcuts, notificationsEnabled, dailyReminderEnabled, dailyReminderTime, soundEffectsEnabled, defaultNoteColor, defaultNoteType, } = req.body;
         user.settings = {
             shortcutsEnabled: shortcutsEnabled !== undefined ? Boolean(shortcutsEnabled) : user.settings.shortcutsEnabled,
             modifierKey: modifierKey || user.settings.modifierKey || 'ctrl',
@@ -287,6 +287,13 @@ export const updateSettings = async (req, res, next) => {
             soundEffectsEnabled: soundEffectsEnabled !== undefined
                 ? Boolean(soundEffectsEnabled)
                 : user.settings.soundEffectsEnabled,
+            defaultNoteColor: typeof defaultNoteColor === 'string' &&
+                ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(defaultNoteColor)
+                ? defaultNoteColor
+                : user.settings.defaultNoteColor || 'peach',
+            defaultNoteType: defaultNoteType === 'note' || defaultNoteType === 'checklist'
+                ? defaultNoteType
+                : user.settings.defaultNoteType || 'note',
         };
         await user.save();
         res.status(200).json({

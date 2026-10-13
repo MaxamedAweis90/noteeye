@@ -1,6 +1,24 @@
 import mongoose from 'mongoose';
 import { Note } from '../models/Note.js';
 import { Folder } from '../models/Folder.js';
+const COLOR_KEYS = ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'];
+const HEX_TO_KEY = {
+    '#fde3c9': 'peach',
+    '#c7f3de': 'mint',
+    '#ceebfd': 'sky',
+    '#e5defa': 'lavender',
+    '#fcddec': 'rose',
+    '#fef3c7': 'yellow',
+};
+/** Accepts a palette key or its hex value; returns a valid key or null */
+const normalizeColor = (c) => {
+    if (typeof c !== 'string')
+        return null;
+    const v = c.trim().toLowerCase();
+    if (COLOR_KEYS.includes(v))
+        return v;
+    return HEX_TO_KEY[v] || null;
+};
 /**
  * Get notes with optional filters (strictly scoped to authenticated user)
  * GET /api/notes
@@ -48,8 +66,9 @@ export const getNotes = async (req, res, next) => {
             filter.type = type;
         }
         // Filter by pastel color
-        if (color && ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(color)) {
-            filter.color = color;
+        const queryColor = normalizeColor(color);
+        if (queryColor) {
+            filter.color = queryColor;
         }
         // Filter by text search query
         if (q && typeof q === 'string' && q.trim()) {
@@ -139,9 +158,7 @@ export const createNote = async (req, res, next) => {
                     completed: Boolean(ci.completed ?? ci.isCompleted),
                 }))
                 : [],
-            color: ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(color)
-                ? color
-                : 'peach',
+            color: normalizeColor(color) || 'peach',
             folderId: resolvedFolderId,
             isFavorite: Boolean(isFavorite),
             isTrash: false,
@@ -188,8 +205,9 @@ export const updateNote = async (req, res, next) => {
                 completed: Boolean(ci.completed ?? ci.isCompleted),
             }));
         }
-        if (color !== undefined && ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(color)) {
-            updates.color = color;
+        const normalizedColor = color !== undefined ? normalizeColor(color) : null;
+        if (normalizedColor) {
+            updates.color = normalizedColor;
         }
         if (folderId !== undefined) {
             if (folderId === null || folderId === 'root' || folderId === 'null' || folderId === '') {

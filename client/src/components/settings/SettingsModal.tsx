@@ -97,49 +97,77 @@ export const SettingsModal: React.FC = () => {
     }
   }, [isSettingsOpen]);
 
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  const loadDraft = () => {
+    const s = useUserStore.getState().user.settings;
+    setDefaultColor(s?.defaultNoteColor || 'peach');
+    setDefaultType(s?.defaultNoteType || 'note');
+    setShortcutsEnabled(s?.shortcutsEnabled ?? true);
+    setModifierKey(s?.modifierKey || 'ctrl');
+    setNotificationsEnabled(s?.notificationsEnabled ?? false);
+    setDailyReminderEnabled(s?.dailyReminderEnabled ?? false);
+    setDailyReminderTime(s?.dailyReminderTime || '09:00');
+    setSoundEffectsEnabled(s?.soundEffectsEnabled ?? true);
+  };
+
+  // Initialise the draft ONLY when the modal opens (background syncs must not clobber edits)
   useEffect(() => {
     if (isSettingsOpen) {
-      fetchProfile();
-      setDefaultColor(user.settings?.defaultNoteColor || 'peach');
-      setDefaultType(user.settings?.defaultNoteType || 'note');
-      setShortcutsEnabled(user.settings?.shortcutsEnabled ?? true);
-      setModifierKey(user.settings?.modifierKey || 'ctrl');
-      setNotificationsEnabled(user.settings?.notificationsEnabled ?? false);
-      setDailyReminderEnabled(user.settings?.dailyReminderEnabled ?? false);
-      setDailyReminderTime(user.settings?.dailyReminderTime || '09:00');
-      setSoundEffectsEnabled(user.settings?.soundEffectsEnabled ?? true);
+      loadDraft();
+      fetchProfile().then(loadDraft).catch(() => {});
     }
-  }, [isSettingsOpen, user.settings, fetchProfile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSettingsOpen]);
+
+  const draftSettings = {
+    defaultNoteColor: defaultColor,
+    defaultNoteType: defaultType,
+    shortcutsEnabled,
+    modifierKey,
+    notificationsEnabled,
+    dailyReminderEnabled,
+    dailyReminderTime,
+    soundEffectsEnabled,
+  };
+  const savedSettings = {
+    defaultNoteColor: user.settings?.defaultNoteColor || 'peach',
+    defaultNoteType: user.settings?.defaultNoteType || 'note',
+    shortcutsEnabled: user.settings?.shortcutsEnabled ?? true,
+    modifierKey: user.settings?.modifierKey || 'ctrl',
+    notificationsEnabled: user.settings?.notificationsEnabled ?? false,
+    dailyReminderEnabled: user.settings?.dailyReminderEnabled ?? false,
+    dailyReminderTime: user.settings?.dailyReminderTime || '09:00',
+    soundEffectsEnabled: user.settings?.soundEffectsEnabled ?? true,
+  };
+  const isDirty = JSON.stringify(draftSettings) !== JSON.stringify(savedSettings);
+
+  const requestClose = () => {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard them?')) return;
+    loadDraft();
+    closeSettingsModal();
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isSettingsOpen) {
-        closeSettingsModal();
+        requestClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSettingsOpen, closeSettingsModal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSettingsOpen, isDirty]);
 
   if (!isSettingsOpen) return null;
 
-  // Save settings helper
-  const handleSaveSettings = async (overrides = {}) => {
-    const nextSettings = {
-      defaultNoteColor: defaultColor,
-      defaultNoteType: defaultType,
-      shortcutsEnabled,
-      modifierKey,
-      notificationsEnabled,
-      dailyReminderEnabled,
-      dailyReminderTime,
-      soundEffectsEnabled,
-      ...overrides,
-    };
-    const success = await updateSettings(nextSettings);
-    if (success) {
-      showToast('Settings saved');
-    }
+  // Persist the whole draft in one request
+  const handleSaveSettings = async () => {
+    if (!isDirty || isSavingSettings) return;
+    setIsSavingSettings(true);
+    const success = await updateSettings(draftSettings);
+    setIsSavingSettings(false);
+    showToast(success ? 'Settings saved' : 'Error saving settings');
   };
 
   // Change password submit
@@ -180,8 +208,7 @@ export const SettingsModal: React.FC = () => {
       setNotificationPermission(permission);
       if (permission === 'granted') {
         setNotificationsEnabled(true);
-        handleSaveSettings({ notificationsEnabled: true });
-        showToast('Notifications enabled');
+        showToast('Notifications enabled — save to apply');
       } else {
         showToast('Permission not granted');
       }
@@ -281,7 +308,7 @@ export const SettingsModal: React.FC = () => {
           {/* Top-Left: Close X Button */}
           <button
             type="button"
-            onClick={closeSettingsModal}
+            onClick={requestClose}
             className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
             aria-label="Close Settings screen"
             title="Close (Esc)"
@@ -354,10 +381,7 @@ export const SettingsModal: React.FC = () => {
                     <button
                       key={color.key}
                       type="button"
-                      onClick={() => {
-                        setDefaultColor(color.key);
-                        handleSaveSettings({ defaultNoteColor: color.key });
-                      }}
+                      onClick={() => setDefaultColor(color.key)}
                       className={`w-7 h-7 rounded-full border transition-all cursor-pointer flex items-center justify-center ${color.bgClass} ${color.borderClass} ${
                         isSelected ? 'ring-2 ring-slate-800 scale-110 shadow-xs' : 'hover:scale-105 opacity-80'
                       }`}
@@ -388,10 +412,7 @@ export const SettingsModal: React.FC = () => {
                   <button
                     key={typeOption}
                     type="button"
-                    onClick={() => {
-                      setDefaultType(typeOption);
-                      handleSaveSettings({ defaultNoteType: typeOption });
-                    }}
+                    onClick={() => setDefaultType(typeOption)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all cursor-pointer ${
                       defaultType === typeOption
                         ? 'bg-white text-slate-900 shadow-2xs font-semibold'
@@ -422,11 +443,7 @@ export const SettingsModal: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => {
-                  const nextVal = !shortcutsEnabled;
-                  setShortcutsEnabled(nextVal);
-                  handleSaveSettings({ shortcutsEnabled: nextVal });
-                }}
+                onClick={() => setShortcutsEnabled(!shortcutsEnabled)}
                 className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
                   shortcutsEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
                 }`}
@@ -449,10 +466,7 @@ export const SettingsModal: React.FC = () => {
                   <button
                     key={key}
                     type="button"
-                    onClick={() => {
-                      setModifierKey(key);
-                      handleSaveSettings({ modifierKey: key });
-                    }}
+                    onClick={() => setModifierKey(key)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                       modifierKey === key
                         ? 'bg-[#1F1F1F] text-white shadow-2xs'
@@ -545,11 +559,7 @@ export const SettingsModal: React.FC = () => {
               ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    const nextVal = !notificationsEnabled;
-                    setNotificationsEnabled(nextVal);
-                    handleSaveSettings({ notificationsEnabled: nextVal });
-                  }}
+                  onClick={() => setNotificationsEnabled(!notificationsEnabled)}
                   className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
                     notificationsEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
                   }`}
@@ -581,19 +591,12 @@ export const SettingsModal: React.FC = () => {
                 <input
                   type="time"
                   value={dailyReminderTime}
-                  onChange={(e) => {
-                    setDailyReminderTime(e.target.value);
-                    handleSaveSettings({ dailyReminderTime: e.target.value });
-                  }}
+                  onChange={(e) => setDailyReminderTime(e.target.value)}
                   className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-mono font-medium text-slate-800"
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    const nextVal = !dailyReminderEnabled;
-                    setDailyReminderEnabled(nextVal);
-                    handleSaveSettings({ dailyReminderEnabled: nextVal });
-                  }}
+                  onClick={() => setDailyReminderEnabled(!dailyReminderEnabled)}
                   className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
                     dailyReminderEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
                   }`}
@@ -623,11 +626,7 @@ export const SettingsModal: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => {
-                  const nextVal = !soundEffectsEnabled;
-                  setSoundEffectsEnabled(nextVal);
-                  handleSaveSettings({ soundEffectsEnabled: nextVal });
-                }}
+                onClick={() => setSoundEffectsEnabled(!soundEffectsEnabled)}
                 className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
                   soundEffectsEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
                 }`}
@@ -829,6 +828,33 @@ export const SettingsModal: React.FC = () => {
                 </button>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Sticky Save / Discard bar — active only when there are unsaved changes */}
+        <div className="sticky bottom-0 z-30 bg-[#F8FAFD]/95 backdrop-blur-sm border-t border-slate-200/70 px-5 sm:px-8 py-3">
+          <div className="max-w-3xl mx-auto flex items-center justify-end gap-2.5">
+            <span className="mr-auto text-[11px] text-slate-400">
+              {isDirty ? 'You have unsaved changes' : 'All changes saved'}
+            </span>
+            <button
+              type="button"
+              onClick={loadDraft}
+              disabled={!isDirty || isSavingSettings}
+              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Discard</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveSettings}
+              disabled={!isDirty || isSavingSettings}
+              className="px-5 py-2 rounded-xl bg-[#1F1F1F] text-white hover:bg-black text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
+            >
+              {isSavingSettings && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>Save Changes</span>
+            </button>
           </div>
         </div>
       </motion.div>

@@ -335,6 +335,8 @@ export const updateSettings = async (
       dailyReminderEnabled,
       dailyReminderTime,
       soundEffectsEnabled,
+      defaultNoteColor,
+      defaultNoteType,
     } = req.body;
 
     user.settings = {
@@ -359,6 +361,15 @@ export const updateSettings = async (
         soundEffectsEnabled !== undefined
           ? Boolean(soundEffectsEnabled)
           : user.settings.soundEffectsEnabled,
+      defaultNoteColor:
+        typeof defaultNoteColor === 'string' &&
+        ['peach', 'mint', 'sky', 'lavender', 'rose', 'yellow'].includes(defaultNoteColor)
+          ? defaultNoteColor
+          : user.settings.defaultNoteColor || 'peach',
+      defaultNoteType:
+        defaultNoteType === 'note' || defaultNoteType === 'checklist'
+          ? defaultNoteType
+          : user.settings.defaultNoteType || 'note',
     };
 
     await user.save();
