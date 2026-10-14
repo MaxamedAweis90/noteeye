@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Star, Check, Lightbulb, FileText, CheckSquare } from 'lucide-react';
 import type { Item } from '../types';
+import { CardActionMenu } from './CardActionMenu';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { cn } from '../utils/cn';
@@ -251,53 +252,63 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             {item.title}
           </h3>
 
-          {/* Morphing Top-Right Action: Checkmark when selected, checkbox target in multi-select mode, or Favorite star */}
-          {isSelectedMulti ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSelect?.();
-              }}
-              aria-label="Deselect item"
-              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B57D0] text-white ring-2 ring-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md shrink-0 scale-105 active:scale-95"
-            >
-              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
-            </button>
-          ) : isMultiSelectMode ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSelect?.();
-              }}
-              aria-label="Select item"
-              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-slate-400/80 bg-white/80 hover:bg-white hover:border-[#0B57D0] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 active:scale-95 group/chk"
-            >
-              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3] text-[#0B57D0] opacity-0 group-hover/chk:opacity-60 transition-opacity" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleToggleFavorite}
-              aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-              className={cn(
-                'w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/70 hover:bg-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 hover:scale-105 active:scale-95',
-                item.isFavorite
-                  ? 'opacity-100 pointer-events-auto'
-                  : 'opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:pointer-events-auto'
-              )}
-            >
-              <Star
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Morphing Top-Right Action: Checkmark when selected, checkbox target in multi-select mode, or Favorite star */}
+            {isSelectedMulti ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect?.();
+                }}
+                aria-label="Deselect item"
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0B57D0] text-white ring-2 ring-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-md shrink-0 scale-105 active:scale-95"
+              >
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+              </button>
+            ) : isMultiSelectMode ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect?.();
+                }}
+                aria-label="Select item"
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-slate-400/80 bg-white/80 hover:bg-white hover:border-[#0B57D0] flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 active:scale-95 group/chk"
+              >
+                <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3] text-[#0B57D0] opacity-0 group-hover/chk:opacity-60 transition-opacity" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                aria-label={item.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 className={cn(
-                  'w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform active:scale-125',
+                  'w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/70 hover:bg-white flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs shrink-0 hover:scale-105 active:scale-95',
                   item.isFavorite
-                    ? 'fill-amber-400 text-amber-400'
-                    : 'text-slate-400 hover:text-amber-500 transition-colors'
+                    ? 'opacity-100 pointer-events-auto'
+                    : 'opacity-0 pointer-events-none sm:group-hover:opacity-100 sm:pointer-events-auto'
                 )}
+              >
+                <Star
+                  className={cn(
+                    'w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform active:scale-125',
+                    item.isFavorite
+                      ? 'fill-amber-400 text-amber-400'
+                      : 'text-slate-400 hover:text-amber-500 transition-colors'
+                  )}
+                />
+              </button>
+            )}
+
+            {/* Context Options Trigger (Reusable CardActionMenu) */}
+            {!readOnly && (
+              <CardActionMenu
+                type={targetItemType}
+                item={item}
               />
-            </button>
-          )}
+            )}
+          </div>
         </div>
         <p className="text-[10px] sm:text-xs text-slate-700/60 font-medium truncate">
           {formattedDate}
@@ -380,9 +391,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
 
-        {/* Pinned Circular Action Buttons (Charcoal #1F1F1F) */}
+        {/* Pinned Circular Action Buttons (Charcoal #1F1F1F — Desktop Hover Only) */}
         {!readOnly && (
-          <div className="flex items-center gap-1.5 sm:gap-2 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
+          <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             {/* Edit Button */}
             <button
               type="button"

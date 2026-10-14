@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { MoreHorizontal, Trash2, Pencil, Star, Check } from 'lucide-react';
+import { Star, Check } from 'lucide-react';
 import type { Folder } from '../types';
+import { CardActionMenu } from './CardActionMenu';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { cn } from '../utils/cn';
@@ -34,12 +35,9 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   const items = useNoteStore((state) => state.items);
   const folders = useNoteStore((state) => state.folders);
   const renameFolder = useNoteStore((state) => state.renameFolder);
-  const openFolderModal = useNoteStore((state) => state.openFolderModal);
-  const openDeleteDialog = useNoteStore((state) => state.openDeleteDialog);
   const toggleFavoriteFolder = useNoteStore((state) => state.toggleFavoriteFolder);
   const executeTransfer = useNoteStore((state) => state.executeTransfer);
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(folder.name);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -387,77 +385,13 @@ export const FolderCard: React.FC<FolderCardProps> = ({
               </button>
             ) : null}
 
-            {/* Context Options Trigger (3-dot circular button) */}
+            {/* Context Options Trigger (Reusable CardActionMenu) */}
             {!readOnly && (
-              <div className="relative" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={() => setIsMenuOpen((prev) => !prev)}
-                  aria-label="Folder options"
-                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-white/40 hover:border-white/80 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs"
-                >
-                  <MoreHorizontal className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[2.2]" />
-                </button>
-
-                {/* Quick Actions Dropdown Menu */}
-                {isMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-30"
-                      onClick={() => setIsMenuOpen(false)}
-                    />
-                    <div className="absolute right-0 top-8 z-40 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 animate-fade-in text-xs">
-                      {/* 1. Rename */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          openFolderModal(folder);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
-                      >
-                        <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Rename</span>
-                      </button>
-
-                      {/* 2. Favorite / Remove from Favorites */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          toggleFavoriteFolder(folder.id);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
-                      >
-                        <Star
-                          className={cn(
-                            'w-3.5 h-3.5',
-                            folder.isFavorite
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-slate-400'
-                          )}
-                        />
-                        <span>
-                          {folder.isFavorite ? 'Remove from Favorites' : 'Favorite'}
-                        </span>
-                      </button>
-
-                      {/* 3. Delete */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          openDeleteDialog(folder.id, folder.name, 'folder');
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 hover:bg-rose-50 font-medium text-left cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
+              <CardActionMenu
+                type="folder"
+                item={folder}
+                isLightHeader
+              />
             )}
           </div>
         </div>
