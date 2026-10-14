@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNoteStore } from '../store/useNoteStore';
 import { MARKETING_URL } from '../api/client';
+import { isPWAMode } from '../pwa/registerSW';
 
 interface LogoProps {
   className?: string;
@@ -13,9 +14,12 @@ interface LogoProps {
 /**
  * Noteeye Brand Logo Component
  * Renders the authentic Noteeye logo mark and brand text.
- * Clicking the logo routes to the landing page:
- * - In production: from app-noteeye.vercel.app to noteeye.vercel.app (with token sync)
- * - In local development: routes to /landing
+ * 
+ * Invariants:
+ * - In PWA mode (standalone): ALWAYS stays in the app (navigates to workspace home '/').
+ * - In Web App Workspace (TopNav / Authenticated): ALWAYS navigates to workspace home '/',
+ *   resetting folder filters and search query.
+ * - On Marketing Domain (noteeye.vercel.app): Smooth-scrolls to top hero section.
  */
 export const Logo: React.FC<LogoProps> = ({
   className = '',
@@ -49,21 +53,14 @@ export const Logo: React.FC<LogoProps> = ({
     if (typeof window === 'undefined') return;
 
     const hostname = window.location.hostname.toLowerCase();
-    const token = localStorage.getItem('noteeye_auth_token');
-    const authQuery = token ? `?auth_token=${encodeURIComponent(token)}` : '';
+    const pathname = window.location.pathname.toLowerCase();
 
-    // 1. In production: if on the web app domain, redirect to the marketing landing domain
+    // 1. Marketing Domain or /landing in dev: smooth scroll to hero/top
     if (
-      hostname === 'app-noteeye.vercel.app' ||
-      hostname.includes('app-noteeye') ||
-      (import.meta.env.PROD && !hostname.includes('localhost') && hostname !== 'noteeye.vercel.app')
+      hostname === 'noteeye.vercel.app' ||
+      hostname === 'noteeye.com' ||
+      pathname === '/landing'
     ) {
-      window.location.href = `${MARKETING_URL}${authQuery}`;
-      return;
-    }
-
-    // 2. If already on the production marketing domain, smooth scroll to the top
-    if (hostname === 'noteeye.vercel.app' || hostname === 'noteeye.com') {
       const heroEl = document.getElementById('hero');
       if (heroEl) {
         heroEl.scrollIntoView({ behavior: 'smooth' });
@@ -73,21 +70,24 @@ export const Logo: React.FC<LogoProps> = ({
       return;
     }
 
-    // 3. In local development or preview:
-    if (window.location.pathname === '/landing') {
-      const heroEl = document.getElementById('hero');
-      if (heroEl) {
-        heroEl.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+    // 2. In PWA Standalone Mode or Web App Workspace:
+    // ALWAYS stay in the app and navigate to workspace root ('/')
+    const workspaceIsland = document.getElementById('workspace-content-island');
+    if (workspaceIsland) {
+      workspaceIsland.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // If on Auth pages in normal web browser (outside PWA), logo links to marketing main domain
+    const isAuthPage = pathname === '/login' || pathname === '/register';
+    if (isAuthPage && !isPWAMode() && (hostname === 'app-noteeye.vercel.app' || hostname.includes('app-noteeye'))) {
+      window.location.href = MARKETING_URL;
       return;
     }
 
     if (navigate) {
-      navigate('/landing');
+      navigate('/');
     } else {
-      window.location.href = '/landing';
+      window.location.href = '/';
     }
   };
 

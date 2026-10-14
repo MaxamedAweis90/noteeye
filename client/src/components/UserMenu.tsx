@@ -17,6 +17,7 @@ import { useUserStore } from "../store/userStore";
 import { useUIStore } from "../store/uiStore";
 import { useAuthStore } from "../store/authStore";
 import { useSplashStore } from "../store/splashStore";
+import { handleSessionEndRedirect } from "../utils/sessionNavigation";
 
 interface UserMenuProps {
   className?: string;
@@ -365,7 +366,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                     triggerLogoutSplash(() => {
                       logout();
                       showToast("Signed out of Noteeye");
-                      window.location.replace('/landing?reason=logout');
+                      handleSessionEndRedirect('logout');
                     });
                   }}
                   className="hover:bg-rose-50 text-rose-600 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-xs font-medium transition-colors cursor-pointer text-left w-full border-0 bg-transparent"

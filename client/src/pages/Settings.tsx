@@ -17,12 +17,12 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../store/userStore';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { useSplashStore } from '../store/splashStore';
+import { handleSessionEndRedirect } from '../utils/sessionNavigation';
 import { authApi } from '../api';
 import { PASTEL_PALETTE } from '../types';
 import type { ItemType } from '../types';
@@ -33,7 +33,6 @@ import type { ItemType } from '../types';
  * Crisp typography, warm white/slate canvases, clean 1px borders, subtle pill switches.
  */
 export const Settings: React.FC = () => {
-  const navigate = useNavigate();
   const showToast = useUIStore((state) => state.showToast);
   const user = useUserStore((state) => state.user);
   const updateSettings = useUserStore((state) => state.updateSettings);
@@ -720,7 +719,7 @@ export const Settings: React.FC = () => {
               triggerLogoutSplash(() => {
                 logout();
                 showToast('Signed out of Noteeye');
-                navigate('/landing?reason=logout');
+                handleSessionEndRedirect('logout');
               });
             }}
             className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2 transition-colors cursor-pointer"

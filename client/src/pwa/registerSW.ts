@@ -129,6 +129,21 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * Detects whether the application is running as an installed Progressive Web App (PWA)
+ * (desktop standalone window, iOS web app, or Android standalone/TWA).
+ */
+export const isPWAMode = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return Boolean(
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches ||
+    (navigator as any).standalone === true ||
+    document.referrer.includes('android-app://')
+  );
+};
+
+/**
  * Custom React Hook to manage PWA installation prompt state.
  */
 export function usePWAInstallPrompt() {
@@ -140,11 +155,7 @@ export function usePWAInstallPrompt() {
     return localStorage.getItem(PWA_DISMISSED_KEY) === 'true';
   });
 
-  const isStandalone = typeof window !== 'undefined' && (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (navigator as any).standalone === true ||
-    document.referrer.includes('android-app://')
-  );
+  const isStandalone = isPWAMode();
 
   useEffect(() => {
     const handlePromptChange = (prompt: BeforeInstallPromptEvent | null) => {

@@ -11,13 +11,14 @@ import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import { Profile } from '../pages/Profile';
 import { Settings } from '../pages/Settings';
-import { LandingPage } from '../pages/LandingPage';
 import { SplashLoader } from '../components/SplashLoader';
 import { useAuthStore } from '../store/authStore';
 import { useUserStore } from '../store/userStore';
 import { useNoteStore } from '../store/useNoteStore';
 import { useNotesStore } from '../store/notesStore';
 import { useFoldersStore } from '../store/foldersStore';
+import { MARKETING_URL } from '../api/client';
+import { isPWAMode } from '../pwa/registerSW';
 
 // Scroll to top helper on navigation
 const ScrollToTop: React.FC = () => {
@@ -59,7 +60,7 @@ const GuestRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
  * ProtectedRoute Guard
  * Protects workspace and sensitive user account pages.
  * If user session is verifying, renders the smooth SplashLoader.
- * If user is not authenticated, redirects to /landing?reason=unauthorized with location state.
+ * If user is not authenticated, redirects to /login?reason=unauthorized with location state.
  */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -71,7 +72,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/landing?reason=unauthorized" state={{ from: location }} replace />;
+    return <Navigate to="/login?reason=unauthorized" state={{ from: location }} replace />;
   }
   return <>{children}</>;
 };
@@ -80,7 +81,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
  * WorkspaceRoot component for "/"
  * 1. If session is verifying, displays SplashLoader.
  * 2. If authenticated, renders <AppShell><Home /></AppShell>.
- * 3. If unauthenticated, displays <LandingPage /> cleanly without any unauthorized warning banner.
+ * 3. If unauthenticated:
+ *    - In PWA: redirects to /login (app-noteeye.vercel.app/login)
+ *    - In web app domain: redirects to the marketing main domain (https://noteeye.vercel.app)
  */
 const WorkspaceRoot: React.FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -91,7 +94,22 @@ const WorkspaceRoot: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <LandingPage />;
+    // PWA user invariant: stay in standalone app and redirect to /login
+    if (isPWAMode()) {
+      return <Navigate to="/login" replace />;
+    }
+
+    // Web browser on app workspace domain: redirect to marketing apex domain
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname.toLowerCase();
+      if (hostname === 'app-noteeye.vercel.app' || hostname.includes('app-noteeye')) {
+        window.location.replace(MARKETING_URL);
+        return null;
+      }
+    }
+
+    // Local dev fallback
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -313,8 +331,17 @@ export const AppRouter: React.FC = () => {
           }
         />
 
-        {/* Landing Page Route (Available for preview & marketing on app domain) */}
-        <Route path="/landing" element={<LandingPage />} />
+        {/* Landing Page Route: Landing page never lives on app workspace */}
+        <Route
+          path="/landing"
+          element={
+            isPWAMode() ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
 
         {/* Catch-all fallback */}
         <Route

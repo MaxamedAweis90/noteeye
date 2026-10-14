@@ -15,6 +15,7 @@ import { useUIStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { sessionsApi } from '../../api';
 import type { UserSession } from '../../types';
+import { handleSessionEndRedirect } from '../../utils/sessionNavigation';
 
 /**
  * Format timestamp into clean, minimalist relative time string.
@@ -81,7 +82,7 @@ export const SessionsModal: React.FC = () => {
           showToast('This device was signed out from another session.');
           closeSessionsModal();
           logout(false);
-          window.location.replace('/landing?reason=revoked');
+          handleSessionEndRedirect('revoked');
         }
       } catch (err: any) {
         // If 401 was returned, auth interceptor will handle kick-out
@@ -149,7 +150,7 @@ export const SessionsModal: React.FC = () => {
         showToast('Current session signed out');
         closeSessionsModal();
         logout();
-        window.location.replace('/landing?reason=logout');
+        handleSessionEndRedirect('logout');
         return;
       }
 

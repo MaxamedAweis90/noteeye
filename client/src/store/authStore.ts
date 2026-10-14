@@ -3,6 +3,7 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { UserProfile } from '../types';
 import { authApi, type UserStats } from '../api';
 import { useUIStore } from './uiStore';
+import { handleSessionEndRedirect } from '../utils/sessionNavigation';
 
 export interface AuthState {
   user: UserProfile | null;
@@ -172,10 +173,10 @@ if (typeof window !== 'undefined') {
       useUIStore.getState().showToast('Session expired or access unauthorized. Please sign in.');
     }
 
-    // Force redirection to landing page with appropriate reason
+    // Force redirection: in PWA -> /login, in web app -> https://noteeye.vercel.app
     const currentPath = window.location.pathname;
-    if (currentPath !== '/landing' && currentPath !== '/login' && currentPath !== '/register') {
-      window.location.replace(`/landing?reason=${reason}`);
+    if (currentPath !== '/login' && currentPath !== '/register') {
+      handleSessionEndRedirect(reason);
     }
   });
 }

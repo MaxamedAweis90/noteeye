@@ -27,6 +27,7 @@ import { useSplashStore } from '../../store/splashStore';
 import { authApi } from '../../api';
 import { PASTEL_PALETTE } from '../../types';
 import type { ItemType } from '../../types';
+import { handleSessionEndRedirect } from '../../utils/sessionNavigation';
 
 /**
  * SettingsModal Component — Minimalist Humane Redesign
@@ -816,7 +817,7 @@ export const SettingsModal: React.FC = () => {
                   triggerLogoutSplash(() => {
                     logout();
                     showToast('Signed out of Noteeye');
-                    window.location.replace('/landing?reason=logout');
+                    handleSessionEndRedirect('logout');
                   });
                 }}
                 className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2 transition-colors cursor-pointer"

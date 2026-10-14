@@ -5,6 +5,7 @@ import { useUserStore } from '../store/userStore';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
 import { useSplashStore } from '../store/splashStore';
+import { handleSessionEndRedirect } from '../utils/sessionNavigation';
 
 interface MobileUserDrawerProps {
   isOpen: boolean;
@@ -54,7 +55,7 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
     triggerLogoutSplash(() => {
       logout();
       showToast('Signed out of Noteeye');
-      window.location.replace('/landing?reason=logout');
+      handleSessionEndRedirect('logout');
     });
   };
 
