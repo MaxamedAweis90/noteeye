@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Palette,
   User,
+  Lightbulb,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -45,6 +46,7 @@ export const DetailsPanel: React.FC = () => {
   const hasSelectedItem = Boolean(selectedNote || selectedFolder);
 
   const isChecklist = selectedNote?.type === 'checklist';
+  const isIdea = selectedNote?.type === 'idea';
 
   // Derived metadata
   const itemTitle = selectedNote
@@ -55,6 +57,8 @@ export const DetailsPanel: React.FC = () => {
 
   const itemTypeLabel = selectedFolder
     ? 'Noteeye Collection'
+    : isIdea
+    ? 'Idea Board'
     : isChecklist
     ? 'Checklist Note'
     : 'Standard Note';
@@ -251,6 +255,8 @@ export const DetailsPanel: React.FC = () => {
                 <div className="flex items-center gap-2.5 min-w-0">
                   {selectedFolder ? (
                     <FolderIcon className="w-4 h-4 text-purple-600 fill-purple-100 shrink-0" />
+                  ) : isIdea ? (
+                    <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
                   ) : isChecklist ? (
                     <CheckSquare className="w-4 h-4 text-blue-600 shrink-0" />
                   ) : (
@@ -334,7 +340,11 @@ export const DetailsPanel: React.FC = () => {
                         </div>
                       ) : (
                         <div
-                          style={{ backgroundColor: selectedNote?.color || '#FDE3C9' }}
+                          style={{
+                            backgroundColor:
+                              selectedNote?.color ||
+                              (isIdea ? '#E5DEFA' : isChecklist ? '#CEEBFD' : '#FDE3C9'),
+                          }}
                           className="w-full max-w-[210px] aspect-[1.3/1] rounded-2xl p-4 flex flex-col justify-between shadow-xs border border-black/[0.04] transition-all hover:shadow-sm"
                         >
                           <div>
@@ -342,7 +352,16 @@ export const DetailsPanel: React.FC = () => {
                               {selectedNote?.title}
                             </p>
                             <p className="text-[11px] text-slate-700/70 mt-1 line-clamp-3 leading-relaxed">
-                              {selectedNote?.content || (isChecklist ? `${selectedNote?.checklistItems?.length || 0} checklist tasks` : 'Empty note...')}
+                              {selectedNote?.content ||
+                                (isIdea
+                                  ? `${selectedNote?.ideaItems?.length || 0} ideas (${
+                                      selectedNote?.ideaItems?.filter(
+                                        (i) => i.status === 'completed',
+                                      ).length || 0
+                                    } completed)`
+                                  : isChecklist
+                                  ? `${selectedNote?.checklistItems?.length || 0} checklist tasks`
+                                  : 'Empty note...')}
                             </p>
                           </div>
                           <div className="flex items-center justify-between text-[10px] font-semibold text-slate-600/75 pt-2 border-t border-black/5">

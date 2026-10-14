@@ -13,7 +13,7 @@ export interface GetNotesParams {
   folderId?: string | null;
   isFavorite?: boolean;
   isTrash?: boolean;
-  type?: 'note' | 'checklist';
+  type?: 'note' | 'checklist' | 'idea';
   color?: string;
   q?: string;
 }

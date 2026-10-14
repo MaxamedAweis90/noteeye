@@ -5,6 +5,7 @@ import {
   Folder as FolderIcon,
   FileText,
   CheckSquare,
+  Lightbulb,
   CornerDownLeft,
   X,
 } from 'lucide-react';
@@ -169,6 +170,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
                   const item = match.data;
                   const isChecklist = item.type === 'checklist';
+                  const isIdea = item.type === 'idea';
                   return (
                     <motion.div
                       key={item.id}
@@ -178,17 +180,19 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                       className="hover:bg-[#F1F5F9] rounded-xl px-3 py-2 cursor-pointer transition-colors flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        {isChecklist ? (
+                        {isIdea ? (
+                          <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
+                        ) : isChecklist ? (
                           <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
                         ) : (
                           <FileText className="w-4 h-4 text-blue-600 shrink-0" />
                         )}
                         <span className="text-sm font-medium text-[#1F1F1F] truncate">
-                          {item.title || (isChecklist ? 'Untitled Checklist' : 'Untitled Note')}
+                          {item.title || (isIdea ? 'Untitled Idea' : isChecklist ? 'Untitled Checklist' : 'Untitled Note')}
                         </span>
                       </div>
                       <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
-                        {isChecklist ? 'Checklist' : 'Note'}
+                        {isIdea ? 'Idea' : isChecklist ? 'Checklist' : 'Note'}
                       </span>
                     </motion.div>
                   );

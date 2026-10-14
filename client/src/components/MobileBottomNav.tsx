@@ -217,7 +217,7 @@ export const MobileBottomNav: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setIsCreateMenuOpen(false);
-                        openNoteModal('note');
+                        openNoteModal('idea');
                       }}
                       className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                     >

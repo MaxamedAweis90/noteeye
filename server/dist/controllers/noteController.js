@@ -66,8 +66,8 @@ export const getNotes = async (req, res, next) => {
         if (isFavorite !== undefined) {
             filter.isFavorite = isFavorite === 'true';
         }
-        // Filter by type ('note' | 'checklist')
-        if (type && ['note', 'checklist'].includes(type)) {
+        // Filter by type ('note' | 'checklist' | 'idea')
+        if (type && ['note', 'checklist', 'idea'].includes(type)) {
             filter.type = type;
         }
         // Filter by pastel color
@@ -130,7 +130,7 @@ export const createNote = async (req, res, next) => {
             res.status(401).json({ message: 'Authentication required' });
             return;
         }
-        const { id, title, body, content, type = 'note', checklistItems = [], color = 'peach', folderId = null, isFavorite = false, } = req.body;
+        const { id, title, body, content, type = 'note', checklistItems = [], ideaItems = [], color = 'peach', folderId = null, isFavorite = false, } = req.body;
         const noteBody = body !== undefined ? body : content !== undefined ? content : '';
         let resolvedFolderId = null;
         if (folderId && folderId !== 'root' && folderId !== 'null') {
@@ -155,12 +155,22 @@ export const createNote = async (req, res, next) => {
             userId: new mongoose.Types.ObjectId(userId),
             title: title ? title.trim() : 'Untitled',
             body: noteBody,
-            type: ['note', 'checklist'].includes(type) ? type : 'note',
+            type: ['note', 'checklist', 'idea'].includes(type) ? type : 'note',
             checklistItems: Array.isArray(checklistItems)
                 ? checklistItems.map((ci) => ({
                     id: ci.id || `cl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
                     text: ci.text || '',
                     completed: Boolean(ci.completed ?? ci.isCompleted),
+                }))
+                : [],
+            ideaItems: Array.isArray(ideaItems)
+                ? ideaItems.map((ii) => ({
+                    id: ii.id || `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    title: ii.title ? String(ii.title).trim() : 'Untitled Idea',
+                    description: ii.description || '',
+                    status: ['ideas', 'completed'].includes(ii.status) ? ii.status : 'ideas',
+                    date: ii.date || new Date().toISOString(),
+                    order: typeof ii.order === 'number' ? ii.order : 0,
                 }))
                 : [],
             color: normalizeColor(color) || 'peach',
@@ -192,7 +202,7 @@ export const updateNote = async (req, res, next) => {
             res.status(400).json({ message: 'Invalid note ID format' });
             return;
         }
-        const { title, body, content, type, checklistItems, color, folderId, isFavorite, } = req.body;
+        const { title, body, content, type, checklistItems, ideaItems, color, folderId, isFavorite, } = req.body;
         const updates = {};
         if (title !== undefined)
             updates.title = title.trim();
@@ -200,7 +210,7 @@ export const updateNote = async (req, res, next) => {
             updates.body = body;
         else if (content !== undefined)
             updates.body = content;
-        if (type !== undefined && ['note', 'checklist'].includes(type)) {
+        if (type !== undefined && ['note', 'checklist', 'idea'].includes(type)) {
             updates.type = type;
         }
         if (checklistItems !== undefined && Array.isArray(checklistItems)) {
@@ -208,6 +218,16 @@ export const updateNote = async (req, res, next) => {
                 id: ci.id || `cl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
                 text: ci.text || '',
                 completed: Boolean(ci.completed ?? ci.isCompleted),
+            }));
+        }
+        if (ideaItems !== undefined && Array.isArray(ideaItems)) {
+            updates.ideaItems = ideaItems.map((ii) => ({
+                id: ii.id || `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                title: ii.title ? String(ii.title).trim() : 'Untitled Idea',
+                description: ii.description || '',
+                status: ['ideas', 'completed'].includes(ii.status) ? ii.status : 'ideas',
+                date: ii.date || new Date().toISOString(),
+                order: typeof ii.order === 'number' ? ii.order : 0,
             }));
         }
         const normalizedColor = color !== undefined ? normalizeColor(color) : null;
@@ -430,6 +450,16 @@ export const duplicateNote = async (req, res, next) => {
                 text: ci.text,
                 completed: ci.completed,
             })),
+            ideaItems: Array.isArray(sourceNote.ideaItems)
+                ? sourceNote.ideaItems.map((ii) => ({
+                    id: `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    title: ii.title,
+                    description: ii.description,
+                    status: ii.status,
+                    date: ii.date,
+                    order: ii.order,
+                }))
+                : [],
             color: sourceNote.color,
             folderId: targetFolder,
             isFavorite: false,

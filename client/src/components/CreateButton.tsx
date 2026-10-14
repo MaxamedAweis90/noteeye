@@ -9,6 +9,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useNoteStore } from "../store/useNoteStore";
+import type { ItemType } from "../types";
 
 export type CreateActionType = "note" | "checklist" | "idea" | "folder";
 
@@ -65,8 +66,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
     if (type === "folder") {
       openFolderModal();
     } else {
-      const itemType = type === "checklist" ? "checklist" : "note";
-      openNoteModal(itemType);
+      openNoteModal(type as ItemType);
     }
   };
 

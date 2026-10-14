@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { ClipboardItem } from '../types';
 
-export type ItemTargetType = 'note' | 'checklist' | 'folder';
+export type ItemTargetType = 'note' | 'checklist' | 'idea' | 'folder';
 
 export interface ContextMenuTarget {
   type: 'note' | 'folder' | 'canvas';
@@ -40,7 +40,7 @@ export interface UIStoreState {
   isDeleteAlertOpen: boolean;
   itemToDelete: DeleteAlertItem | null;
   isNoteModalOpen: boolean;
-  noteModalType: 'note' | 'checklist';
+  noteModalType: 'note' | 'checklist' | 'idea';
   isProfileOpen: boolean;
   isSettingsOpen: boolean;
   isSessionsOpen: boolean;
@@ -81,7 +81,7 @@ export interface UIStoreState {
   closeFolderModal: () => void;
   openDeleteDialog: (type: 'note' | 'folder', id: string, name?: string) => void;
   closeDeleteDialog: () => void;
-  openNoteModal: (type?: 'note' | 'checklist') => void;
+  openNoteModal: (type?: 'note' | 'checklist' | 'idea') => void;
   closeNoteModal: () => void;
   openProfileModal: () => void;
   closeProfileModal: () => void;

@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Home,
   Loader2,
+  Lightbulb,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNoteStore } from "../store/useNoteStore";
@@ -29,13 +30,15 @@ import { useUIStore } from "../store/uiStore";
 import { useUserStore } from "../store/userStore";
 import { useSyncStore } from "../store/syncStore";
 import { DEFAULT_PASTEL_COLOR, colorKeyToHex } from "../types";
-import type { ItemType, ChecklistItem } from "../types";
+import type { ItemType, ChecklistItem, IdeaItem } from "../types";
 import { Table as TableIcon } from "lucide-react";
 import { cn } from "../utils/cn";
 import { EditorContextMenu } from "../components/editor/EditorContextMenu";
 import { SelectionFloatingToolbar } from "../components/editor/SelectionFloatingToolbar";
 import { TableCustomizerMenu } from "../components/editor/TableCustomizerMenu";
 import { DividerToolbar } from "../components/editor/DividerToolbar";
+import { IdeaKanbanBoard } from "../components/editor/IdeaKanbanBoard";
+import { IdeaInspectorDrawer } from "../components/editor/IdeaInspectorDrawer";
 import { initTableColumnResizing } from "../utils/tableResize";
 import { initTableMultiCellSelection } from "../utils/tableSelection";
 import { markdownToHtml, htmlToPlainText } from "../utils/markdownToHtml";
@@ -88,6 +91,9 @@ export const NoteEditor: React.FC = () => {
   const [type, setType] = useState<ItemType>("note");
   const [content, setContent] = useState("");
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
+  const [ideaItems, setIdeaItems] = useState<IdeaItem[]>([]);
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
+  const [isIdeaInspectorOpen, setIsIdeaInspectorOpen] = useState(false);
   const [color, setColor] = useState(DEFAULT_PASTEL_COLOR);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -171,6 +177,7 @@ export const NoteEditor: React.FC = () => {
     folderId,
     content,
     checklistItems,
+    ideaItems,
     color,
     isFavorite,
     activeId,
@@ -183,6 +190,7 @@ export const NoteEditor: React.FC = () => {
     folderId,
     content,
     checklistItems,
+    ideaItems,
     color,
     isFavorite,
     activeId,
@@ -201,10 +209,13 @@ export const NoteEditor: React.FC = () => {
         editorRef.current.innerHTML = convertedHtml;
       }
       setChecklistItems(existingItem.checklistItems || []);
+      setIdeaItems(existingItem.ideaItems || []);
       setColor(
         existingItem.color ||
           (existingItem.type === "checklist"
             ? "#CEEBFD"
+            : existingItem.type === "idea"
+            ? "#E5DEFA"
             : DEFAULT_PASTEL_COLOR),
       );
       setFolderId(existingItem.folderId);
@@ -241,6 +252,10 @@ export const NoteEditor: React.FC = () => {
         setChecklistItems(existingItem.checklistItems || []);
         latestValuesRef.current.checklistItems = existingItem.checklistItems || [];
       }
+      if (JSON.stringify(existingItem.ideaItems || []) !== JSON.stringify(ideaItems)) {
+        setIdeaItems(existingItem.ideaItems || []);
+        latestValuesRef.current.ideaItems = existingItem.ideaItems || [];
+      }
       if (existingItem.folderId !== folderId) {
         setFolderId(existingItem.folderId);
         latestValuesRef.current.folderId = existingItem.folderId;
@@ -259,8 +274,9 @@ export const NoteEditor: React.FC = () => {
     } else if (isNewRoute && loadedIdRef.current !== "new") {
       loadedIdRef.current = "new";
       isLocallyDirtyRef.current = false;
-      const paramType =
-        searchParams.get("type") === "checklist" ? "checklist" : "note";
+      const rawType = searchParams.get("type");
+      const paramType: ItemType =
+        rawType === "checklist" ? "checklist" : rawType === "idea" ? "idea" : "note";
       const paramFolder = searchParams.get("folder") || currentFolderId || null;
       setTitle("");
       setType(paramType);
@@ -269,11 +285,14 @@ export const NoteEditor: React.FC = () => {
         editorRef.current.innerHTML = "";
       }
       setChecklistItems([]);
+      setIdeaItems([]);
       const prefKey = useUserStore.getState().user.settings?.defaultNoteColor;
       const prefHex = prefKey ? colorKeyToHex(prefKey) : DEFAULT_PASTEL_COLOR;
       setColor(
         paramType === "checklist" && (!prefKey || prefKey === "peach")
           ? "#CEEBFD"
+          : paramType === "idea" && (!prefKey || prefKey === "peach")
+          ? "#E5DEFA"
           : prefHex,
       );
       setFolderId(paramFolder);
@@ -294,6 +313,7 @@ export const NoteEditor: React.FC = () => {
     title,
     content,
     checklistItems,
+    ideaItems,
   ]);
 
   // Sync content into editorRef when mounted
@@ -321,6 +341,7 @@ export const NoteEditor: React.FC = () => {
       type: curType,
       folderId: curFolder,
       checklistItems: curChecklist,
+      ideaItems: curIdeas,
       color: curColor,
       isFavorite: curFav,
       activeId: curActiveId,
@@ -338,9 +359,14 @@ export const NoteEditor: React.FC = () => {
     const hasData =
       trimmedTitle.length > 0 ||
       finalContent.trim().length > 0 ||
-      curChecklist.length > 0;
+      curChecklist.length > 0 ||
+      (curIdeas && curIdeas.length > 0);
     const fallbackTitle =
-      curType === "checklist" ? "Untitled Checklist" : "Untitled Note";
+      curType === "checklist"
+        ? "Untitled Checklist"
+        : curType === "idea"
+        ? "Untitled Idea"
+        : "Untitled Note";
 
     if (!curActiveId) {
       // Create new note only if there is meaningful content or title
@@ -352,6 +378,7 @@ export const NoteEditor: React.FC = () => {
           folderId: curFolder,
           content: finalContent,
           checklistItems: curChecklist,
+          ideaItems: curIdeas,
           color: curColor,
           isFavorite: curFav,
         });
@@ -376,6 +403,7 @@ export const NoteEditor: React.FC = () => {
         folderId: curFolder,
         content: finalContent,
         checklistItems: curChecklist,
+        ideaItems: curIdeas,
         color: curColor,
         isFavorite: curFav,
       });
@@ -460,8 +488,12 @@ export const NoteEditor: React.FC = () => {
       openDeleteDialog(
         activeId,
         title.trim() ||
-          (type === "checklist" ? "Untitled Checklist" : "Untitled Note"),
-        type === "checklist" ? "checklist" : "note",
+          (type === "checklist"
+            ? "Untitled Checklist"
+            : type === "idea"
+            ? "Untitled Idea"
+            : "Untitled Note"),
+        type === "checklist" ? "checklist" : type === "idea" ? "idea" : "note",
       );
     }
   };
@@ -594,6 +626,127 @@ export const NoteEditor: React.FC = () => {
       }
     }
   };
+
+  // Idea Kanban Handlers
+  const handleAddIdea = (status: 'ideas' | 'completed' = 'ideas', customTitle?: string) => {
+    isLocallyDirtyRef.current = true;
+    const newIdea: IdeaItem = {
+      id: `idea-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      title: customTitle?.trim() || 'New Idea',
+      description: '',
+      status,
+      date: new Date().toISOString(),
+      order: ideaItems.filter((i) => i.status === status).length,
+    };
+    setIdeaItems((prev) => {
+      const next = [...prev, newIdea];
+      latestValuesRef.current.ideaItems = next;
+      return next;
+    });
+    setSelectedIdeaId(newIdea.id);
+    triggerAutosave();
+  };
+
+  const handleSelectIdea = (ideaId: string) => {
+    setSelectedIdeaId(ideaId);
+  };
+
+  const handleOpenIdeaInspector = (ideaId: string) => {
+    setSelectedIdeaId(ideaId);
+    setIsIdeaInspectorOpen(true);
+  };
+
+  const handleMoveCard = (
+    ideaId: string,
+    targetStatus: 'ideas' | 'completed',
+    targetIndex?: number,
+  ) => {
+    isLocallyDirtyRef.current = true;
+    setIdeaItems((prev) => {
+      const target = prev.find((i) => i.id === ideaId);
+      if (!target) return prev;
+
+      const others = prev.filter((i) => i.id !== ideaId);
+      const targetColItems = others
+        .filter((i) => i.status === targetStatus)
+        .sort((a, b) => a.order - b.order);
+      const otherColItems = others.filter((i) => i.status !== targetStatus);
+
+      const updatedTarget: IdeaItem = {
+        ...target,
+        status: targetStatus,
+      };
+
+      if (typeof targetIndex === 'number' && targetIndex >= 0) {
+        targetColItems.splice(targetIndex, 0, updatedTarget);
+      } else {
+        targetColItems.push(updatedTarget);
+      }
+
+      const reindexedTarget = targetColItems.map((item, idx) => ({
+        ...item,
+        order: idx,
+      }));
+
+      const next = [...otherColItems, ...reindexedTarget];
+      latestValuesRef.current.ideaItems = next;
+      return next;
+    });
+    triggerAutosave();
+  };
+
+  const handleUpdateIdeaTitle = (newTitle: string) => {
+    if (!selectedIdeaId) return;
+    isLocallyDirtyRef.current = true;
+    setIdeaItems((prev) => {
+      const next = prev.map((i) =>
+        i.id === selectedIdeaId ? { ...i, title: newTitle } : i,
+      );
+      latestValuesRef.current.ideaItems = next;
+      return next;
+    });
+    triggerAutosave();
+  };
+
+  const handleUpdateIdeaDescription = (newDesc: string) => {
+    if (!selectedIdeaId) return;
+    isLocallyDirtyRef.current = true;
+    setIdeaItems((prev) => {
+      const next = prev.map((i) =>
+        i.id === selectedIdeaId ? { ...i, description: newDesc } : i,
+      );
+      latestValuesRef.current.ideaItems = next;
+      return next;
+    });
+    triggerAutosave();
+  };
+
+  const handleUpdateIdeaStatus = (newStatus: 'ideas' | 'completed') => {
+    if (!selectedIdeaId) return;
+    handleMoveCard(selectedIdeaId, newStatus);
+  };
+
+  const handleDeleteIdea = (idToDelete?: string) => {
+    const targetId = idToDelete || selectedIdeaId;
+    if (!targetId) return;
+    isLocallyDirtyRef.current = true;
+    setIdeaItems((prev) => {
+      const next = prev.filter((i) => i.id !== targetId);
+      latestValuesRef.current.ideaItems = next;
+      return next;
+    });
+    if (selectedIdeaId === targetId) {
+      setSelectedIdeaId(null);
+      setIsIdeaInspectorOpen(false);
+    }
+    triggerAutosave();
+    showToast("Idea deleted");
+  };
+
+  const activeSelectedIdea = useMemo(
+    () => ideaItems.find((i) => i.id === selectedIdeaId) || null,
+    [ideaItems, selectedIdeaId],
+  );
 
   // Save active selection whenever user clicks or presses key
   const saveCurrentSelection = useCallback(() => {
@@ -1425,9 +1578,16 @@ export const NoteEditor: React.FC = () => {
         0,
       );
     }
+    if (type === "idea") {
+      return ideaItems.reduce((acc, item) => {
+        const tWords = item.title?.trim() ? item.title.trim().split(/\s+/).length : 0;
+        const dWords = item.description?.trim() ? item.description.trim().split(/\s+/).length : 0;
+        return acc + tWords + dWords;
+      }, 0);
+    }
     const plain = htmlToPlainText(content).trim();
     return plain ? plain.split(/\s+/).filter(Boolean).length : 0;
-  }, [type, content, checklistItems]);
+  }, [type, content, checklistItems, ideaItems]);
 
   const checklistCompletedCount = checklistItems.filter(
     (c) => c.isCompleted,
@@ -1644,7 +1804,10 @@ export const NoteEditor: React.FC = () => {
       <main
         data-editor-canvas
         onContextMenu={handleEditorContextMenu}
-        className="w-full max-w-3xl mx-auto pt-1 sm:pt-2 pb-6 sm:pb-8 flex flex-col flex-1"
+        className={cn(
+          "w-full mx-auto pt-1 sm:pt-2 pb-6 sm:pb-8 flex flex-col flex-1",
+          type === "idea" ? "max-w-5xl" : "max-w-3xl",
+        )}
       >
         {/* Title Input */}
         <input
@@ -1659,7 +1822,11 @@ export const NoteEditor: React.FC = () => {
           }}
           onBlur={flushSave}
           placeholder={
-            type === "checklist" ? "Untitled Checklist" : "Untitled Note"
+            type === "checklist"
+              ? "Untitled Checklist"
+              : type === "idea"
+              ? "Untitled Idea"
+              : "Untitled Note"
           }
           className="w-full bg-transparent border-0 outline-none text-2xl sm:text-4xl font-extrabold text-[#1F1F1F] placeholder-slate-400/80 mb-3 tracking-tight focus:ring-0 leading-tight"
         />
@@ -1685,6 +1852,11 @@ export const NoteEditor: React.FC = () => {
               <>
                 <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Checklist</span>
+              </>
+            ) : type === "idea" ? (
+              <>
+                <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+                <span>Idea Board</span>
               </>
             ) : (
               <>
@@ -1715,7 +1887,7 @@ export const NoteEditor: React.FC = () => {
               className="rich-editor w-full flex-1 min-h-[420px] bg-transparent border-0 outline-none text-base leading-relaxed text-[#1F1F1F] font-normal focus:ring-0 select-text cursor-text"
             />
           </div>
-        ) : (
+        ) : type === "checklist" ? (
           /* Interactive Checklist Content Body */
           <div className="flex-1 flex flex-col space-y-4">
             {/* Checklist Progress Overview & Metrics */}
@@ -1826,8 +1998,31 @@ export const NoteEditor: React.FC = () => {
               </button>
             </form>
           </div>
+        ) : (
+          /* Dynamic Minimalist 2-Column Kanban Editor Body */
+          <div className="flex-1 flex flex-col pt-1">
+            <IdeaKanbanBoard
+              ideas={ideaItems}
+              selectedIdeaId={selectedIdeaId}
+              onSelectIdea={handleSelectIdea}
+              onOpenInspector={handleOpenIdeaInspector}
+              onAddIdea={handleAddIdea}
+              onMoveCard={handleMoveCard}
+            />
+          </div>
         )}
       </main>
+
+      {/* Idea Inspector Drawer for Idea Note Type */}
+      <IdeaInspectorDrawer
+        isOpen={isIdeaInspectorOpen}
+        idea={activeSelectedIdea}
+        onClose={() => setIsIdeaInspectorOpen(false)}
+        onUpdateTitle={handleUpdateIdeaTitle}
+        onUpdateDescription={handleUpdateIdeaDescription}
+        onUpdateStatus={handleUpdateIdeaStatus}
+        onDelete={() => handleDeleteIdea()}
+      />
 
       {/* Rich Text Context Menu (Word / Docs Style) */}
       <EditorContextMenu

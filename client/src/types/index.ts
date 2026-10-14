@@ -1,4 +1,13 @@
-export type ItemType = 'note' | 'checklist';
+export type ItemType = 'note' | 'checklist' | 'idea';
+
+export interface IdeaItem {
+  id: string;
+  title: string;
+  description: string;
+  status: 'ideas' | 'completed';
+  date: string;
+  order: number;
+}
 
 export type PastelColor = 'peach' | 'mint' | 'sky' | 'lavender' | 'rose' | 'yellow';
 export type PastelThemeKey = PastelColor;
@@ -68,8 +77,9 @@ export interface Note {
   title: string;
   body: string;
   content?: string; // Backward compatibility alias
-  type: 'note' | 'checklist';
+  type: ItemType;
   checklistItems?: ChecklistItem[];
+  ideaItems?: IdeaItem[];
   color: PastelColor | string;
   folderId: string | null;
   isFavorite: boolean;
@@ -125,7 +135,7 @@ export interface UserSettings {
   dailyReminderTime: string;
   soundEffectsEnabled: boolean;
   defaultNoteColor?: string;
-  defaultNoteType?: 'note' | 'checklist';
+  defaultNoteType?: ItemType;
 }
 
 export interface UserProfile {

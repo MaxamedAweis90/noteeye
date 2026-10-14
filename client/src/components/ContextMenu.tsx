@@ -18,6 +18,7 @@ import {
   FolderPlus,
   Scissors,
   CornerDownRight,
+  Lightbulb,
 } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
 import { useNoteStore } from '../store/useNoteStore';
@@ -332,6 +333,18 @@ export const ContextMenu: React.FC = () => {
             >
               <CheckSquare className="w-4 h-4 text-slate-500 shrink-0" />
               <span>New Checklist</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                closeContextMenu();
+                openNoteModal('idea');
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+            >
+              <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
+              <span>New Idea</span>
             </button>
 
             <button

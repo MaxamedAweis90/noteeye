@@ -8,13 +8,23 @@ export interface IChecklistItem {
   completed: boolean;
 }
 
+export interface IIdeaItem {
+  id: string;
+  title: string;
+  description: string;
+  status: 'ideas' | 'completed';
+  date: string;
+  order: number;
+}
+
 export interface INote extends Document {
   _id: mongoose.Types.ObjectId;
   userId?: mongoose.Types.ObjectId;
   title: string;
   body: string;
-  type: 'note' | 'checklist';
+  type: 'note' | 'checklist' | 'idea';
   checklistItems: IChecklistItem[];
+  ideaItems: IIdeaItem[];
   color: PastelColor;
   folderId: mongoose.Types.ObjectId | null;
   isFavorite: boolean;
@@ -60,6 +70,44 @@ checklistItemSchema.virtual('isCompleted').get(function (this: IChecklistItem) {
   return this.completed;
 });
 
+const ideaItemSchema = new Schema<IIdeaItem>(
+  {
+    id: {
+      type: String,
+      default: () => `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    },
+    title: {
+      type: String,
+      required: [true, 'Idea title is required'],
+      trim: true,
+      default: 'Untitled Idea',
+    },
+    description: {
+      type: String,
+      default: '',
+    },
+    status: {
+      type: String,
+      enum: ['ideas', 'completed'],
+      default: 'ideas',
+    },
+    date: {
+      type: String,
+      default: () => new Date().toISOString(),
+    },
+    order: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    _id: false,
+    toJSON: {
+      virtuals: true,
+    },
+  }
+);
+
 const noteSchema = new Schema<INote>(
   {
     userId: {
@@ -81,13 +129,17 @@ const noteSchema = new Schema<INote>(
     type: {
       type: String,
       enum: {
-        values: ['note', 'checklist'],
-        message: '{VALUE} is not a valid note type (expected "note" or "checklist")',
+        values: ['note', 'checklist', 'idea'],
+        message: '{VALUE} is not a valid note type (expected "note", "checklist", or "idea")',
       },
       default: 'note',
     },
     checklistItems: {
       type: [checklistItemSchema],
+      default: [],
+    },
+    ideaItems: {
+      type: [ideaItemSchema],
       default: [],
     },
     color: {
@@ -131,6 +183,16 @@ const noteSchema = new Schema<INote>(
           ret.checklistItems = ret.checklistItems.map((ci: any) => ({
             ...ci,
             isCompleted: ci.completed,
+          }));
+        }
+        if (Array.isArray(ret.ideaItems)) {
+          ret.ideaItems = ret.ideaItems.map((ii: any) => ({
+            id: ii.id,
+            title: ii.title || '',
+            description: ii.description || '',
+            status: ii.status || 'ideas',
+            date: ii.date || new Date().toISOString(),
+            order: typeof ii.order === 'number' ? ii.order : 0,
           }));
         }
         delete ret._id;

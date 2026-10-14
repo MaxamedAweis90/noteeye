@@ -37,20 +37,19 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
   folderId = null,
   onSave,
 }) => {
+  const getStartingColor = (t: ItemType) =>
+    t === 'checklist' ? '#CEEBFD' : t === 'idea' ? '#E5DEFA' : '#FDE3C9';
+
   const [title, setTitle] = useState('');
-  const [selectedColor, setSelectedColor] = useState<string>(
-    defaultType === 'checklist' ? '#CEEBFD' : '#FDE3C9'
-  );
-  const [initialColor, setInitialColor] = useState<string>(
-    defaultType === 'checklist' ? '#CEEBFD' : '#FDE3C9'
-  );
+  const [selectedColor, setSelectedColor] = useState<string>(getStartingColor(defaultType));
+  const [initialColor, setInitialColor] = useState<string>(getStartingColor(defaultType));
   const [isSaved, setIsSaved] = useState(false);
 
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-      const startingColor = defaultType === 'checklist' ? '#CEEBFD' : '#FDE3C9';
+      const startingColor = getStartingColor(defaultType);
       setSelectedColor(startingColor);
       setInitialColor(startingColor);
       setTitle('');
@@ -78,7 +77,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
   const handleSave = () => {
     if (isSaved || !isDirty) return;
 
-    const finalTitle = title.trim() || (defaultType === 'checklist' ? 'New Checklist' : 'New Note');
+    const finalTitle = title.trim() || (defaultType === 'checklist' ? 'New Checklist' : defaultType === 'idea' ? 'New Idea' : 'New Note');
 
     onSave({
       title: finalTitle,
@@ -137,7 +136,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={handleTitleKeyDown}
-                placeholder={defaultType === 'checklist' ? 'Checklist title...' : 'Note title...'}
+                placeholder={defaultType === 'checklist' ? 'Checklist title...' : defaultType === 'idea' ? 'Idea title...' : 'Note title...'}
                 className="text-xl font-bold text-[#1F1F1F] placeholder-slate-400 outline-none w-full bg-transparent border-none p-0"
               />
 

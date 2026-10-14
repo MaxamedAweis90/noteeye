@@ -18,8 +18,10 @@ import {
   Home,
   AlertCircle,
   Edit3,
+  Lightbulb,
 } from "lucide-react";
 import { format } from "date-fns";
+import type { ItemType } from "../types";
 import { useNoteStore } from "../store/useNoteStore";
 import { useUIStore } from "../store/uiStore";
 import { NoteCard } from "../components/NoteCard";
@@ -425,7 +427,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
     return trail;
   }, [folder, folders]);
 
-  const handleCreateNote = (type: "note" | "checklist" = "note") => {
+  const handleCreateNote = (type: ItemType = "note") => {
     if (folder) {
       setCurrentFolder(folder.id);
       openNoteModal(type);
@@ -817,6 +819,16 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
               <span>New note</span>
             </button>
 
+            {/* New Idea CTA Button */}
+            <button
+              type="button"
+              onClick={() => handleCreateNote("idea")}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+            >
+              <Lightbulb className="w-4 h-4 text-purple-600" />
+              <span>New idea</span>
+            </button>
+
             {/* View Mode Toggle */}
             <div className="bg-slate-100 p-1 rounded-full flex items-center gap-0.5 border border-black/[0.04]">
               <button
@@ -899,6 +911,14 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Create note here</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCreateNote("idea")}
+              className="px-4 py-2 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition-colors cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1.5"
+            >
+              <Lightbulb className="w-4 h-4 text-purple-600" />
+              <span>Create idea here</span>
             </button>
           </div>
         </div>

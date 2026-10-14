@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X } from "lucide-react";
+import { Search, X, Lightbulb } from "lucide-react";
 import { Logo } from "./Logo";
 import { SearchDropdown } from "./SearchDropdown";
 import { UserMenu } from "./UserMenu";
@@ -36,6 +36,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
   const folders = useNoteStore((state) => state.folders);
   const items = useNoteStore((state) => state.items);
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
+  const openNoteModal = useNoteStore((state) => state.openNoteModal);
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -224,6 +225,18 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
               title="Search in Noteeye"
             >
               <Search className="w-4 h-4 text-slate-600 shrink-0" />
+            </button>
+
+            {/* Desktop + New Idea Quick Action Button */}
+            <button
+              type="button"
+              onClick={() => openNoteModal('idea')}
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-700 hover:text-purple-900 border border-purple-200/80 text-xs font-semibold shadow-2xs transition-all active:scale-95 cursor-pointer"
+              title="Create new Idea Kanban Board"
+              aria-label="Create new Idea"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-purple-600 fill-purple-200/50" />
+              <span>New Idea</span>
             </button>
 
             <UserMenu onMobileAvatarClick={() => setIsMobileUserDrawerOpen(true)} />

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Folder, Item, ItemType, ChecklistItem } from '../types';
+import type { Folder, Item, ItemType, ChecklistItem, IdeaItem } from '../types';
 import { STARTER_FOLDERS, STARTER_ITEMS, DEFAULT_PASTEL_COLOR, generateMongoId } from '../types';
 import { useUIStore } from './uiStore';
 import { useSyncStore } from './syncStore';
@@ -63,6 +63,7 @@ export interface ConflictRecord {
     folderId: string | null;
     content?: string;
     checklistItems?: ChecklistItem[];
+    ideaItems?: IdeaItem[];
     color?: string;
     isFavorite?: boolean;
   };
@@ -160,7 +161,7 @@ interface NoteStoreState {
     isOpen: boolean;
     id: string;
     name: string;
-    type: 'item' | 'folder' | 'note' | 'checklist';
+    type: 'item' | 'folder' | 'note' | 'checklist' | 'idea';
   } | null;
   conflictDialogData: ConflictDialogState | null;
 
@@ -183,6 +184,7 @@ interface NoteStoreState {
     folderId: string | null;
     content?: string;
     checklistItems?: ChecklistItem[];
+    ideaItems?: IdeaItem[];
     color?: string;
     isFavorite?: boolean;
   }) => Item | null;
@@ -226,7 +228,7 @@ interface NoteStoreState {
   closeFolderModal: () => void;
   openQuickEditModal: (item: Item) => void;
   closeQuickEditModal: () => void;
-  openDeleteDialog: (id: string, name: string, type?: 'item' | 'folder' | 'note' | 'checklist') => void;
+  openDeleteDialog: (id: string, name: string, type?: 'item' | 'folder' | 'note' | 'checklist' | 'idea') => void;
   closeDeleteDialog: () => void;
   toggleMobileSidebar: (open?: boolean) => void;
   resetToDefault: () => void;
@@ -714,7 +716,7 @@ export const useNoteStore = create<NoteStoreState>()(
       },
 
       addItem: (data) => {
-        const trimmedTitle = data.title.trim() || (data.type === 'checklist' ? 'Untitled Checklist' : 'Untitled Note');
+        const trimmedTitle = data.title.trim() || (data.type === 'checklist' ? 'Untitled Checklist' : data.type === 'idea' ? 'Untitled Idea' : 'Untitled Note');
         const targetFolderId = data.folderId ?? null;
         const newNoteId = data.id && /^[0-9a-fA-F]{24}$/.test(data.id) ? data.id : generateMongoId();
 
@@ -774,6 +776,12 @@ export const useNoteStore = create<NoteStoreState>()(
             completed: ci.completed ?? ci.isCompleted ?? false,
             isCompleted: ci.isCompleted ?? ci.completed ?? false,
           })) || [],
+          ideaItems: data.ideaItems ? data.ideaItems.map((ii) => ({
+            ...ii,
+            status: ii.status || 'ideas',
+            date: ii.date || new Date().toISOString(),
+            order: typeof ii.order === 'number' ? ii.order : 0,
+          })) : [],
           color: data.color || DEFAULT_PASTEL_COLOR,
           isTrash: false,
           isDeleted: false,
@@ -797,6 +805,7 @@ export const useNoteStore = create<NoteStoreState>()(
               body: data.content || '',
               type: data.type,
               checklistItems: newItem.checklistItems,
+              ideaItems: newItem.ideaItems,
               color: newItem.color,
               folderId: targetFolderId,
               isFavorite: newItem.isFavorite,
@@ -1044,6 +1053,12 @@ export const useNoteStore = create<NoteStoreState>()(
             checklistItems: original.checklistItems
               ? original.checklistItems.map((ci) => ({
                   ...ci,
+                  id: generateMongoId(),
+                }))
+              : [],
+            ideaItems: original.ideaItems
+              ? original.ideaItems.map((ii) => ({
+                  ...ii,
                   id: generateMongoId(),
                 }))
               : [],

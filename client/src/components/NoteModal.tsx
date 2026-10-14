@@ -36,6 +36,11 @@ export const NoteModal: React.FC = () => {
         });
 
         if (newItem) {
+          if (newItem.type === 'idea') {
+            navigate(`/notes/${newItem.id}`);
+            return;
+          }
+
           if (newItem.folderId) {
             if (location.pathname !== `/folders/${newItem.folderId}`) {
               navigate(`/folders/${newItem.folderId}`);
@@ -46,7 +51,10 @@ export const NoteModal: React.FC = () => {
             }
           }
 
-          setSelectedItem(newItem.id, newItem.type === 'checklist' ? 'checklist' : 'note');
+          setSelectedItem(
+            newItem.id,
+            newItem.type === 'checklist' ? 'checklist' : 'note'
+          );
 
           setTimeout(() => {
             const element = document.querySelector(`[data-card-id="${newItem.id}"]`);

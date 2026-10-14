@@ -1,0 +1,311 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, Sparkles } from 'lucide-react';
+import type { IdeaItem } from '../../types';
+import { cn } from '../../utils/cn';
+
+export interface IdeaKanbanBoardProps {
+  ideas: IdeaItem[];
+  selectedIdeaId: string | null;
+  onSelectIdea: (id: string) => void;
+  onOpenInspector: (id: string) => void;
+  onAddIdea: (status: 'ideas' | 'completed', title?: string) => void;
+  onMoveCard: (ideaId: string, targetStatus: 'ideas' | 'completed', targetIndex?: number) => void;
+}
+
+export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
+  ideas,
+  selectedIdeaId,
+  onSelectIdea,
+  onOpenInspector,
+  onAddIdea,
+  onMoveCard,
+}) => {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<'ideas' | 'completed' | null>(null);
+  const [addingInColumn, setAddingInColumn] = useState<'ideas' | 'completed' | null>(null);
+  const [inlineTitle, setInlineTitle] = useState('');
+
+  const ideasItems = ideas
+    .filter((i) => i.status === 'ideas')
+    .sort((a, b) => a.order - b.order);
+
+  const completedItems = ideas
+    .filter((i) => i.status === 'completed')
+    .sort((a, b) => a.order - b.order);
+
+  const handleInlineSubmit = (status: 'ideas' | 'completed', e?: React.FormEvent) => {
+    e?.preventDefault();
+    const trimmed = inlineTitle.trim();
+    onAddIdea(status, trimmed || undefined);
+    setInlineTitle('');
+    setAddingInColumn(null);
+  };
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingId(id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverColumn(null);
+  };
+
+  const handleColumnDrop = (e: React.DragEvent, targetStatus: 'ideas' | 'completed') => {
+    e.preventDefault();
+    const droppedId = e.dataTransfer.getData('text/plain') || draggingId;
+    if (droppedId) {
+      onMoveCard(droppedId, targetStatus);
+    }
+    setDraggingId(null);
+    setDragOverColumn(null);
+  };
+
+  const handleCardDrop = (
+    e: React.DragEvent,
+    targetStatus: 'ideas' | 'completed',
+    targetIndex: number
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const droppedId = e.dataTransfer.getData('text/plain') || draggingId;
+    if (droppedId) {
+      onMoveCard(droppedId, targetStatus, targetIndex);
+    }
+    setDraggingId(null);
+    setDragOverColumn(null);
+  };
+
+  const renderCard = (item: IdeaItem, index: number) => {
+    const isSelected = selectedIdeaId === item.id;
+    const isDragging = draggingId === item.id;
+    const formattedDate = new Date(item.date || Date.now()).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+    });
+
+    return (
+      <motion.div
+        key={item.id}
+        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.16 }}
+        draggable
+        onDragStart={(e: any) => handleDragStart(e, item.id)}
+        onDragEnd={handleDragEnd as any}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => handleCardDrop(e, item.status, index)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelectIdea(item.id);
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onOpenInspector(item.id);
+        }}
+        className={cn(
+          'group/kcard relative bg-white rounded-2xl p-4 border transition-all cursor-grab active:cursor-grabbing select-none',
+          isSelected
+            ? 'ring-2 ring-purple-500 border-purple-400 shadow-md'
+            : 'border-slate-200/80 hover:border-purple-300/80 shadow-2xs hover:shadow-md',
+          isDragging && 'opacity-40 scale-95 ring-2 ring-purple-400'
+        )}
+      >
+        {/* Header: Title */}
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <h4 className="text-sm font-semibold text-[#1F1F1F] leading-snug line-clamp-2">
+            {item.title || 'Untitled Idea'}
+          </h4>
+        </div>
+
+        {/* Body Preview: Truncated Description */}
+        <div className="min-h-[2.2rem] mb-3">
+          {item.description?.trim() ? (
+            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+              {item.description}
+            </p>
+          ) : (
+            <p className="text-xs text-slate-400/80 italic leading-relaxed">
+              Double-click to add details or plans...
+            </p>
+          )}
+        </div>
+
+        {/* Footer Row: Date & Custom Circular Idea Icon Badge */}
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between mt-auto">
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span>{formattedDate}</span>
+          </div>
+
+          <div
+            title="Idea Item (Double click to edit details)"
+            className={cn(
+              'w-6 h-6 rounded-full flex items-center justify-center border transition-transform shadow-2xs group-hover/kcard:scale-110',
+              item.status === 'completed'
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                : 'bg-purple-50 text-purple-600 border-purple-100'
+            )}
+          >
+            {item.status === 'completed' ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            ) : (
+              <Lightbulb className="w-3.5 h-3.5 fill-purple-200/50 text-purple-600" />
+            )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  const renderColumn = (
+    title: string,
+    status: 'ideas' | 'completed',
+    itemsList: IdeaItem[],
+    icon: React.ReactNode,
+    badgeColor: string
+  ) => {
+    const isOver = dragOverColumn === status;
+    const isAdding = addingInColumn === status;
+
+    return (
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          setDragOverColumn(status);
+        }}
+        onDragLeave={() => {
+          setDragOverColumn((prev) => (prev === status ? null : prev));
+        }}
+        onDrop={(e) => handleColumnDrop(e, status)}
+        className={cn(
+          'flex-1 min-w-[280px] sm:min-w-[320px] rounded-3xl p-4 sm:p-5 flex flex-col transition-all duration-200 border',
+          isOver
+            ? 'bg-purple-50/70 border-purple-300 ring-2 ring-purple-300/40 shadow-md'
+            : 'bg-slate-50/60 border-slate-200/70'
+        )}
+      >
+        {/* Column Header Row */}
+        <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-slate-200/60">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-xl bg-white shadow-2xs border border-slate-200/60">
+              {icon}
+            </div>
+            <h3 className="text-sm font-bold text-[#1F1F1F] tracking-tight">{title}</h3>
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-[11px] font-bold shadow-2xs',
+                badgeColor
+              )}
+            >
+              {itemsList.length}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAddingInColumn(status);
+              setInlineTitle('');
+            }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/80 shadow-2xs transition-colors cursor-pointer active:scale-95"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Add idea</span>
+          </button>
+        </div>
+
+        {/* Quick Add Inline Form */}
+        <AnimatePresence>
+          {isAdding && (
+            <motion.form
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              onSubmit={(e) => handleInlineSubmit(status, e)}
+              className="p-3 mb-3 bg-white rounded-2xl border border-purple-200 shadow-md space-y-2"
+            >
+              <input
+                autoFocus
+                type="text"
+                value={inlineTitle}
+                onChange={(e) => setInlineTitle(e.target.value)}
+                placeholder="What is your idea?"
+                className="w-full text-xs sm:text-sm font-medium text-[#1F1F1F] placeholder-slate-400 bg-transparent border-0 outline-none p-0 focus:ring-0"
+              />
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setAddingInColumn(null)}
+                  className="px-2.5 py-1 rounded-lg text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 rounded-lg bg-[#0B57D0] hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  Add
+                </button>
+              </div>
+            </motion.form>
+          )}
+        </AnimatePresence>
+
+        {/* Cards Stack */}
+        <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar min-h-[220px]">
+          <AnimatePresence mode="popLayout">
+            {itemsList.map((item, index) => renderCard(item, index))}
+          </AnimatePresence>
+
+          {itemsList.length === 0 && !isAdding && (
+            <div
+              onClick={() => {
+                setAddingInColumn(status);
+                setInlineTitle('');
+              }}
+              className="h-32 border-2 border-dashed border-slate-200/90 rounded-2xl flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-purple-300 hover:bg-purple-50/20 transition-all select-none"
+            >
+              <Sparkles className="w-5 h-5 text-slate-300 mb-1.5" />
+              <p className="text-xs font-medium text-slate-500">
+                {status === 'ideas' ? 'No active ideas' : 'No completed ideas'}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {status === 'ideas'
+                  ? 'Click "+ Add idea" to capture thoughts'
+                  : 'Drag resolved cards here'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="w-full flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 min-h-0 select-none pb-6">
+      {/* Column 1: Ideas (Active Thoughts) */}
+      {renderColumn(
+        'Ideas',
+        'ideas',
+        ideasItems,
+        <Clock className="w-4 h-4 text-purple-600" />,
+        'bg-purple-100 text-purple-700'
+      )}
+
+      {/* Column 2: Completed (Executed Ideas) */}
+      {renderColumn(
+        'Completed',
+        'completed',
+        completedItems,
+        <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
+        'bg-emerald-100 text-emerald-700'
+      )}
+    </div>
+  );
+};

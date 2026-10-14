@@ -17,6 +17,7 @@ import {
   CheckSquare,
   Copy,
   Scissors,
+  Lightbulb,
 } from 'lucide-react';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
@@ -373,6 +374,14 @@ export const Home: React.FC<HomeProps> = ({
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>New Note</span>
             </button>
+            <button
+              type="button"
+              onClick={() => openNoteModal('idea')}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+              <span>New Idea</span>
+            </button>
             <DetailsToggleButton className="hidden md:flex" />
           </div>
         </div>
@@ -575,6 +584,14 @@ export const Home: React.FC<HomeProps> = ({
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Create Note</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openNoteModal('idea')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+              >
+                <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+                <span>New Idea</span>
               </button>
             </div>
           </div>

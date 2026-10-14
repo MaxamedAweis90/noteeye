@@ -73,8 +73,8 @@ export const getNotes = async (
       filter.isFavorite = isFavorite === 'true';
     }
 
-    // Filter by type ('note' | 'checklist')
-    if (type && ['note', 'checklist'].includes(type as string)) {
+    // Filter by type ('note' | 'checklist' | 'idea')
+    if (type && ['note', 'checklist', 'idea'].includes(type as string)) {
       filter.type = type;
     }
 
@@ -161,6 +161,7 @@ export const createNote = async (
       content,
       type = 'note',
       checklistItems = [],
+      ideaItems = [],
       color = 'peach',
       folderId = null,
       isFavorite = false,
@@ -195,12 +196,22 @@ export const createNote = async (
       userId: new mongoose.Types.ObjectId(userId),
       title: title ? title.trim() : 'Untitled',
       body: noteBody,
-      type: ['note', 'checklist'].includes(type) ? type : 'note',
+      type: ['note', 'checklist', 'idea'].includes(type) ? type : 'note',
       checklistItems: Array.isArray(checklistItems)
         ? checklistItems.map((ci: any) => ({
             id: ci.id || `cl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
             text: ci.text || '',
             completed: Boolean(ci.completed ?? ci.isCompleted),
+          }))
+        : [],
+      ideaItems: Array.isArray(ideaItems)
+        ? ideaItems.map((ii: any) => ({
+            id: ii.id || `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            title: ii.title ? String(ii.title).trim() : 'Untitled Idea',
+            description: ii.description || '',
+            status: ['ideas', 'completed'].includes(ii.status) ? ii.status : 'ideas',
+            date: ii.date || new Date().toISOString(),
+            order: typeof ii.order === 'number' ? ii.order : 0,
           }))
         : [],
       color: normalizeColor(color) || 'peach',
@@ -246,6 +257,7 @@ export const updateNote = async (
       content,
       type,
       checklistItems,
+      ideaItems,
       color,
       folderId,
       isFavorite,
@@ -257,7 +269,7 @@ export const updateNote = async (
     if (body !== undefined) updates.body = body;
     else if (content !== undefined) updates.body = content;
 
-    if (type !== undefined && ['note', 'checklist'].includes(type)) {
+    if (type !== undefined && ['note', 'checklist', 'idea'].includes(type)) {
       updates.type = type;
     }
 
@@ -266,6 +278,17 @@ export const updateNote = async (
         id: ci.id || `cl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         text: ci.text || '',
         completed: Boolean(ci.completed ?? ci.isCompleted),
+      }));
+    }
+
+    if (ideaItems !== undefined && Array.isArray(ideaItems)) {
+      updates.ideaItems = ideaItems.map((ii: any) => ({
+        id: ii.id || `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        title: ii.title ? String(ii.title).trim() : 'Untitled Idea',
+        description: ii.description || '',
+        status: ['ideas', 'completed'].includes(ii.status) ? ii.status : 'ideas',
+        date: ii.date || new Date().toISOString(),
+        order: typeof ii.order === 'number' ? ii.order : 0,
       }));
     }
 
@@ -543,6 +566,16 @@ export const duplicateNote = async (
         text: ci.text,
         completed: ci.completed,
       })),
+      ideaItems: Array.isArray(sourceNote.ideaItems)
+        ? sourceNote.ideaItems.map((ii) => ({
+            id: `idea-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            title: ii.title,
+            description: ii.description,
+            status: ii.status,
+            date: ii.date,
+            order: ii.order,
+          }))
+        : [],
       color: sourceNote.color,
       folderId: targetFolder,
       isFavorite: false,

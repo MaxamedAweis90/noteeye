@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, X, Folder as FolderIcon, FileText, Clock, ArrowRight } from 'lucide-react';
+import { Search, X, Folder as FolderIcon, FileText, CheckSquare, Lightbulb, Clock, ArrowRight } from 'lucide-react';
 import { useNoteStore } from '../store/useNoteStore';
 import { getRecentSearches, saveRecentSearch, removeRecentSearch } from '../utils/recentSearches';
 
@@ -203,7 +203,13 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ isOpen, on
                           className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition-colors cursor-pointer"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <FileText className="w-4.5 h-4.5 text-indigo-500 shrink-0" />
+                            {note.type === 'idea' ? (
+                              <Lightbulb className="w-4.5 h-4.5 text-purple-600 shrink-0" />
+                            ) : note.type === 'checklist' ? (
+                              <CheckSquare className="w-4.5 h-4.5 text-emerald-600 shrink-0" />
+                            ) : (
+                              <FileText className="w-4.5 h-4.5 text-indigo-500 shrink-0" />
+                            )}
                             <div className="flex flex-col min-w-0">
                               <span className="text-sm font-medium text-slate-800 truncate">
                                 {note.title}

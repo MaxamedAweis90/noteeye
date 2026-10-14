@@ -26,6 +26,7 @@ import { useUIStore } from '../../store/uiStore';
 import { useSplashStore } from '../../store/splashStore';
 import { authApi } from '../../api';
 import { PASTEL_PALETTE } from '../../types';
+import type { ItemType } from '../../types';
 
 /**
  * SettingsModal Component — Minimalist Humane Redesign
@@ -60,7 +61,7 @@ export const SettingsModal: React.FC = () => {
   const [defaultColor, setDefaultColor] = useState<string>(
     user.settings?.defaultNoteColor || 'peach'
   );
-  const [defaultType, setDefaultType] = useState<'note' | 'checklist'>(
+  const [defaultType, setDefaultType] = useState<ItemType>(
     user.settings?.defaultNoteType || 'note'
   );
   const [shortcutsEnabled, setShortcutsEnabled] = useState(
@@ -424,7 +425,7 @@ export const SettingsModal: React.FC = () => {
               </div>
 
               <div className="flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200/60">
-                {(['note', 'checklist'] as const).map((typeOption) => (
+                {(['note', 'checklist', 'idea'] as const).map((typeOption) => (
                   <button
                     key={typeOption}
                     type="button"
