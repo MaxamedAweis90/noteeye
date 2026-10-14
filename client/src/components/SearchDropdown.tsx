@@ -210,22 +210,23 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 })
               )}
 
-              {/* Footer Row (Only Shown When Active Matches Exist) */}
-              {matches.length > 0 && (
-                <motion.div layout="position" transition={springPhysics}>
-                  <div className="h-px bg-slate-100 my-1" />
-                  <div className="flex justify-end pt-0.5">
-                    <button
-                      type="button"
-                      onClick={onViewAllResults}
-                      className="text-xs font-semibold text-[#0B57D0] flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
-                    >
-                      <span>All results</span>
-                      <CornerDownLeft className="w-3.5 h-3.5 stroke-[2.5]" />
-                    </button>
-                  </div>
-                </motion.div>
-              )}
+              {/* Footer Row (Shown Whenever Query Is Typed) */}
+              <motion.div layout="position" transition={springPhysics}>
+                <div className="h-px bg-slate-100 my-1" />
+                <div className="flex items-center justify-between px-2 pt-0.5">
+                  <span className="text-[11px] text-slate-400 select-none">
+                    Press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[10px]">Enter ↵</kbd>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={onViewAllResults}
+                    className="text-xs font-semibold text-[#0B57D0] flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
+                  >
+                    <span>All results</span>
+                    <CornerDownLeft className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </button>
+                </div>
+              </motion.div>
             </>
           )}
         </motion.div>

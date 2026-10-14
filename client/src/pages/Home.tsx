@@ -116,8 +116,10 @@ export const Home: React.FC<HomeProps> = ({
     const q = searchParams.get('q');
     if (q !== null && q !== undefined) {
       useNoteStore.getState().setSearchQuery(q);
+    } else if (location.pathname === '/' && !searchParams.has('q')) {
+      useNoteStore.getState().setSearchQuery('');
     }
-  }, [searchParams]);
+  }, [searchParams, location.pathname]);
 
   // Active (non-deleted) collections
   const activeFolders = useMemo(() => {
@@ -413,7 +415,12 @@ export const Home: React.FC<HomeProps> = ({
           </div>
           <button
             type="button"
-            onClick={() => setSearchQuery('')}
+            onClick={() => {
+              setSearchQuery('');
+              if (location.pathname === '/search') {
+                navigate('/');
+              }
+            }}
             className="flex items-center gap-1 text-slate-500 hover:text-slate-800 text-xs font-semibold cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />

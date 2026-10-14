@@ -83,6 +83,7 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ isOpen, on
   const handleViewAll = () => {
     if (cleanQuery) {
       saveRecentSearch(cleanQuery);
+      useNoteStore.getState().setSearchQuery(cleanQuery);
       onClose();
       navigate(`/search?q=${encodeURIComponent(cleanQuery)}`);
     }
@@ -107,6 +108,11 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ isOpen, on
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleViewAll();
+                  }
+                }}
                 placeholder="Search notes, checklists, and folders..."
                 className="w-full bg-transparent text-sm text-[#1F1F1F] placeholder-slate-400 outline-none"
               />

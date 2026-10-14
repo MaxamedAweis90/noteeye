@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search, X, Lightbulb } from "@/components/ui/icons";
 import { Logo } from "./Logo";
 import { SearchDropdown } from "./SearchDropdown";
@@ -28,6 +28,7 @@ export interface TopNavProps {
  */
 export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,10 +39,21 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
   const openNoteModal = useNoteStore((state) => state.openNoteModal);
 
+  // Local draft query while typing so workspace is NOT filtered until "All results" or Enter
+  const [inputValue, setInputValue] = useState(searchQuery);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isMobileUserDrawerOpen, setIsMobileUserDrawerOpen] = useState(false);
+
+  // Keep input value in sync with committed store searchQuery and route transitions
+  useEffect(() => {
+    if (location.pathname !== "/search" && !searchQuery) {
+      setInputValue("");
+    } else {
+      setInputValue(searchQuery);
+    }
+  }, [location.pathname, searchQuery]);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -74,17 +86,21 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Desktop search handlers
+  // Desktop search handlers: Only commit search on Enter or clicking 'All results'
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      const trimmed = searchQuery.trim();
+      const trimmed = inputValue.trim();
       if (trimmed) {
         const updated = saveRecentSearch(trimmed);
         setRecentSearches(updated);
         setIsSearchFocused(false);
         inputRef.current?.blur();
+        setSearchQuery(trimmed);
         navigate(`/search?q=${encodeURIComponent(trimmed)}`);
       }
+    } else if (e.key === "Escape") {
+      setIsSearchFocused(false);
+      inputRef.current?.blur();
     }
   };
 
@@ -92,6 +108,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
     (term: string) => {
       const updated = saveRecentSearch(term);
       setRecentSearches(updated);
+      setInputValue(term);
       setSearchQuery(term);
       setIsSearchFocused(false);
       inputRef.current?.blur();
@@ -130,18 +147,23 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
   );
 
   const handleViewAllResults = useCallback(() => {
-    const trimmed = searchQuery.trim();
+    const trimmed = inputValue.trim();
     if (trimmed) {
       const updated = saveRecentSearch(trimmed);
       setRecentSearches(updated);
       setIsSearchFocused(false);
       inputRef.current?.blur();
+      setSearchQuery(trimmed);
       navigate(`/search?q=${encodeURIComponent(trimmed)}`);
     }
-  }, [navigate, searchQuery]);
+  }, [navigate, inputValue, setSearchQuery]);
 
   const handleClearQuery = () => {
+    setInputValue("");
     setSearchQuery("");
+    if (location.pathname === "/search") {
+      navigate("/");
+    }
     inputRef.current?.focus();
   };
 
@@ -174,8 +196,8 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
                   id="noteeye-main-search-input"
                   ref={inputRef}
                   type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
                   onFocus={() => {
                     setRecentSearches(getRecentSearches());
                     setIsSearchFocused(true);
@@ -186,7 +208,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
                   aria-label="Search notes, checklists, and folders"
                 />
 
-                {searchQuery && (
+                {inputValue && (
                   <button
                     type="button"
                     onClick={handleClearQuery}
@@ -201,7 +223,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
               {/* Dynamic Auto-Height Morphing Search Dropdown */}
               <SearchDropdown
                 isOpen={isSearchFocused}
-                query={searchQuery}
+                query={inputValue}
                 recentSearches={recentSearches}
                 folders={folders}
                 items={items}
