@@ -145,7 +145,7 @@ export const Register: React.FC = () => {
             <Logo />
           </div>
           <div className="flex flex-col gap-1 mt-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#1F1F1F] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-[#1F1F1F] tracking-tight">
               Create your Noteeye account
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-normal">

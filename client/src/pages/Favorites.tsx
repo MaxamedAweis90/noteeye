@@ -427,7 +427,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
       >
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
               <span>Favorites</span>
               <Star className="w-6 h-6 fill-amber-400 text-amber-400 shrink-0" />
             </h1>

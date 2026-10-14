@@ -156,7 +156,7 @@ const SectionHeading: React.FC<{ children: React.ReactNode; eyebrow?: string }> 
         {eyebrow}
       </span>
     )}
-    <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#1F1F1F] leading-[1.12] whitespace-pre-line">
+    <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tight text-[#1F1F1F] leading-[1.12] whitespace-pre-line">
       {children}
     </h2>
   </Reveal>
@@ -779,7 +779,7 @@ export const LandingPage: React.FC = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F]"
+            className="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F]"
           >
             Organize Your Notes,
             <br />
@@ -1176,13 +1176,13 @@ export const LandingPage: React.FC = () => {
               className="absolute bottom-0 right-0 w-[18%] h-[18%] bg-gradient-to-tl from-[#D9A800] to-[#FFF1A0]"
               style={{ clipPath: 'polygon(0 0, 100% 100%, 0 100%)' }}
             />
-            <p className="text-lg sm:text-xl font-bold leading-snug text-[#5C4600] whitespace-pre-line -rotate-2">
+            <p className="text-2xl sm:text-3xl font-handwriting font-bold leading-snug text-[#5C4600] whitespace-pre-line -rotate-2">
               {'Your space for\nnotes and docs.'}
             </p>
           </motion.div>
 
           <Reveal className="mt-14">
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight">
+            <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tight">
               Simple Notes. Powerful Docs.
             </h2>
             <p className="mt-3 text-sm sm:text-base text-[#444746]">

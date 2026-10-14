@@ -40,7 +40,7 @@ export const NoteEditorMetaBar: React.FC<NoteEditorMetaBarProps> = ({
             ? "Untitled Idea"
             : "Untitled Note"
         }
-        className="w-full bg-transparent border-0 outline-none text-2xl sm:text-4xl font-extrabold text-[#1F1F1F] placeholder-slate-400/80 mb-3 tracking-tight focus:ring-0 leading-tight"
+        className="w-full bg-transparent border-0 outline-none text-2xl sm:text-4xl font-display font-extrabold text-[#1F1F1F] placeholder-slate-400/80 mb-3 tracking-tight focus:ring-0 leading-tight"
       />
 
       {/* Meta Bar: Timestamp, Word Count, Autosaved Badge & Type Switcher */}

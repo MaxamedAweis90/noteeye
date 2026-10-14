@@ -279,7 +279,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       {/* 1. Top Header Area: Title & Date */}
       <div className="space-y-0.5 sm:space-y-1 min-w-0 shrink-0">
         <div className="flex items-start justify-between gap-1.5">
-          <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
+          <h3 className="font-display font-bold text-[14px] sm:text-[16px] lg:text-[18px] leading-tight text-[#1F1F1F] tracking-tight truncate flex-1">
             {item.title}
           </h3>
 

@@ -243,7 +243,7 @@ export const Settings: React.FC = () => {
     <div className="w-full max-w-3xl mx-auto py-8 sm:py-10 px-4 select-none flex flex-col gap-8">
       {/* Header */}
       <div className="flex flex-col gap-1 border-b border-slate-200/70 pb-5">
-        <h1 className="text-2xl font-bold text-[#1F1F1F] tracking-tight">
+        <h1 className="text-2xl font-display font-bold text-[#1F1F1F] tracking-tight">
           Settings
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 font-normal">

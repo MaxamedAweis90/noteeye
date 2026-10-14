@@ -263,7 +263,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               children
             ) : (
               <div className="flex flex-col w-full h-full min-h-[calc(100vh-8rem)] items-center justify-center">
-                <p className="text-base text-[#737785] font-normal tracking-normal select-none">
+                <p className="text-xl text-[#737785] font-handwriting select-none">
                   nothing to show!
                 </p>
               </div>

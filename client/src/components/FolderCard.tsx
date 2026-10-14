@@ -337,7 +337,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
         {/* Top Header Row: Title & Subtitle on Left, Star & 3-Dot Circle on Right */}
         <div className="w-full flex items-start justify-between gap-1.5 sm:gap-2 pt-0.5">
           <div className="flex-1 min-w-0 pr-1">
-            <h3 className="font-bold text-[14px] sm:text-[16px] lg:text-[18px] text-white tracking-tight leading-tight truncate">
+            <h3 className="font-display font-bold text-[14px] sm:text-[16px] lg:text-[18px] text-white tracking-tight leading-tight truncate">
               {folder.name}
             </h3>
             <p className="text-[10px] sm:text-xs text-white/80 font-normal mt-0.5">

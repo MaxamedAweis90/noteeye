@@ -433,9 +433,9 @@ export const Home: React.FC<HomeProps> = ({
           )}
         >
           <div className="max-w-2xl">
-            <h1 className="text-xl sm:text-2xl md:text-[32px] font-bold text-[#1F1F1F] tracking-tight leading-tight">
+            <h1 className="text-xl sm:text-2xl md:text-[32px] font-display font-bold text-[#1F1F1F] tracking-tight leading-tight">
               Hi, {displayName} —{' '}
-              <span className="italic font-normal text-[#FF6B4A]">
+              <span className="font-handwriting font-medium text-2xl sm:text-3xl text-[#FF6B4A]">
                 ready to capture your thoughts?
               </span>
             </h1>

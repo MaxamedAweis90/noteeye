@@ -665,7 +665,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight truncate">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] tracking-tight truncate">
                   {folder.name}
                 </h1>
 

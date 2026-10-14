@@ -122,7 +122,7 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
       >
         {/* Header: Title */}
         <div className="flex items-start justify-between gap-2 mb-1.5">
-          <h4 className="text-sm font-semibold text-[#1F1F1F] leading-snug line-clamp-2">
+          <h4 className="text-sm font-display font-semibold text-[#1F1F1F] leading-snug line-clamp-2">
             {item.title || 'Untitled Idea'}
           </h4>
         </div>
@@ -235,7 +235,7 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
             <div className="p-1.5 rounded-xl bg-white shadow-2xs border border-slate-200/60">
               {icon}
             </div>
-            <h3 className="text-sm font-bold text-[#1F1F1F] tracking-tight">{title}</h3>
+            <h3 className="text-sm font-display font-bold text-[#1F1F1F] tracking-tight">{title}</h3>
             <span
               className={cn(
                 'px-2 py-0.5 rounded-full text-[11px] font-bold shadow-2xs',

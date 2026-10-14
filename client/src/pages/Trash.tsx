@@ -504,7 +504,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
                 <span>Trash</span>
                 <Trash2 className="w-6 h-6 text-slate-700 shrink-0" />
               </h1>

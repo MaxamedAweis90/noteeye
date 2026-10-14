@@ -316,7 +316,7 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
             <div className="w-8 h-8 rounded-xl bg-[#EDF2FC] text-[#0B57D0] flex items-center justify-center shadow-2xs">
               <Clock className="w-4 h-4" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#1F1F1F] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] tracking-tight">
               Recents
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">

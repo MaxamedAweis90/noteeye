@@ -262,7 +262,7 @@ export const DetailsPanel: React.FC = () => {
                   ) : (
                     <FileText className="w-4 h-4 text-amber-600 shrink-0" />
                   )}
-                  <h2 className="text-sm font-bold text-[#1F1F1F] truncate tracking-tight">
+                  <h2 className="text-sm font-display font-bold text-[#1F1F1F] truncate tracking-tight">
                     {itemTitle}
                   </h2>
                 </div>

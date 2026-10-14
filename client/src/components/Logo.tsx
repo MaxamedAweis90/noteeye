@@ -102,7 +102,7 @@ export const Logo: React.FC<LogoProps> = ({
           alt="Noteeye Logo"
           className="w-10 h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
         />
-        <span className="text-[22px] font-bold tracking-tight text-[#1F1F1F]">
+        <span className="text-[22px] font-display font-bold tracking-tight text-[#1F1F1F]">
           Noteeye
         </span>
       </div>
