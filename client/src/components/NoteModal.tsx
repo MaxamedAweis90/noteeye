@@ -36,11 +36,6 @@ export const NoteModal: React.FC = () => {
         });
 
         if (newItem) {
-          if (newItem.type === 'idea') {
-            navigate(`/notes/${newItem.id}`);
-            return;
-          }
-
           if (newItem.folderId) {
             if (location.pathname !== `/folders/${newItem.folderId}`) {
               navigate(`/folders/${newItem.folderId}`);
@@ -53,7 +48,7 @@ export const NoteModal: React.FC = () => {
 
           setSelectedItem(
             newItem.id,
-            newItem.type === 'checklist' ? 'checklist' : 'note'
+            newItem.type === 'checklist' ? 'checklist' : newItem.type === 'idea' ? 'idea' : 'note'
           );
 
           setTimeout(() => {

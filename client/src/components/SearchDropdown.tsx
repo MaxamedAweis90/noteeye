@@ -58,12 +58,23 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
       (f) => !f.isDeleted && f.name.toLowerCase().includes(searchLower)
     );
 
-    const activeItems = items.filter(
-      (i) =>
-        !i.isDeleted &&
-        (i.title.toLowerCase().includes(searchLower) ||
-          (i.content && i.content.toLowerCase().includes(searchLower)))
-    );
+    const activeItems = items.filter((i) => {
+      if (i.isDeleted) return false;
+      if (i.title.toLowerCase().includes(searchLower)) return true;
+      if (i.content && i.content.toLowerCase().includes(searchLower)) return true;
+      if (i.checklistItems && i.checklistItems.some((c) => c.text.toLowerCase().includes(searchLower))) return true;
+      if (
+        i.ideaItems &&
+        i.ideaItems.some(
+          (ii) =>
+            ii.title.toLowerCase().includes(searchLower) ||
+            (ii.description && ii.description.toLowerCase().includes(searchLower))
+        )
+      ) {
+        return true;
+      }
+      return false;
+    });
 
     const combined: MatchItem[] = [
       ...activeFolders.map((f) => ({ kind: 'folder' as const, data: f })),

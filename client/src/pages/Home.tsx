@@ -164,7 +164,22 @@ export const Home: React.FC<HomeProps> = ({
       return activeItems.filter((i) => i.isFavorite);
     }
     if (isSearching) {
-      return activeItems.filter((i) => i.title.toLowerCase().includes(searchLower));
+      return activeItems.filter((i) => {
+        if (i.title.toLowerCase().includes(searchLower)) return true;
+        if (i.content && i.content.toLowerCase().includes(searchLower)) return true;
+        if (i.checklistItems && i.checklistItems.some((c) => c.text.toLowerCase().includes(searchLower))) return true;
+        if (
+          i.ideaItems &&
+          i.ideaItems.some(
+            (ii) =>
+              ii.title.toLowerCase().includes(searchLower) ||
+              (ii.description && ii.description.toLowerCase().includes(searchLower))
+          )
+        ) {
+          return true;
+        }
+        return false;
+      });
     }
     // Items inside current folder level
     return activeItems.filter((i) => i.folderId === currentFolderId);

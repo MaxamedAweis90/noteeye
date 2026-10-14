@@ -142,13 +142,30 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
             <span>{formattedDate}</span>
           </div>
 
-          <div
-            title="Idea Item (Double click to edit details)"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveCard(
+                item.id,
+                item.status === 'ideas' ? 'completed' : 'ideas'
+              );
+            }}
+            title={
+              item.status === 'ideas'
+                ? 'Click to mark as completed (or double-click card to edit details)'
+                : 'Click to move back to ideas (or double-click card to edit details)'
+            }
+            aria-label={
+              item.status === 'ideas'
+                ? 'Mark idea completed'
+                : 'Move idea back to active ideas'
+            }
             className={cn(
-              'w-6 h-6 rounded-full flex items-center justify-center border transition-transform shadow-2xs group-hover/kcard:scale-110',
+              'w-6 h-6 rounded-full flex items-center justify-center border transition-all shadow-2xs hover:scale-115 active:scale-90 cursor-pointer',
               item.status === 'completed'
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                : 'bg-purple-50 text-purple-600 border-purple-100'
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/80'
+                : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100/80'
             )}
           >
             {item.status === 'completed' ? (
@@ -156,7 +173,7 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
             ) : (
               <Lightbulb className="w-3.5 h-3.5 fill-purple-200/50 text-purple-600" />
             )}
-          </div>
+          </button>
         </div>
       </motion.div>
     );

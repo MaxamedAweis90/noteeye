@@ -203,6 +203,8 @@ export const ContextMenu: React.FC = () => {
           ? 'folder'
           : targetNote?.type === 'checklist'
           ? 'checklist'
+          : targetNote?.type === 'idea'
+          ? 'idea'
           : 'note'
       );
     }
@@ -220,6 +222,12 @@ export const ContextMenu: React.FC = () => {
         checklistItems: targetNote.checklistItems
           ? targetNote.checklistItems.map((ci) => ({ ...ci, id: `ci-${Date.now()}-${Math.random()}` }))
           : [],
+        ideaItems: targetNote.ideaItems
+          ? targetNote.ideaItems.map((ii) => ({
+              ...ii,
+              id: `idea-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+            }))
+          : [],
         color: targetNote.color,
         isFavorite: false,
       });
@@ -231,6 +239,18 @@ export const ContextMenu: React.FC = () => {
     if (targetNote) {
       const textToCopy = targetNote.type === 'checklist'
         ? `${targetNote.title}\n` + (targetNote.checklistItems?.map((c) => `[${c.isCompleted ? 'x' : ' '}] ${c.text}`).join('\n') || '')
+        : targetNote.type === 'idea'
+        ? `${targetNote.title}\n\n` +
+          (targetNote.ideaItems && targetNote.ideaItems.length > 0
+            ? targetNote.ideaItems
+                .map(
+                  (ii) =>
+                    `• [${ii.status === 'completed' ? 'Completed' : 'Idea'}] ${ii.title}${
+                      ii.description ? `\n  ${ii.description}` : ''
+                    }`
+                )
+                .join('\n\n')
+            : 'No ideas recorded yet.')
         : `${targetNote.title}\n\n${targetNote.content || ''}`;
 
       try {
