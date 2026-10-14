@@ -13,6 +13,7 @@ import { FloatingFeedbackButton } from './feedback/FloatingFeedbackButton';
 import { ContextMenu } from './ContextMenu';
 import { DetailsPanel } from './DetailsPanel';
 import { MobileBottomNav } from './MobileBottomNav';
+import { InstallAppBanner } from './InstallAppBanner';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -342,6 +343,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Floating Bottom-Right Feedback & Report Trigger Button */}
       <FloatingFeedbackButton />
+
+      {/* PWA Floating Install Banner (Workspace Only) */}
+      <InstallAppBanner />
 
       {/* Mobile Bottom Navigation Bar (< 768px) */}
       <MobileBottomNav />
