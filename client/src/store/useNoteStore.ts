@@ -317,6 +317,14 @@ export const useNoteStore = create<NoteStoreState>()(
                 completed: ci.completed ?? ci.isCompleted ?? false,
                 isCompleted: ci.isCompleted ?? ci.completed ?? false,
               })),
+              ideaItems: (sn.ideaItems || []).map((ii: any) => ({
+                id: ii.id || ii._id,
+                title: ii.title || '',
+                description: ii.description || '',
+                status: ii.status || 'ideas',
+                date: ii.date || new Date().toISOString(),
+                order: typeof ii.order === 'number' ? ii.order : 0,
+              })),
               color: sn.color || DEFAULT_PASTEL_COLOR,
               folderId: sn.folderId || null,
               isFavorite: Boolean(sn.isFavorite),
@@ -684,6 +692,12 @@ export const useNoteStore = create<NoteStoreState>()(
             checklistItems: note.checklistItems
               ? note.checklistItems.map((ci) => ({
                   ...ci,
+                  id: generateMongoId(),
+                }))
+              : [],
+            ideaItems: note.ideaItems
+              ? note.ideaItems.map((ii) => ({
+                  ...ii,
                   id: generateMongoId(),
                 }))
               : [],
@@ -1269,6 +1283,9 @@ export const useNoteStore = create<NoteStoreState>()(
                                 isCompleted: ci.isCompleted ?? ci.completed ?? false,
                               }))
                             : i.checklistItems,
+                          ideaItems: data?.ideaItems
+                            ? data.ideaItems.map((ii) => ({ ...ii }))
+                            : i.ideaItems,
                           id: conflict.existingId,
                           title: conflict.incomingName,
                           folderId: conflict.targetFolderId,
@@ -1369,6 +1386,7 @@ export const useNoteStore = create<NoteStoreState>()(
                       completed: ci.completed ?? ci.isCompleted ?? false,
                       isCompleted: ci.isCompleted ?? ci.completed ?? false,
                     })) || [],
+                    ideaItems: data?.ideaItems?.map((ii) => ({ ...ii })) || [],
                     color: data?.color || DEFAULT_PASTEL_COLOR,
                     isTrash: false,
                     isDeleted: false,
@@ -1670,6 +1688,9 @@ export const useNoteStore = create<NoteStoreState>()(
                     checklistItems: noteToMove.checklistItems
                       ? noteToMove.checklistItems.map((ci) => ({ ...ci, id: generateMongoId() }))
                       : [],
+                    ideaItems: noteToMove.ideaItems
+                      ? noteToMove.ideaItems.map((ii) => ({ ...ii, id: generateMongoId() }))
+                      : [],
                   };
                   updatedItems = [clonedNote, ...updatedItems];
                   operationsToSync.push({
@@ -1740,6 +1761,7 @@ export const useNoteStore = create<NoteStoreState>()(
                     body: op.clonedNote.content || '',
                     type: op.clonedNote.type,
                     checklistItems: op.clonedNote.checklistItems,
+                    ideaItems: op.clonedNote.ideaItems,
                     color: op.clonedNote.color,
                     folderId: op.clonedNote.folderId,
                     isFavorite: false,
@@ -1759,6 +1781,7 @@ export const useNoteStore = create<NoteStoreState>()(
                           body: cn.content || '',
                           type: cn.type,
                           checklistItems: cn.checklistItems,
+                          ideaItems: cn.ideaItems,
                           color: cn.color,
                           folderId: createdFolder.id,
                           isFavorite: false,

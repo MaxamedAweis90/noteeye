@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { IdeaKanbanBoard } from '../editor/IdeaKanbanBoard';
 import { IdeaInspectorDrawer } from '../editor/IdeaInspectorDrawer';
 import type { IdeaItem } from '../../types';
@@ -20,7 +21,8 @@ export interface Ideafile_EditorProps {
 
 /**
  * Ideafile_Editor — Dedicated Idea Board File Editor Component.
- * Integrates the dynamic 2-column minimalist Kanban board with the right-side Idea Inspector Drawer.
+ * Integrates the dynamic 2-column minimalist Kanban board.
+ * Renders the companion Idea Inspector into the AppShell companion slot (where DetailsPanel sits).
  */
 export const Ideafile_Editor: React.FC<Ideafile_EditorProps> = ({
   ideaItems,
@@ -36,11 +38,31 @@ export const Ideafile_Editor: React.FC<Ideafile_EditorProps> = ({
   onUpdateIdeaStatus,
   onDeleteIdea,
 }) => {
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const activeSelectedIdea = ideaItems.find((i) => i.id === selectedIdeaId) || null;
+
+  useEffect(() => {
+    const el = document.getElementById('companion-panel-portal');
+    if (el) {
+      setPortalTarget(el);
+    }
+  }, []);
+
+  const inspectorNode = (
+    <IdeaInspectorDrawer
+      isOpen={isIdeaInspectorOpen}
+      idea={activeSelectedIdea}
+      onClose={onCloseInspector}
+      onUpdateTitle={onUpdateIdeaTitle}
+      onUpdateDescription={onUpdateIdeaDescription}
+      onUpdateStatus={onUpdateIdeaStatus}
+      onDelete={() => onDeleteIdea()}
+    />
+  );
 
   return (
     <>
-      <div className="flex-1 flex flex-col pt-1">
+      <div className="flex-1 flex flex-col pt-1 w-full">
         <IdeaKanbanBoard
           ideas={ideaItems}
           selectedIdeaId={selectedIdeaId}
@@ -51,16 +73,8 @@ export const Ideafile_Editor: React.FC<Ideafile_EditorProps> = ({
         />
       </div>
 
-      {/* Slide-out Idea Inspector Drawer */}
-      <IdeaInspectorDrawer
-        isOpen={isIdeaInspectorOpen}
-        idea={activeSelectedIdea}
-        onClose={onCloseInspector}
-        onUpdateTitle={onUpdateIdeaTitle}
-        onUpdateDescription={onUpdateIdeaDescription}
-        onUpdateStatus={onUpdateIdeaStatus}
-        onDelete={() => onDeleteIdea()}
-      />
+      {/* Companion Idea Inspector portaled to AppShell companion slot */}
+      {portalTarget ? createPortal(inspectorNode, portalTarget) : inspectorNode}
     </>
   );
 };

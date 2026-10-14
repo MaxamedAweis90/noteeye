@@ -108,11 +108,11 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
           onOpenInspector(item.id);
         }}
         className={cn(
-          'group/kcard relative bg-white rounded-2xl p-4 border transition-all cursor-grab active:cursor-grabbing select-none',
+          'group/kcard relative rounded-2xl p-4 border transition-all cursor-grab active:cursor-grabbing select-none',
           isSelected
-            ? 'ring-2 ring-purple-500 border-purple-400 shadow-md'
-            : 'border-slate-200/80 hover:border-purple-300/80 shadow-2xs hover:shadow-md',
-          isDragging && 'opacity-40 scale-95 ring-2 ring-purple-400'
+            ? 'bg-purple-50/50 border-purple-300 ring-2 ring-purple-200/70 shadow-xs'
+            : 'bg-white border-slate-200/80 hover:border-purple-200 hover:shadow-xs shadow-2xs',
+          isDragging && 'opacity-40 scale-[0.98] border-purple-300 ring-1 ring-purple-200'
         )}
       >
         {/* Header: Title */}

@@ -271,6 +271,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
           {/* Integrated Companion Details Panel Island (Active outside note editor) */}
           {!location.pathname.startsWith('/notes') && <DetailsPanel />}
+
+          {/* Integrated Companion Panel Slot (e.g. Idea Inspector inside note editor) */}
+          <div id="companion-panel-portal" className="contents" />
         </main>
       </div>
 

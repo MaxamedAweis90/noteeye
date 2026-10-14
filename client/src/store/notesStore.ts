@@ -60,6 +60,7 @@ export const useNotesStore = create<NotesStoreState>()(
             content: body, // Backward compatibility
             type,
             checklistItems: payload.checklistItems || [],
+            ideaItems: payload.ideaItems || [],
             color,
             folderId,
             isFavorite: payload.isFavorite || false,
@@ -85,6 +86,7 @@ export const useNotesStore = create<NotesStoreState>()(
               body,
               type,
               checklistItems: newNote.checklistItems,
+              ideaItems: newNote.ideaItems,
               color,
               folderId,
               isFavorite: newNote.isFavorite,
@@ -302,6 +304,10 @@ export const useNotesStore = create<NotesStoreState>()(
             updatedAt: now,
             checklistItems: target.checklistItems?.map((ci) => ({
               ...ci,
+              id: generateMongoId(),
+            })),
+            ideaItems: target.ideaItems?.map((ii) => ({
+              ...ii,
               id: generateMongoId(),
             })),
           };
