@@ -8,7 +8,7 @@ import {
   Lightbulb,
   CornerDownLeft,
   X,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import type { Folder, Item } from '../types';
 
 export interface SearchDropdownProps {

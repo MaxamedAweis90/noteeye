@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, Lightbulb } from "lucide-react";
+import { Search, X, Lightbulb } from "@/components/ui/icons";
 import { Logo } from "./Logo";
 import { SearchDropdown } from "./SearchDropdown";
 import { UserMenu } from "./UserMenu";

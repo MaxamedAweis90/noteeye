@@ -19,7 +19,7 @@ import {
   Plus,
   Trash2,
   Sliders,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { cn } from '../../utils/cn';
 
 export interface EditorContextMenuProps {

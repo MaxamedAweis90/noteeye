@@ -10,7 +10,7 @@ import {
   AlignLeft,
   Tag,
   User,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import type { IdeaItem } from '../../types';
 import { cn } from '../../utils/cn';
 

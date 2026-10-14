@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, X, Plus } from 'lucide-react';
+import { Check, X, Plus } from '@/components/ui/icons';
 import type { ChecklistItem } from '../../types';
 import { cn } from '../../utils/cn';
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, Home } from 'lucide-react';
+import { ChevronRight, Home } from '@/components/ui/icons';
 import type { Folder } from '../types';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';

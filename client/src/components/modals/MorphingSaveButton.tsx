@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Check } from 'lucide-react';
+import { Check } from '@/components/ui/icons';
 
 export interface MorphingSaveButtonProps {
   /** True when user has typed a title, toggled an item, or changed a swatch */

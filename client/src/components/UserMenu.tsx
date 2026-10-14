@@ -12,7 +12,7 @@ import {
   Camera,
   Loader2,
   Laptop,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useUserStore } from "../store/userStore";
 import { useUIStore } from "../store/uiStore";
 import { useAuthStore } from "../store/authStore";

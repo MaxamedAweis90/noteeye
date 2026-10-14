@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2 } from 'lucide-react';
+import { Trash2 } from '@/components/ui/icons';
 
 export interface DeleteDialogProps {
   isOpen: boolean;

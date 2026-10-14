@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { X } from '@/components/ui/icons';
 import type { ItemType } from '../../types';
 import { MorphingSaveButton } from './MorphingSaveButton';
 

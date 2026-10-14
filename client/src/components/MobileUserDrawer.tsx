@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock, Camera, Loader2, Laptop } from 'lucide-react';
+import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock, Camera, Loader2, Laptop } from '@/components/ui/icons';
 import { useUserStore } from '../store/userStore';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';

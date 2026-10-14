@@ -9,7 +9,7 @@ import {
   Palette,
   User,
   Lightbulb,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';

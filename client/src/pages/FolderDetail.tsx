@@ -19,7 +19,7 @@ import {
   AlertCircle,
   Edit3,
   Lightbulb,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { format } from "date-fns";
 import type { ItemType } from "../types";
 import { useNoteStore } from "../store/useNoteStore";

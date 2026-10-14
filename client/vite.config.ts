@@ -36,6 +36,11 @@ function stripStaticPWAManifestPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   plugins: [
     tailwindcss(),
     react(),

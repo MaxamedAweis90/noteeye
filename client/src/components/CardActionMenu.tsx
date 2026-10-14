@@ -21,7 +21,7 @@ import {
   CheckSquare,
   Lightbulb,
   CornerDownRight,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useUIStore } from '../store/uiStore';
 import { useNoteStore } from '../store/useNoteStore';
 import { cn } from '../utils/cn';

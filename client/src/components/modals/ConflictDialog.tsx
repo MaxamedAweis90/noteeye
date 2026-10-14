@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   AlertCircle,
   X,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useNoteStore } from '../../store/useNoteStore';
 
 const springConfig = {

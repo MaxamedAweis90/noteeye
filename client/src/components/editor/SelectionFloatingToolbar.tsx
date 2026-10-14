@@ -10,7 +10,7 @@ import {
   List,
   Copy,
   Scissors,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 
 export interface SelectionFloatingToolbarProps {
   isOpen: boolean;

@@ -7,7 +7,7 @@ import {
   CheckSquare,
   Folder,
   Lightbulb,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import { useNoteStore } from "../store/useNoteStore";
 import type { ItemType } from "../types";
 

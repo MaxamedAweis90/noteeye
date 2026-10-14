@@ -14,7 +14,7 @@ import {
   Star,
   Edit3,
   Trash2,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import {
   differenceInCalendarDays,
   isThisMonth,

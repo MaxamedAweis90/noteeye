@@ -1,6 +1,6 @@
 import React, { useState, useId } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Loader2, AlertCircle } from '@/components/ui/icons';
 import { Logo } from '../../components/Logo';
 import { authApi } from '../../api';
 import { useAuthStore } from '../../store/authStore';

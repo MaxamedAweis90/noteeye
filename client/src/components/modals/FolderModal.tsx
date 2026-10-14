@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Folder as FolderIcon, X } from 'lucide-react';
+import { Folder as FolderIcon, X } from '@/components/ui/icons';
 import type { Folder } from '../../types';
 
 export interface FolderModalProps {

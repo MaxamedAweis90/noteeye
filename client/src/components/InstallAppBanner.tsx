@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Download, X, Smartphone } from 'lucide-react';
+import { Download, X, Smartphone } from '@/components/ui/icons';
 import { usePWAInstallPrompt } from '../pwa/registerSW';
 
 /**

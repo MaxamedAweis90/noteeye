@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronDown, Loader2, Send } from 'lucide-react';
+import { X, ChevronDown, Loader2, Send } from '@/components/ui/icons';
 import { useUIStore } from '../../store/uiStore';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';

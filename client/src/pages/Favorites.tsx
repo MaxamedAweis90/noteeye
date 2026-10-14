@@ -13,7 +13,7 @@ import {
   Trash2,
   MoreHorizontal,
   Pencil,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { format } from 'date-fns';
 import { useNoteStore } from '../store/useNoteStore';
 import { NoteCard } from '../components/NoteCard';

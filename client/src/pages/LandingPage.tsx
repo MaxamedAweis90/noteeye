@@ -24,7 +24,7 @@ import {
   Zap,
   Lock,
   ShieldAlert,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { APP_URL } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';

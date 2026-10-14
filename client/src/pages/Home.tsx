@@ -18,7 +18,7 @@ import {
   Copy,
   Scissors,
   Lightbulb,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { useUserStore } from '../store/userStore';

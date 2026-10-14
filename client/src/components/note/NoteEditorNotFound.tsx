@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, Home } from 'lucide-react';
+import { AlertCircle, Home } from '@/components/ui/icons';
 
 interface NoteEditorNotFoundProps {
   onReturnHome: () => void;

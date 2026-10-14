@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, X, Folder as FolderIcon, FileText, CheckSquare, Lightbulb, Clock, ArrowRight } from 'lucide-react';
+import { Search, X, Folder as FolderIcon, FileText, CheckSquare, Lightbulb, Clock, ArrowRight } from '@/components/ui/icons';
 import { useNoteStore } from '../store/useNoteStore';
 import { getRecentSearches, saveRecentSearch, removeRecentSearch } from '../utils/recentSearches';
 

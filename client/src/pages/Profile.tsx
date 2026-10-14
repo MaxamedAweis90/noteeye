@@ -12,7 +12,7 @@ import {
   FileText,
   Folder as FolderIcon,
   Calendar,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useUserStore } from '../store/userStore';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';

@@ -17,7 +17,7 @@ import {
   Sparkles,
   Clock,
   CheckSquare,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { format } from 'date-fns';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';

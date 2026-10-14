@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Loader2, CloudOff, AlertTriangle, Check } from 'lucide-react';
+import { Loader2, CloudOff, AlertTriangle, Check } from '@/components/ui/icons';
 import { useSyncStore } from '../store/syncStore';
 import { useAuthStore } from '../store/authStore';
 import { queryClient } from './SyncProvider';

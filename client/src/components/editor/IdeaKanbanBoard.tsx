@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, Sparkles, SlidersHorizontal } from '@/components/ui/icons';
 import type { IdeaItem } from '../../types';
 import { cn } from '../../utils/cn';
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Star, Check } from 'lucide-react';
+import { Star, Check } from '@/components/ui/icons';
 import type { Folder } from '../types';
 import { CardActionMenu } from './CardActionMenu';
 import { useNoteStore } from '../store/useNoteStore';

@@ -9,7 +9,7 @@ import {
   RefreshCw,
   LogOut,
   Info,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { useUIStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';

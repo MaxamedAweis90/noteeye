@@ -12,7 +12,7 @@ import {
   Lightbulb,
   Folder,
   X,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useNoteStore } from '../store/useNoteStore';
 
 const springTransition = {

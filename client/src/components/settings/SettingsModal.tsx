@@ -18,7 +18,7 @@ import {
   Lock,
   Loader2,
   LogOut,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
 import { useNoteStore } from '../../store/useNoteStore';

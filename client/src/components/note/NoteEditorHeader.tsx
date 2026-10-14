@@ -10,7 +10,7 @@ import {
   Table as TableIcon,
   Star,
   Trash2,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import type { Folder } from '../../types';
 import { cn } from '../../utils/cn';
 

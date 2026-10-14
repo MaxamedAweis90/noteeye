@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
-import { Check, CloudOff, Loader2, TriangleAlert } from 'lucide-react';
+import { Check, CloudOff, Loader2, TriangleAlert } from '@/components/ui/icons';
 import { useAuthStore } from '../store/authStore';
 import { useNoteStore } from '../store/useNoteStore';
 import { useUserStore } from '../store/userStore';

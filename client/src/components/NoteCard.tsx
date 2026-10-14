@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "motion/react";
-import { Star, Check, Lightbulb, FileText, CheckSquare } from "lucide-react";
+import { Star, Check, Lightbulb, FileText, CheckSquare, Pencil, Trash2 } from "@/components/ui/icons";
 import type { Item } from "../types";
 import { CardActionMenu } from "./CardActionMenu";
 import { useNoteStore } from "../store/useNoteStore";
@@ -465,18 +465,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               aria-label="Edit note"
               className="w-7 h-7 sm:w-[32px] sm:h-[32px] lg:w-[34px] lg:h-[34px] rounded-full bg-[#1F1F1F] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition-all cursor-pointer shadow-2xs"
             >
-              <svg
-                className="w-3 h-3 sm:w-3.5 sm:h-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                <path d="m15 5 4 4" />
-              </svg>
+              <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={2.2} />
             </button>
 
             {/* Delete Button */}
@@ -486,19 +475,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
               aria-label="Delete note"
               className="w-7 h-7 sm:w-[32px] sm:h-[32px] lg:w-[34px] lg:h-[34px] rounded-full bg-[#1F1F1F] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition-all cursor-pointer shadow-2xs"
             >
-              <svg
-                className="w-3 h-3 sm:w-3.5 sm:h-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              </svg>
+              <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" strokeWidth={2.2} />
             </button>
           </div>
         )}

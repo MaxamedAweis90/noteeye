@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FolderPlus } from 'lucide-react';
+import { X, FolderPlus } from '@/components/ui/icons';
 import { useNoteStore } from '../store/useNoteStore';
 
 export const CreateFolderModal: React.FC = () => {

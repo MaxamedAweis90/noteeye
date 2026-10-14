@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Minus, Trash2 } from 'lucide-react';
+import { Minus, Trash2 } from '@/components/ui/icons';
 import { cn } from '../../utils/cn';
 
 const DIVIDER_COLORS = [

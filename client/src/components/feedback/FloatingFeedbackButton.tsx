@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquarePlus } from 'lucide-react';
+import { MessageSquarePlus } from '@/components/ui/icons';
 import { useUIStore } from '../../store/uiStore';
 
 /**

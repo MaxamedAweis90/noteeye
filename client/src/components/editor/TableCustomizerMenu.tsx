@@ -10,7 +10,7 @@ import {
   AlignRight,
   Palette,
   LayoutGrid,
-} from 'lucide-react';
+} from '@/components/ui/icons';
 import { cn } from '../../utils/cn';
 
 const PASTEL_SWATCHES = [
