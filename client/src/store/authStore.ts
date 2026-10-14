@@ -9,16 +9,20 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isCheckingAuth: boolean;
   stats: UserStats | null;
 
   // Actions
   login: (token: string, user: UserProfile) => void;
   register: (token: string, user: UserProfile) => void;
-  logout: () => void;
+  logout: (callServer?: boolean) => void;
   updateUser: (updates: Partial<UserProfile>) => void;
   checkAuth: () => Promise<boolean>;
   setStats: (stats: UserStats) => void;
 }
+
+const hasInitialToken =
+  typeof window !== 'undefined' && Boolean(localStorage.getItem('noteeye_auth_token'));
 
 export const useAuthStore = create<AuthState>()(
   devtools(
@@ -26,8 +30,9 @@ export const useAuthStore = create<AuthState>()(
       (set, get) => ({
         user: null,
         token: typeof window !== 'undefined' ? localStorage.getItem('noteeye_auth_token') : null,
-        isAuthenticated: !!(typeof window !== 'undefined' && localStorage.getItem('noteeye_auth_token')),
+        isAuthenticated: hasInitialToken,
         isLoading: false,
+        isCheckingAuth: hasInitialToken,
         stats: null,
 
         login: (token: string, user: UserProfile) => {
@@ -37,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
             user,
             isAuthenticated: true,
             isLoading: false,
+            isCheckingAuth: false,
           });
           try {
             window.dispatchEvent(new CustomEvent('noteeye:login'));
@@ -50,23 +56,31 @@ export const useAuthStore = create<AuthState>()(
             user,
             isAuthenticated: true,
             isLoading: false,
+            isCheckingAuth: false,
           });
           try {
             window.dispatchEvent(new CustomEvent('noteeye:login'));
           } catch {}
         },
 
-        logout: () => {
+        logout: (callServer = true) => {
+          if (callServer) {
+            authApi.logout().catch(() => {});
+          }
           localStorage.removeItem('noteeye_auth_token');
+          try {
+            localStorage.removeItem('noteeye-drive-storage');
+          } catch {}
+
           set({
             token: null,
             user: null,
             isAuthenticated: false,
             isLoading: false,
+            isCheckingAuth: false,
             stats: null,
           });
           try {
-            // Reset user profile to Guest
             window.dispatchEvent(new CustomEvent('noteeye:logout'));
           } catch {
             // Ignore
@@ -87,12 +101,13 @@ export const useAuthStore = create<AuthState>()(
         checkAuth: async () => {
           const token = localStorage.getItem('noteeye_auth_token');
           if (!token) {
-            set({ isAuthenticated: false, user: null });
+            localStorage.removeItem('noteeye-drive-storage');
+            set({ isAuthenticated: false, user: null, isCheckingAuth: false });
             return false;
           }
 
           try {
-            set({ isLoading: true });
+            set({ isLoading: true, isCheckingAuth: true });
             const data = await authApi.getMe();
             if (data?.user) {
               set({
@@ -100,19 +115,28 @@ export const useAuthStore = create<AuthState>()(
                 stats: data.stats || null,
                 isAuthenticated: true,
                 isLoading: false,
+                isCheckingAuth: false,
               });
               return true;
             }
-            return false;
+            throw new Error('No user data returned');
           } catch (err) {
             console.warn('[AuthStore] checkAuth failed:', err);
             localStorage.removeItem('noteeye_auth_token');
+            try {
+              localStorage.removeItem('noteeye-drive-storage');
+            } catch {}
+
             set({
               user: null,
               token: null,
               isAuthenticated: false,
               isLoading: false,
+              isCheckingAuth: false,
             });
+            try {
+              window.dispatchEvent(new CustomEvent('noteeye:logout'));
+            } catch {}
             return false;
           }
         },
@@ -134,9 +158,24 @@ export const useAuthStore = create<AuthState>()(
 // Listen to global 401 unauthorized event
 if (typeof window !== 'undefined') {
   window.addEventListener('noteeye:unauthorized', (event: any) => {
-    useAuthStore.getState().logout();
-    if (event?.detail?.isRevoked) {
+    useAuthStore.getState().logout(false);
+    try {
+      localStorage.removeItem('noteeye-drive-storage');
+    } catch {}
+
+    const isRevoked = Boolean(event?.detail?.isRevoked);
+    const reason = isRevoked ? 'revoked' : 'unauthorized';
+
+    if (isRevoked) {
       useUIStore.getState().showToast('This session was signed out from another device.');
+    } else {
+      useUIStore.getState().showToast('Session expired or access unauthorized. Please sign in.');
+    }
+
+    // Force redirection to landing page with appropriate reason
+    const currentPath = window.location.pathname;
+    if (currentPath !== '/landing' && currentPath !== '/login' && currentPath !== '/register') {
+      window.location.replace(`/landing?reason=${reason}`);
     }
   });
 }

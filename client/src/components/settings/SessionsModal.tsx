@@ -80,7 +80,8 @@ export const SessionsModal: React.FC = () => {
         if (list.length > 0 && !list.some((s) => s.isCurrent)) {
           showToast('This device was signed out from another session.');
           closeSessionsModal();
-          logout();
+          logout(false);
+          window.location.replace('/landing?reason=revoked');
         }
       } catch (err: any) {
         // If 401 was returned, auth interceptor will handle kick-out
@@ -148,6 +149,7 @@ export const SessionsModal: React.FC = () => {
         showToast('Current session signed out');
         closeSessionsModal();
         logout();
+        window.location.replace('/landing?reason=logout');
         return;
       }
 

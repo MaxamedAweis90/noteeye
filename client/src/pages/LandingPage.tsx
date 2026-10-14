@@ -22,9 +22,12 @@ import {
   Users,
   X,
   Zap,
+  Lock,
+  ShieldAlert,
 } from 'lucide-react';
 import { APP_URL } from '../api/client';
 import { useAuthStore } from '../store/authStore';
+import { useUIStore } from '../store/uiStore';
 
 /* ═════════════════════════════════════════════════════════════
    DATA
@@ -432,32 +435,102 @@ const DemoPlayer: React.FC = () => {
    PAGE
    ═════════════════════════════════════════════════════════════ */
 
+export interface AuthNotice {
+  type: 'unauthorized' | 'revoked' | 'logout';
+  title: string;
+  description: string;
+}
+
 export const LandingPage: React.FC = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const authStoreIsAuth = useAuthStore((state) => state.isAuthenticated);
   const logout = useAuthStore((state) => state.logout);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [authNotice, setAuthNotice] = useState<AuthNotice | null>(null);
+
+  // Directly check both storage and zustand store to immediately catch active session on render
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const hasToken = Boolean(localStorage.getItem('noteeye_auth_token'));
+    return hasToken && authStoreIsAuth;
+  });
+
+  // Keep isLoggedIn strictly in sync with storage & store events
+  useEffect(() => {
+    const syncAuthState = () => {
+      if (typeof window === 'undefined') return;
+      const hasToken = Boolean(localStorage.getItem('noteeye_auth_token'));
+      const isAuth = useAuthStore.getState().isAuthenticated;
+      setIsLoggedIn(hasToken && isAuth);
+    };
+
+    syncAuthState();
+
+    window.addEventListener('noteeye:login', syncAuthState);
+    window.addEventListener('noteeye:logout', syncAuthState);
+    window.addEventListener('storage', syncAuthState);
+
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('noteeye_auth_token'));
+      setIsLoggedIn(hasToken && state.isAuthenticated);
+    });
+
+    return () => {
+      window.removeEventListener('noteeye:login', syncAuthState);
+      window.removeEventListener('noteeye:logout', syncAuthState);
+      window.removeEventListener('storage', syncAuthState);
+      unsubscribe();
+    };
+  }, []);
 
   // Sync token if redirected from the app subdomain, or revalidate an existing session
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const params = new URLSearchParams(window.location.search);
+    const reason = params.get('reason');
+
+    if (reason === 'unauthorized' || reason === 'no-access') {
+      setAuthNotice({
+        type: 'unauthorized',
+        title: 'Sign-in Required',
+        description: 'Access to that workspace page is restricted. Please sign in to continue.',
+      });
+      useUIStore.getState().showToast('Access restricted: Please sign in to view your workspace.');
+    } else if (reason === 'revoked') {
+      setAuthNotice({
+        type: 'revoked',
+        title: 'Session Terminated',
+        description: 'This session was signed out from another device. Please sign in again to continue.',
+      });
+      useUIStore.getState().showToast('Security Alert: Your session was signed out from another device.');
+    } else if (reason === 'logout') {
+      setAuthNotice({
+        type: 'logout',
+        title: 'Logged Out Successfully',
+        description: 'You have been safely signed out of your Noteeye account.',
+      });
+      useUIStore.getState().showToast('Signed out of Noteeye.');
+    }
+
     const authToken = params.get('auth_token');
 
     if (authToken) {
       localStorage.setItem('noteeye_auth_token', authToken);
       useAuthStore.getState().checkAuth().catch(() => {});
+    } else if (localStorage.getItem('noteeye_auth_token')) {
+      useAuthStore.getState().checkAuth().catch(() => {});
+    }
 
+    if (reason || authToken) {
       params.delete('auth_token');
+      params.delete('reason');
       const cleanSearch = params.toString() ? `?${params.toString()}` : '';
       window.history.replaceState(
         {},
         '',
         `${window.location.pathname}${cleanSearch}${window.location.hash}`
       );
-    } else if (localStorage.getItem('noteeye_auth_token')) {
-      useAuthStore.getState().checkAuth().catch(() => {});
     }
   }, []);
 
@@ -476,9 +549,9 @@ export const LandingPage: React.FC = () => {
       return `${APP_URL}/${authQuery}`;
     }
     return '/';
-  }, [isAuthenticated, appWorkspaceUrl]);
+  }, [isLoggedIn, appWorkspaceUrl]);
 
-  const primaryHref = isAuthenticated ? workspaceHref : registerUrl;
+  const primaryHref = isLoggedIn ? workspaceHref : registerUrl;
 
   const handleLogout = () => {
     logout();
@@ -507,7 +580,7 @@ export const LandingPage: React.FC = () => {
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     const q = email.trim() ? `?email=${encodeURIComponent(email.trim())}` : '';
-    window.location.href = isAuthenticated ? workspaceHref : `${registerUrl}${q}`;
+    window.location.href = isLoggedIn ? workspaceHref : `${registerUrl}${q}`;
   };
 
   return (
@@ -517,6 +590,68 @@ export const LandingPage: React.FC = () => {
     >
       {/* ───────────── 1. TOP NAVIGATION ───────────── */}
       <header className="absolute top-0 inset-x-0 z-50">
+        {/* Authorization Alert Notification Banner */}
+        {authNotice && (
+          <div
+            className={`text-white border-b px-4 py-2.5 shadow-md transition-all ${
+              authNotice.type === 'logout'
+                ? 'bg-[#002B1D] border-emerald-500/30'
+                : authNotice.type === 'revoked'
+                ? 'bg-[#2B0E14] border-rose-500/30'
+                : 'bg-[#001D35] border-white/10'
+            }`}
+          >
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs sm:text-sm">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                    authNotice.type === 'logout'
+                      ? 'bg-emerald-400/20 text-emerald-400'
+                      : authNotice.type === 'revoked'
+                      ? 'bg-rose-400/20 text-rose-300'
+                      : 'bg-amber-400/20 text-amber-300'
+                  }`}
+                >
+                  {authNotice.type === 'revoked' ? (
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                  ) : authNotice.type === 'logout' ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 text-amber-300" />
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
+                  <span className="font-semibold text-white">{authNotice.title}:</span>
+                  <span className="text-slate-300 text-xs">{authNotice.description}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={loginUrl}
+                  className={`px-3 py-1 rounded-lg text-white text-xs font-semibold shadow-xs transition-all active:scale-95 ${
+                    authNotice.type === 'logout'
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : authNotice.type === 'revoked'
+                      ? 'bg-rose-600 hover:bg-rose-700'
+                      : 'bg-[#0B57D0] hover:bg-[#0041A2]'
+                  }`}
+                >
+                  Sign in
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setAuthNotice(null)}
+                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  aria-label="Dismiss notice"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="h-20 max-w-7xl mx-auto px-6 flex items-center justify-between select-none">
           <a href="#home" className="flex items-center gap-2.5 group">
             <img
@@ -540,7 +675,7 @@ export const LandingPage: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-2">
-            {isAuthenticated ? (
+            {isLoggedIn ? (
               <>
                 <button
                   type="button"
@@ -598,7 +733,7 @@ export const LandingPage: React.FC = () => {
                 {l.label}
               </a>
             ))}
-            {isAuthenticated && (
+            {isLoggedIn && (
               <button
                 type="button"
                 onClick={handleLogout}
@@ -665,7 +800,7 @@ export const LandingPage: React.FC = () => {
             className="mt-8"
           >
             <DarkButton href={primaryHref} className="px-8 py-3.5 text-base">
-              {isAuthenticated ? 'Open Noteeye' : 'Try For Free'}
+              {isLoggedIn ? 'Open Noteeye' : 'Try For Free'}
             </DarkButton>
           </motion.div>
 

@@ -58,6 +58,13 @@ export const authApi = {
     const res = await apiClient.patch<{ message: string }>('/auth/change-password', data);
     return res.data;
   },
+  /**
+   * Log out of current device session
+   */
+  logout: async (): Promise<{ message: string }> => {
+    const res = await apiClient.post<{ message: string }>('/auth/logout');
+    return res.data;
+  },
 };
 
 export default authApi;

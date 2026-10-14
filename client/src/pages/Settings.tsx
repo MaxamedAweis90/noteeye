@@ -719,7 +719,7 @@ export const Settings: React.FC = () => {
               triggerLogoutSplash(() => {
                 logout();
                 showToast('Signed out of Noteeye');
-                navigate('/');
+                navigate('/landing?reason=logout');
               });
             }}
             className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2 transition-colors cursor-pointer"

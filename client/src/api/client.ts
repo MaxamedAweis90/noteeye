@@ -107,6 +107,9 @@ apiClient.interceptors.response.use(
           const message = error.response?.data?.message || '';
           const isRevoked = typeof message === 'string' && message.toLowerCase().includes('revoked');
           localStorage.removeItem('noteeye_auth_token');
+          try {
+            localStorage.removeItem('noteeye-drive-storage');
+          } catch {}
           window.dispatchEvent(
             new CustomEvent('noteeye:unauthorized', { detail: { isRevoked, message } })
           );

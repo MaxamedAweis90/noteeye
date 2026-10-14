@@ -37,29 +37,68 @@ const ScrollToTop: React.FC = () => {
 /**
  * GuestRoute Guard
  * If the user is already authenticated, prevents access to /login and /register
- * and automatically redirects them to the workspace root ("/").
+ * and automatically redirects them to the workspace root ("/") or previous route.
  */
 const GuestRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
+  const location = useLocation();
+
+  if (isCheckingAuth) {
+    return <SplashLoader />;
+  }
+
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    const from = (location.state as any)?.from?.pathname || '/';
+    return <Navigate to={from} replace />;
   }
   return <>{children}</>;
 };
 
 /**
  * ProtectedRoute Guard
- * Protects sensitive user account pages (/profile, /settings).
- * If the user is not authenticated, redirects them to /login.
+ * Protects workspace and sensitive user account pages.
+ * If user session is verifying, renders the smooth SplashLoader.
+ * If user is not authenticated, redirects to /landing?reason=unauthorized with location state.
  */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
   const location = useLocation();
 
+  if (isCheckingAuth) {
+    return <SplashLoader />;
+  }
+
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/landing?reason=unauthorized" state={{ from: location }} replace />;
   }
   return <>{children}</>;
+};
+
+/**
+ * WorkspaceRoot component for "/"
+ * 1. If session is verifying, displays SplashLoader.
+ * 2. If authenticated, renders <AppShell><Home /></AppShell>.
+ * 3. If unauthenticated, displays <LandingPage /> cleanly without any unauthorized warning banner.
+ */
+const WorkspaceRoot: React.FC = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
+
+  if (isCheckingAuth) {
+    return <SplashLoader />;
+  }
+
+  if (!isAuthenticated) {
+    return <LandingPage />;
+  }
+
+  return (
+    <AppShell>
+      <Home />
+    </AppShell>
+  );
 };
 
 export const AppRouter: React.FC = () => {
@@ -73,6 +112,7 @@ export const AppRouter: React.FC = () => {
       if (isLogoutAction) {
         useAuthStore.getState().logout();
         useUserStore.getState().resetUser();
+        useNoteStore.getState().resetToDefault();
         searchParams.delete('action');
         searchParams.delete('logout');
         const cleanSearch = searchParams.toString() ? `?${searchParams.toString()}` : '';
@@ -110,16 +150,18 @@ export const AppRouter: React.FC = () => {
             useFoldersStore.getState().fetchFolders().catch(() => {});
           } else {
             useUserStore.getState().resetUser();
+            useNoteStore.getState().resetToDefault();
           }
         })
         .catch(() => {
           useUserStore.getState().resetUser();
+          useNoteStore.getState().resetToDefault();
         });
     } else {
       useUserStore.getState().resetUser();
+      useNoteStore.getState().resetToDefault();
     }
   }, []);
-
 
   return (
     <BrowserRouter>
@@ -128,69 +170,78 @@ export const AppRouter: React.FC = () => {
       <SplashLoader />
 
       <Routes>
-        {/* Populated Drive Workspace Pages inside Noteeye AppShell */}
-        <Route
-          path="/"
-          element={
-            <AppShell>
-              <Home />
-            </AppShell>
-          }
-        />
+        {/* Workspace Root (Landing Page if guest, AppShell if logged in) */}
+        <Route path="/" element={<WorkspaceRoot />} />
+
+        {/* Protected Internal Drive Workspace Pages inside Noteeye AppShell */}
         <Route
           path="/folders/:id"
           element={
-            <AppShell>
-              <FolderDetail />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <FolderDetail />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/recents"
           element={
-            <AppShell>
-              <Recents />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <Recents />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/favorites"
           element={
-            <AppShell>
-              <Favorites />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <Favorites />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/notes/new"
           element={
-            <AppShell>
-              <NoteEditor />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <NoteEditor />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/notes/:id"
           element={
-            <AppShell>
-              <NoteEditor />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <NoteEditor />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/search"
           element={
-            <AppShell>
-              <Home />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <Home />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/trash"
           element={
-            <AppShell>
-              <Trash />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <Trash />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
 
@@ -245,8 +296,22 @@ export const AppRouter: React.FC = () => {
         />
 
         {/* Isolated App Shell Wireframe */}
-        <Route path="/shell" element={<AppShell />} />
-        <Route path="/empty" element={<AppShell />} />
+        <Route
+          path="/shell"
+          element={
+            <ProtectedRoute>
+              <AppShell />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/empty"
+          element={
+            <ProtectedRoute>
+              <AppShell />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Landing Page Route (Available for preview & marketing on app domain) */}
         <Route path="/landing" element={<LandingPage />} />
@@ -255,9 +320,11 @@ export const AppRouter: React.FC = () => {
         <Route
           path="*"
           element={
-            <AppShell>
-              <Home />
-            </AppShell>
+            <ProtectedRoute>
+              <AppShell>
+                <Home />
+              </AppShell>
+            </ProtectedRoute>
           }
         />
       </Routes>

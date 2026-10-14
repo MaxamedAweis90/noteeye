@@ -815,6 +815,7 @@ export const SettingsModal: React.FC = () => {
                   triggerLogoutSplash(() => {
                     logout();
                     showToast('Signed out of Noteeye');
+                    window.location.replace('/landing?reason=logout');
                   });
                 }}
                 className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2 transition-colors cursor-pointer"

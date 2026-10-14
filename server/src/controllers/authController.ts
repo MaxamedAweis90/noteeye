@@ -181,23 +181,21 @@ export const getMe = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    let user: IUser | null = null;
-    if (req.user?.id) {
-      user = await User.findById(req.user.id);
-    }
-    if (!user) {
-      user = await User.findOne({ email: 'maxamedaweys90@gmail.com' }) || await User.findOne();
-    }
-
-    if (!user) {
-      res.status(404).json({ message: 'User not found' });
+    if (!req.user?.id) {
+      res.status(401).json({ message: 'Authentication required. Please sign in.' });
       return;
     }
 
-    // Functional account statistics
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      res.status(401).json({ message: 'User account not found or has been removed.' });
+      return;
+    }
+
+    // Scoped account statistics for the authenticated user
     const [totalNotes, totalFolders] = await Promise.all([
-      Note.countDocuments({ isTrash: false }),
-      Folder.countDocuments({ isTrash: false }),
+      Note.countDocuments({ userId: user._id, isTrash: false }),
+      Folder.countDocuments({ userId: user._id, isTrash: false }),
     ]);
 
     const stats = {
@@ -225,16 +223,14 @@ export const updateProfile = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    let user: IUser | null = null;
-    if (req.user?.id) {
-      user = await User.findById(req.user.id);
-    }
-    if (!user) {
-      user = await User.findOne({ email: 'maxamedaweys90@gmail.com' }) || await User.findOne();
+    if (!req.user?.id) {
+      res.status(401).json({ message: 'Authentication required.' });
+      return;
     }
 
+    const user = await User.findById(req.user.id);
     if (!user) {
-      res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'User not found.' });
       return;
     }
 
@@ -283,14 +279,12 @@ export const changePassword = async (
       return;
     }
 
-    let user: IUser | null = null;
-    if (req.user?.id) {
-      user = await User.findById(req.user.id);
-    }
-    if (!user) {
-      user = await User.findOne({ email: 'maxamedaweys90@gmail.com' });
+    if (!req.user?.id) {
+      res.status(401).json({ message: 'Authentication required.' });
+      return;
     }
 
+    const user = await User.findById(req.user.id);
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -309,6 +303,28 @@ export const changePassword = async (
     res.status(200).json({
       message: 'Password changed successfully',
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Logout user from current device (deletes active session)
+ * POST /api/auth/logout
+ */
+export const logout = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (req.tokenHash && req.user?.id) {
+      await Session.findOneAndDelete({
+        tokenHash: req.tokenHash,
+        userId: req.user.id,
+      });
+    }
+    res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
     next(error);
   }

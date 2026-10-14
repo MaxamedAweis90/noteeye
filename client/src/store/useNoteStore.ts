@@ -1772,9 +1772,14 @@ export const useNoteStore = create<NoteStoreState>()(
       },
 
       resetToDefault: () => {
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('noteeye-drive-storage');
+          }
+        } catch {}
         set({
-          folders: STARTER_FOLDERS,
-          items: STARTER_ITEMS,
+          folders: [],
+          items: [],
           currentFolderId: null,
           searchQuery: '',
           isNoteModalOpen: false,

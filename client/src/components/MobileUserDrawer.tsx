@@ -54,6 +54,7 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
     triggerLogoutSplash(() => {
       logout();
       showToast('Signed out of Noteeye');
+      window.location.replace('/landing?reason=logout');
     });
   };
 
