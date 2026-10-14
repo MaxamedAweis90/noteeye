@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, Sparkles } from 'lucide-react';
+import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, Sparkles, SlidersHorizontal } from 'lucide-react';
 import type { IdeaItem } from '../../types';
 import { cn } from '../../utils/cn';
 
@@ -25,6 +25,7 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
   const [dragOverColumn, setDragOverColumn] = useState<'ideas' | 'completed' | null>(null);
   const [addingInColumn, setAddingInColumn] = useState<'ideas' | 'completed' | null>(null);
   const [inlineTitle, setInlineTitle] = useState('');
+  const [mobileTab, setMobileTab] = useState<'ideas' | 'completed'>('ideas');
 
   const ideasItems = ideas
     .filter((i) => i.status === 'ideas')
@@ -102,6 +103,10 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
         onClick={(e) => {
           e.stopPropagation();
           onSelectIdea(item.id);
+          // On mobile screens, single tap directly opens the companion inspector
+          if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            onOpenInspector(item.id);
+          }
         }}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -130,16 +135,32 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
             </p>
           ) : (
             <p className="text-xs text-slate-400/80 italic leading-relaxed">
-              Double-click to add details or plans...
+              <span className="sm:hidden">Tap to add details or plans...</span>
+              <span className="hidden sm:inline">Double-click to add details or plans...</span>
             </p>
           )}
         </div>
 
-        {/* Footer Row: Date & Custom Circular Idea Icon Badge */}
+        {/* Footer Row: Date, Notes/Inspect Button & Custom Circular Idea Icon Badge */}
         <div className="pt-2 border-t border-slate-100 flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <span>{formattedDate}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              <span>{formattedDate}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenInspector(item.id);
+              }}
+              title="View details & notes"
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-slate-500 hover:text-purple-700 hover:bg-purple-50 transition-colors text-[10px] sm:text-[11px] font-semibold cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3 h-3 text-purple-600" />
+              <span>Notes</span>
+            </button>
           </div>
 
           <button
@@ -201,7 +222,8 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
         }}
         onDrop={(e) => handleColumnDrop(e, status)}
         className={cn(
-          'flex-1 min-w-[280px] sm:min-w-[320px] rounded-3xl p-4 sm:p-5 flex flex-col transition-all duration-200 border',
+          'w-full lg:flex-1 min-w-0 lg:min-w-[320px] rounded-3xl p-4 sm:p-5 flex flex-col transition-all duration-200 border',
+          mobileTab !== status && 'hidden lg:flex',
           isOver
             ? 'bg-purple-50/70 border-purple-300 ring-2 ring-purple-300/40 shadow-md'
             : 'bg-slate-50/60 border-slate-200/70'
@@ -275,7 +297,7 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
         </AnimatePresence>
 
         {/* Cards Stack */}
-        <div className="flex-1 overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar min-h-[220px]">
+        <div className="flex-1 lg:overflow-y-auto space-y-2.5 pr-0.5 custom-scrollbar min-h-[160px] sm:min-h-[220px]">
           <AnimatePresence mode="popLayout">
             {itemsList.map((item, index) => renderCard(item, index))}
           </AnimatePresence>
@@ -305,24 +327,64 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 min-h-0 select-none pb-6">
-      {/* Column 1: Ideas (Active Thoughts) */}
-      {renderColumn(
-        'Ideas',
-        'ideas',
-        ideasItems,
-        <Clock className="w-4 h-4 text-purple-600" />,
-        'bg-purple-100 text-purple-700'
-      )}
+    <div className="w-full flex-1 flex flex-col min-h-0 select-none pb-6">
+      {/* Mobile Column Switcher (< lg) */}
+      <div className="flex lg:hidden items-center justify-between p-1 bg-slate-100/90 rounded-2xl border border-slate-200/70 mb-3 gap-1">
+        <button
+          type="button"
+          onClick={() => setMobileTab('ideas')}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer',
+            mobileTab === 'ideas'
+              ? 'bg-white text-purple-700 shadow-2xs font-bold'
+              : 'text-slate-500 hover:text-slate-800'
+          )}
+        >
+          <Clock className="w-3.5 h-3.5 text-purple-600" />
+          <span>Ideas</span>
+          <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-purple-100 text-purple-700 font-bold">
+            {ideasItems.length}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('completed')}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer',
+            mobileTab === 'completed'
+              ? 'bg-white text-emerald-700 shadow-2xs font-bold'
+              : 'text-slate-500 hover:text-slate-800'
+          )}
+        >
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Completed</span>
+          <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-700 font-bold">
+            {completedItems.length}
+          </span>
+        </button>
+      </div>
 
-      {/* Column 2: Completed (Executed Ideas) */}
-      {renderColumn(
-        'Completed',
-        'completed',
-        completedItems,
-        <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
-        'bg-emerald-100 text-emerald-700'
-      )}
+      {/* Columns: side-by-side on lg+, responsive stacked/filtered on mobile */}
+      <div className="w-full flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 min-h-0">
+        {/* Column 1: Ideas (Active Thoughts) */}
+        {renderColumn(
+          'Ideas',
+          'ideas',
+          ideasItems,
+          <Clock className="w-4 h-4 text-purple-600" />,
+          'bg-purple-100 text-purple-700'
+        )}
+
+        {/* Column 2: Completed (Executed Ideas) */}
+        {renderColumn(
+          'Completed',
+          'completed',
+          completedItems,
+          <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
+          'bg-emerald-100 text-emerald-700'
+        )}
+      </div>
     </div>
   );
 };
+

@@ -796,7 +796,13 @@ export const useNoteStore = create<NoteStoreState>()(
             date: ii.date || new Date().toISOString(),
             order: typeof ii.order === 'number' ? ii.order : 0,
           })) : [],
-          color: data.color || DEFAULT_PASTEL_COLOR,
+          color:
+            data.color ||
+            (data.type === 'idea'
+              ? '#E5DEFA'
+              : data.type === 'checklist'
+              ? '#CEEBFD'
+              : DEFAULT_PASTEL_COLOR),
           isTrash: false,
           isDeleted: false,
           deletedAt: null,
