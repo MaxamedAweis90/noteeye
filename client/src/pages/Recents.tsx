@@ -419,26 +419,24 @@ export const Recents: React.FC<RecentsProps> = ({ isLoading = false }) => {
       {/* 2. Chronological Timeline Sections */}
       {totalNotesCount === 0 ? (
         /* Empty State */
-        <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-[#F8FAFD]/50 p-12 sm:p-16 text-center flex flex-col items-center justify-center max-w-lg mx-auto my-12 space-y-4">
-          <div className="w-16 h-16 rounded-3xl bg-[#EDF2FC] text-[#0B57D0] flex items-center justify-center shadow-2xs">
-            <Clock className="w-8 h-8" />
+        <div className="flex flex-col items-center justify-center py-20 text-center select-none animate-fade-in">
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-xs">
+            <Clock className="w-7 h-7 text-slate-400" />
           </div>
 
-          <div className="space-y-1">
-            <h3 className="text-base font-bold text-[#1F1F1F]">
-              {filterType === 'all'
-                ? 'No recent notes yet'
-                : `No recent ${filterType}s found`}
-            </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Notes and interactive checklists you create or update will automatically appear here in chronological timeline groups.
-            </p>
-          </div>
+          <h2 className="text-lg font-bold text-[#1F1F1F]">
+            {filterType === 'all'
+              ? 'No recent notes yet'
+              : `No recent ${filterType}s found`}
+          </h2>
+          <p className="text-sm text-slate-500 max-w-sm mt-1">
+            Notes and interactive checklists you create or update will automatically appear here in chronological timeline groups.
+          </p>
 
           <button
             type="button"
             onClick={() => navigate('/notes/new?type=note')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0B57D0] hover:bg-[#0041A2] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer mt-2"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0B57D0] hover:bg-[#0041A2] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer mt-5"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Create Note</span>

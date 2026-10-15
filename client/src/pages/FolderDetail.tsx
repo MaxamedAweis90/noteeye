@@ -885,40 +885,40 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
       {totalItemsCount === 0 ? (
         /* Empty Folder State */
         <div className="flex flex-col items-center justify-center py-20 text-center select-none animate-fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-4 shadow-xs">
-            <FolderIcon className="w-7 h-7 fill-amber-400 text-amber-400" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-xs">
+            <FolderIcon className="w-7 h-7 text-slate-400" />
           </div>
           <h2 className="text-lg font-bold text-[#1F1F1F]">
             This folder is empty
           </h2>
-          <p className="text-sm text-slate-500 max-w-sm mt-1 mb-5">
+          <p className="text-sm text-slate-500 max-w-sm mt-1">
             Add notes, checklists, or create nested subfolders inside this
             collection.
           </p>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 mt-5">
             <button
               type="button"
               onClick={() => openFolderModal()}
-              className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[#1F1F1F] text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95 flex items-center gap-1.5"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[#1F1F1F] text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
             >
-              <FolderPlus className="w-4 h-4 text-purple-600" />
-              <span>Create folder here</span>
+              <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
+              <span>New Folder</span>
             </button>
             <button
               type="button"
               onClick={() => handleCreateNote("note")}
-              className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-black transition-colors cursor-pointer shadow-xs active:scale-95 flex items-center gap-1.5"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0B57D0] hover:bg-[#0041A2] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
             >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>Create note here</span>
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Create Note</span>
             </button>
             <button
               type="button"
               onClick={() => handleCreateNote("idea")}
-              className="px-4 py-2 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 text-xs font-semibold hover:bg-purple-100 transition-colors cursor-pointer shadow-2xs active:scale-95 flex items-center gap-1.5"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
             >
-              <Lightbulb className="w-4 h-4 text-purple-600" />
-              <span>Create idea here</span>
+              <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+              <span>New Idea</span>
             </button>
           </div>
         </div>

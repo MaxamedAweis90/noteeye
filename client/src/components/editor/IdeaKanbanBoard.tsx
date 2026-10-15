@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, Sparkles, SlidersHorizontal } from '@/components/ui/icons';
+import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, SlidersHorizontal } from '@/components/ui/icons';
 import type { IdeaItem } from '../../types';
 import { cn } from '../../utils/cn';
 
@@ -308,15 +308,19 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
                 setAddingInColumn(status);
                 setInlineTitle('');
               }}
-              className="h-32 border-2 border-dashed border-slate-200/90 rounded-2xl flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-purple-300 hover:bg-purple-50/20 transition-all select-none"
+              className="h-28 rounded-2xl bg-slate-50/70 border border-slate-200/70 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:bg-slate-100/70 hover:border-slate-300 transition-all select-none"
             >
-              <Sparkles className="w-5 h-5 text-slate-300 mb-1.5" />
-              <p className="text-xs font-medium text-slate-500">
+              {status === 'ideas' ? (
+                <Lightbulb className="w-5 h-5 text-slate-400 mb-1.5" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5 text-slate-400 mb-1.5" />
+              )}
+              <p className="text-xs font-semibold text-slate-600">
                 {status === 'ideas' ? 'No active ideas' : 'No completed ideas'}
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">
                 {status === 'ideas'
-                  ? 'Click "+ Add idea" to capture thoughts'
+                  ? 'Click to capture a new thought'
                   : 'Drag resolved cards here'}
               </p>
             </div>

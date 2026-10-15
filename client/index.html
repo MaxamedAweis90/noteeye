@@ -13,7 +13,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <script>
+      (function() {
+        try {
+          var h = window.location.hostname.toLowerCase();
+          var p = window.location.pathname.toLowerCase();
+          var s = window.location.search.toLowerCase();
+          var isApp = (
+            h === 'app-noteeye.vercel.app' ||
+            h.indexOf('app-noteeye') !== -1 ||
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+            Boolean(navigator.standalone)
+          );
+          var isMarketing = !isApp && (
+            h === 'noteeye.vercel.app' ||
+            h === 'noteeye.com' ||
+            h === 'www.noteeye.com' ||
+            h === 'marketing.noteeye.com' ||
+            ((h === 'localhost' || h === '127.0.0.1') && (p === '/landing' || p.indexOf('/landing/') === 0 || s.indexOf('mode=landing') !== -1 || s.indexOf('domain=marketing') !== -1))
+          );
+          if (isMarketing) {
+            document.documentElement.classList.add('noteeye-marketing-domain');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <style>
+      /* Hide pre-launch splash immediately on marketing landing domain */
+      html.noteeye-marketing-domain #pwa-prelaunch-splash {
+        display: none !important;
+      }
       /* Zero-flash critical CSS for instant PWA pre-hydration launch */
       #pwa-prelaunch-splash {
         position: fixed;
@@ -55,7 +84,7 @@
   </head>
   <body class="bg-[#F8FAFD] text-[#1F1F1F] font-sans antialiased min-h-screen">
     <div id="root">
-      <!-- 0ms Instant Native Pre-Hydration Splash (Replaced seamlessly when React mounts) -->
+      <!-- 0ms Instant Native Pre-Hydration Splash (Replaced seamlessly when React mounts; only rendered on app domain) -->
       <div id="pwa-prelaunch-splash" aria-hidden="true">
         <div style="position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
           <div class="prelaunch-glow"></div>
@@ -66,6 +95,12 @@
           Calm Notes & Ideas · Workspace
         </div>
       </div>
+      <script>
+        if (document.documentElement.classList.contains('noteeye-marketing-domain')) {
+          var pre = document.getElementById('pwa-prelaunch-splash');
+          if (pre) pre.remove();
+        }
+      </script>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

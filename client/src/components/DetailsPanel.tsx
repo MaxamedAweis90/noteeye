@@ -141,109 +141,16 @@ export const DetailsPanel: React.FC = () => {
                 </button>
               </div>
 
-              {/* Centered Illustration & Message */}
-              <div className="flex-1 flex flex-col items-center justify-center px-6 pb-12 text-center select-none">
-                <div className="w-48 h-48 relative flex items-center justify-center">
-                  <svg
-                    width="180"
-                    height="180"
-                    viewBox="0 0 180 180"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-full h-full"
-                  >
-                    {/* Whimsical pencil doodle curve behind on left */}
-                    <path
-                      d="M42 68 C 34 106, 38 126, 56 132 C 67 135, 73 128, 77 122"
-                      stroke="#2D3139"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-
-                    {/* Green circular accent dot */}
-                    <circle cx="50" cy="52" r="14" fill="#34A853" />
-
-                    {/* Soft Coral/Pink rounded rectangle card behind right */}
-                    <rect
-                      x="100"
-                      y="74"
-                      width="52"
-                      height="44"
-                      rx="10"
-                      fill="#FCDDEC"
-                    />
-
-                    {/* Light blue folded document */}
-                    <path
-                      d="M60 40 C 60 34, 64 30, 70 30 L 106 30 L 126 50 L 126 114 C 126 120, 122 124, 116 124 L 70 124 C 64 124, 60 120, 60 114 Z"
-                      fill="#C2E7FF"
-                      stroke="#1F1F1F"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-
-                    {/* Folded corner dog-ear */}
-                    <path
-                      d="M106 30 L 106 50 L 126 50"
-                      fill="#A5D4FF"
-                      stroke="#1F1F1F"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-
-                    {/* Horizontal text lines on document */}
-                    <line
-                      x1="72"
-                      y1="60"
-                      x2="102"
-                      y2="60"
-                      stroke="#1F1F1F"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="72"
-                      y1="74"
-                      x2="114"
-                      y2="74"
-                      stroke="#1F1F1F"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="72"
-                      y1="88"
-                      x2="96"
-                      y2="88"
-                      stroke="#1F1F1F"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-
-                    {/* Magnifying Glass Yellow Handle */}
-                    <path
-                      d="M96 106 L 114 136"
-                      stroke="#F9AB00"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-
-                    {/* Magnifying Glass Yellow Rim & Lens */}
-                    <circle
-                      cx="82"
-                      cy="90"
-                      r="28"
-                      fill="white"
-                      fillOpacity="0.4"
-                      stroke="#F9AB00"
-                      strokeWidth="7"
-                    />
-                  </svg>
+              {/* Centered Minimalist Message Matching Favorites and Trash */}
+              <div className="flex-1 flex flex-col items-center justify-center px-6 pb-12 text-center select-none animate-fade-in">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-xs">
+                  <FileText className="w-7 h-7 text-slate-400" />
                 </div>
-
-                <p className="text-[14px] font-normal text-[#1F1F1F] mt-6 tracking-normal">
-                  Select an item to see the details
+                <h3 className="text-base font-bold text-[#1F1F1F]">
+                  No item selected
+                </h3>
+                <p className="text-xs text-slate-500 max-w-[220px] mt-1 leading-relaxed">
+                  Select a note or folder to inspect its details and activity.
                 </p>
               </div>
             </div>

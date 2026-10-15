@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useSplashStore } from '../../store/splashStore';
 import { verifyInitialConnection } from '../../hooks/useOnlineStatus';
 import { isPWAMode } from '../../pwa/registerSW';
+import { isMarketingDomain } from '../../utils/domain';
 
 /**
  * Noteeye Authentic Vector Brand Icon
@@ -67,7 +68,7 @@ const AnimatedBrandIcon: React.FC<{ isDone?: boolean }> = ({ isDone }) => {
 };
 
 /**
- * FullScreen Noteeye Master Splash Screen
+ * FullScreen Noteeye Master Splash Screen Implementation
  * Orchestrates:
  * 1. Full-screen edge-to-edge luxury background (No square card)
  * 2. Real-time network reachability check
@@ -78,7 +79,7 @@ const AnimatedBrandIcon: React.FC<{ isDone?: boolean }> = ({ isDone }) => {
  * 7. PWA standalone mode differentiation
  * 8. Staged login/logout overlay support
  */
-export const SplashScreen: React.FC = () => {
+const AppSplashScreen: React.FC = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
   const user = useAuthStore((state) => state.user);
@@ -318,6 +319,18 @@ export const SplashScreen: React.FC = () => {
       </div>
     </div>
   );
+};
+
+/**
+ * Noteeye Master Splash Screen
+ * Strictly rendered only on the App Workspace domain (app-noteeye.vercel.app, localhost app, or PWA standalone).
+ * Completely bypassed on marketing landing domain (noteeye.vercel.app or local /landing).
+ */
+export const SplashScreen: React.FC = () => {
+  if (isMarketingDomain()) {
+    return null;
+  }
+  return <AppSplashScreen />;
 };
 
 export default SplashScreen;

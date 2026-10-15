@@ -2,69 +2,25 @@ import React, { useMemo, useEffect } from 'react';
 import { AppRouter } from '../router/AppRouter';
 import { LandingPage } from '../pages/LandingPage';
 import { APP_URL, MARKETING_URL } from '../api/client';
-import { isPWAMode } from '../pwa/registerSW';
+import { isMarketingDomain } from '../utils/domain';
+import { SplashScreen } from '../components/common/SplashScreen';
 
-/**
- * Checks whether the current browser hostname or path qualifies as the Marketing / Landing domain.
- * Strictly guarantees that app-noteeye.vercel.app is NEVER treated as the marketing domain.
- */
-export const isMarketingDomain = (): boolean => {
-  if (typeof window === 'undefined') return false;
-
-  const hostname = window.location.hostname.toLowerCase();
-  const pathname = window.location.pathname.toLowerCase();
-  const searchParams = new URLSearchParams(window.location.search);
-
-  // 1. Strict App Workspace Firewall:
-  // app-noteeye.vercel.app and PWA standalone mode are NEVER marketing domain
-  if (
-    hostname === 'app-noteeye.vercel.app' ||
-    hostname.includes('app-noteeye') ||
-    isPWAMode()
-  ) {
-    return false;
-  }
-
-  // 2. Production Marketing Domain & Apex domains
-  if (
-    hostname === 'noteeye.vercel.app' ||
-    hostname === 'noteeye.com' ||
-    hostname === 'www.noteeye.com' ||
-    hostname === 'marketing.noteeye.com'
-  ) {
-    return true;
-  }
-
-  // 3. Local Development Fallback (localhost / 127.0.0.1):
-  // Allows testing landing page locally via /landing or ?mode=landing
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    if (
-      pathname === '/landing' ||
-      pathname.startsWith('/landing/') ||
-      searchParams.get('mode') === 'landing' ||
-      searchParams.get('domain') === 'marketing'
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-};
+export { isMarketingDomain };
 
 /**
  * Dynamic Hostname Routing Controller
  * 
  * Evaluation Logic:
- * 1. If on 'app-noteeye.vercel.app':
+ * 1. If on 'app-noteeye.vercel.app' (or localhost app workspace):
  *    - Landing page NEVER lives here.
  *    - Visiting '/landing' immediately redirects to https://noteeye.vercel.app (preserving query params).
- *    - All routes handled by <AppRouter />.
+ *    - All routes handled by <AppRouter />, with <SplashScreen /> active for initial boot, auth, login, and logout.
  * 2. If on 'noteeye.vercel.app' (Marketing Domain):
  *    - Deep app workspace links redirect to https://app-noteeye.vercel.app.
- *    - Root '/' and '/landing' render <LandingPage />.
+ *    - Root '/' and '/landing' render <LandingPage /> directly with ZERO splash screens.
  * 3. Local Development (localhost):
- *    - Defaults to Workspace App (localhost:5173/).
- *    - Allows previewing Landing Page via localhost:5173/landing or ?mode=landing.
+ *    - Defaults to Workspace App (localhost:5173/) with splash screen active.
+ *    - Allows previewing Landing Page via localhost:5173/landing or ?mode=landing with splash screens disabled.
  */
 export const HostRouter: React.FC = () => {
   const isMarketing = useMemo(() => isMarketingDomain(), []);
@@ -104,7 +60,12 @@ export const HostRouter: React.FC = () => {
     }
   }
 
-  return <AppRouter />;
+  return (
+    <>
+      <SplashScreen />
+      <AppRouter />
+    </>
+  );
 };
 
 export default HostRouter;

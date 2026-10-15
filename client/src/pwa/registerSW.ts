@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { isMarketingDomain } from '../routes/HostRouter';
+import { isMarketingDomain } from '../utils/domain';
 import type { BeforeInstallPromptEvent } from '../types/pwa';
 
 const PWA_DISMISSED_KEY = 'noteeye_pwa_dismissed';
