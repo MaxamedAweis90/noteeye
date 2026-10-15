@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Lightbulb, CheckCircle2, Clock, Calendar, SlidersHorizontal } from '@/components/ui/icons';
 import type { IdeaItem } from '../../types';
@@ -34,6 +34,23 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
   const completedItems = ideas
     .filter((i) => i.status === 'completed')
     .sort((a, b) => a.order - b.order);
+
+  // Auto smooth-scroll to newly created idea at the bottom of the ideas list
+  const ideasBottomRef = useRef<HTMLDivElement | null>(null);
+  const prevIdeasCountRef = useRef(ideasItems.length);
+
+  useEffect(() => {
+    if (ideasItems.length > prevIdeasCountRef.current) {
+      const timer = setTimeout(() => {
+        ideasBottomRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+    prevIdeasCountRef.current = ideasItems.length;
+  }, [ideasItems.length]);
 
   const handleInlineSubmit = (status: 'ideas' | 'completed', e?: React.FormEvent) => {
     e?.preventDefault();
@@ -246,17 +263,19 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setAddingInColumn(status);
-              setInlineTitle('');
-            }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/80 shadow-2xs transition-colors cursor-pointer active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Add idea</span>
-          </button>
+          {status === 'ideas' && (
+            <button
+              type="button"
+              onClick={() => {
+                setAddingInColumn(status);
+                setInlineTitle('');
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/80 shadow-2xs transition-colors cursor-pointer active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Add idea</span>
+            </button>
+          )}
         </div>
 
         {/* Quick Add Inline Form */}
@@ -302,13 +321,24 @@ export const IdeaKanbanBoard: React.FC<IdeaKanbanBoardProps> = ({
             {itemsList.map((item, index) => renderCard(item, index))}
           </AnimatePresence>
 
+          {status === 'ideas' && (
+            <div ref={ideasBottomRef} className="h-0 w-full pointer-events-none" />
+          )}
+
           {itemsList.length === 0 && !isAdding && (
             <div
               onClick={() => {
-                setAddingInColumn(status);
-                setInlineTitle('');
+                if (status === 'ideas') {
+                  setAddingInColumn(status);
+                  setInlineTitle('');
+                }
               }}
-              className="h-28 rounded-2xl bg-slate-50/70 border border-slate-200/70 flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:bg-slate-100/70 hover:border-slate-300 transition-all select-none"
+              className={cn(
+                'h-28 rounded-2xl bg-slate-50/70 border border-slate-200/70 flex flex-col items-center justify-center p-4 text-center select-none',
+                status === 'ideas'
+                  ? 'cursor-pointer hover:bg-slate-100/70 hover:border-slate-300 transition-all'
+                  : 'cursor-default'
+              )}
             >
               {status === 'ideas' ? (
                 <Lightbulb className="w-5 h-5 text-slate-400 mb-1.5" />

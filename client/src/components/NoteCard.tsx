@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "motion/react";
 import { Star, Check, Lightbulb, FileText, CheckSquare, Pencil, Trash2 } from "@/components/ui/icons";
@@ -76,6 +76,45 @@ export const NoteCard: React.FC<NoteCardProps> = ({
     (ii) => ii.status === "completed",
   ).length;
   const totalIdeasCount = ideaItems.length;
+
+  // Compute 2-item preview for Idea files:
+  // Row 1 (top): Last completed idea
+  // Row 2 (bottom): First/top idea on active to-do list
+  const previewIdeaItems = useMemo(() => {
+    if (!ideaItems.length) return [];
+
+    const activeIdeas = ideaItems
+      .filter((i) => i.status === "ideas")
+      .sort((a, b) => a.order - b.order);
+
+    const completedIdeas = ideaItems
+      .filter((i) => i.status === "completed")
+      .sort((a, b) => a.order - b.order);
+
+    const lastCompleted =
+      completedIdeas.length > 0
+        ? completedIdeas[0]
+        : null;
+
+    const topActive = activeIdeas.length > 0 ? activeIdeas[0] : null;
+
+    // Both completed and active exist: show [lastCompleted, topActive]
+    if (lastCompleted && topActive) {
+      return [lastCompleted, topActive];
+    }
+
+    // Only active ideas exist: show top 2 active ideas
+    if (!lastCompleted && activeIdeas.length > 0) {
+      return activeIdeas.slice(0, 2);
+    }
+
+    // Only completed ideas exist: show top 2 completed ideas
+    if (completedIdeas.length > 0 && !topActive) {
+      return completedIdeas.slice(0, 2);
+    }
+
+    return ideaItems.slice(0, 2);
+  }, [ideaItems]);
 
   const targetItemType = isIdea ? "idea" : isChecklist ? "checklist" : "note";
 
@@ -347,7 +386,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       <div className="py-1 sm:py-1.5 overflow-hidden flex-1 min-h-0 flex flex-col justify-center">
         {isIdea ? (
           <div className="space-y-1 sm:space-y-1.5">
-            {ideaItems.slice(0, 2).map((ii) => (
+            {previewIdeaItems.map((ii) => (
               <div
                 key={ii.id}
                 className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-800 pointer-events-none select-none"

@@ -665,10 +665,20 @@ export const NoteEditor: React.FC = () => {
       description: '',
       status,
       date: new Date().toISOString(),
-      order: ideaItems.filter((i) => i.status === status).length,
+      order: status === 'completed' ? 0 : ideaItems.filter((i) => i.status === status).length,
     };
     setIdeaItems((prev) => {
-      const next = [...prev, newIdea];
+      let next: IdeaItem[];
+      if (status === 'completed') {
+        const others = prev.filter((i) => i.status !== 'completed');
+        const completed = [newIdea, ...prev.filter((i) => i.status === 'completed')].map((item, idx) => ({
+          ...item,
+          order: idx,
+        }));
+        next = [...others, ...completed];
+      } else {
+        next = [...prev, newIdea];
+      }
       latestValuesRef.current.ideaItems = next;
       return next;
     });
@@ -714,7 +724,11 @@ export const NoteEditor: React.FC = () => {
 
       if (typeof targetIndex === 'number' && targetIndex >= 0) {
         targetColItems.splice(targetIndex, 0, updatedTarget);
+      } else if (targetStatus === 'completed') {
+        // Last completed idea goes to the TOP of the completed column
+        targetColItems.unshift(updatedTarget);
       } else {
+        // Active ideas append to the bottom as before
         targetColItems.push(updatedTarget);
       }
 
