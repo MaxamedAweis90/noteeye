@@ -324,9 +324,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         isOpen={!!deleteDialogData?.isOpen}
         onClose={closeDeleteDialog}
         itemName={deleteDialogData?.name}
-        itemType={deleteDialogData?.type === 'folder' ? 'folder' : 'note'}
+        itemType={deleteDialogData?.type}
+        title={deleteDialogData?.title}
+        description={deleteDialogData?.description}
+        confirmLabel={deleteDialogData?.confirmLabel}
+        isPermanent={deleteDialogData?.isPermanent}
         onConfirm={() => {
-          if (deleteDialogData) {
+          if (deleteDialogData?.onConfirm) {
+            deleteDialogData.onConfirm();
+          } else if (deleteDialogData) {
             if (deleteDialogData.type === 'folder') {
               deleteFolder(deleteDialogData.id);
             } else {

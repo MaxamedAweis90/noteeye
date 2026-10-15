@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { DeleteDialog } from '../modals/DeleteDialog';
 import {
   Lightbulb,
   X,
@@ -40,6 +41,7 @@ export const IdeaInspectorDrawer: React.FC<IdeaInspectorDrawerProps> = ({
   onUpdateStatus,
   onDelete,
 }) => {
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize description textarea based on content
@@ -109,7 +111,7 @@ export const IdeaInspectorDrawer: React.FC<IdeaInspectorDrawerProps> = ({
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={onDelete}
+                  onClick={() => setIsConfirmDeleteOpen(true)}
                   title="Delete idea"
                   aria-label="Delete idea"
                   className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
@@ -240,7 +242,7 @@ export const IdeaInspectorDrawer: React.FC<IdeaInspectorDrawerProps> = ({
               <div className="pt-2 shrink-0">
                 <button
                   type="button"
-                  onClick={onDelete}
+                  onClick={() => setIsConfirmDeleteOpen(true)}
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50/70 hover:bg-rose-100/70 rounded-xl transition-colors cursor-pointer border border-rose-100"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -251,6 +253,22 @@ export const IdeaInspectorDrawer: React.FC<IdeaInspectorDrawerProps> = ({
           </motion.aside>
         </>
       )}
+
+      {/* Confirmation Dialog for Deleting this Idea */}
+      <DeleteDialog
+        isOpen={isConfirmDeleteOpen}
+        onClose={() => setIsConfirmDeleteOpen(false)}
+        onConfirm={() => {
+          setIsConfirmDeleteOpen(false);
+          onDelete();
+        }}
+        title="Delete Idea?"
+        itemName={idea?.title || 'Untitled Idea'}
+        itemType="idea"
+        description="Are you sure you want to delete this idea? It will be removed from your idea board."
+        confirmLabel="Delete Idea"
+        isPermanent={true}
+      />
     </AnimatePresence>
   );
 };

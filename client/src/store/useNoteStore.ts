@@ -162,6 +162,11 @@ interface NoteStoreState {
     id: string;
     name: string;
     type: 'item' | 'folder' | 'note' | 'checklist' | 'idea';
+    title?: string;
+    description?: string;
+    confirmLabel?: string;
+    isPermanent?: boolean;
+    onConfirm?: () => void;
   } | null;
   conflictDialogData: ConflictDialogState | null;
 
@@ -228,7 +233,18 @@ interface NoteStoreState {
   closeFolderModal: () => void;
   openQuickEditModal: (item: Item) => void;
   closeQuickEditModal: () => void;
-  openDeleteDialog: (id: string, name: string, type?: 'item' | 'folder' | 'note' | 'checklist' | 'idea') => void;
+  openDeleteDialog: (
+    id: string,
+    name: string,
+    type?: 'item' | 'folder' | 'note' | 'checklist' | 'idea',
+    options?: {
+      title?: string;
+      description?: string;
+      confirmLabel?: string;
+      isPermanent?: boolean;
+      onConfirm?: () => void;
+    }
+  ) => void;
   closeDeleteDialog: () => void;
   toggleMobileSidebar: (open?: boolean) => void;
   resetToDefault: () => void;
@@ -1222,13 +1238,18 @@ export const useNoteStore = create<NoteStoreState>()(
         });
       },
 
-      openDeleteDialog: (id, name, type = 'item') => {
+      openDeleteDialog: (id, name, type = 'item', options) => {
         set({
           deleteDialogData: {
             isOpen: true,
             id,
             name,
             type,
+            title: options?.title,
+            description: options?.description,
+            confirmLabel: options?.confirmLabel,
+            isPermanent: options?.isPermanent,
+            onConfirm: options?.onConfirm,
           },
         });
       },

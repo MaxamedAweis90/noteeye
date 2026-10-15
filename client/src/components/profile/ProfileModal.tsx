@@ -20,6 +20,7 @@ import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { authApi } from '../../api';
+import { DeleteDialog } from '../modals/DeleteDialog';
 
 /**
  * ProfileModal Component — Minimalist Humane Redesign
@@ -54,6 +55,7 @@ export const ProfileModal: React.FC = () => {
     { kind: 'new'; dataUrl: string; filename: string } | { kind: 'removed' } | null
   >(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRemoveAvatarModalOpen, setIsRemoveAvatarModalOpen] = useState(false);
 
   // Verification flow state
   const [isVerifying, setIsVerifying] = useState(false);
@@ -339,9 +341,10 @@ export const ProfileModal: React.FC = () => {
               {avatarPreview && (
                 <button
                   type="button"
-                  onClick={handleRemoveAvatar}
+                  onClick={() => setIsRemoveAvatarModalOpen(true)}
                   disabled={isSaving}
                   className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-transparent hover:border-rose-200"
+                  title="Remove photo"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -564,6 +567,16 @@ export const ProfileModal: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Remove Avatar Confirmation Dialog */}
+      <DeleteDialog
+        isOpen={isRemoveAvatarModalOpen}
+        onClose={() => setIsRemoveAvatarModalOpen(false)}
+        onConfirm={handleRemoveAvatar}
+        title="Remove Profile Photo?"
+        description="Are you sure you want to remove your profile photo? Your avatar will revert to your default initials."
+        confirmLabel="Remove Photo"
+      />
     </AnimatePresence>
   );
 };

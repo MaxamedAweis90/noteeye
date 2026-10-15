@@ -120,29 +120,56 @@ export const useKeyboardShortcuts = () => {
         return;
       }
 
-      // 6. Delete or Backspace: Move selected item(s) to Trash
+      // 6. Delete or Backspace: Move selected item(s) to Trash with confirmation dialog
       if (e.key === 'Delete' || e.key === 'Backspace') {
         const { selectedItemId, selectedItemType, selectedIds, clearSelection } = useUIStore.getState();
-        const { deleteItem, deleteFolder } = useNoteStore.getState();
+        const { openDeleteDialog, items, folders, deleteItem, deleteFolder } = useNoteStore.getState();
 
         if (selectedIds.size > 0) {
           e.preventDefault();
-          selectedIds.forEach((id: string) => {
-            deleteItem(id);
-            deleteFolder(id);
-          });
-          clearSelection();
+          const count = selectedIds.size;
+          openDeleteDialog(
+            'batch',
+            `${count} ${count === 1 ? 'item' : 'items'}`,
+            'item',
+            {
+              title: `Move ${count} ${count === 1 ? 'item' : 'items'} to Trash?`,
+              description: 'These items will be moved to Trash. You can restore them anytime within 30 days.',
+              confirmLabel: 'Move to Trash',
+              onConfirm: () => {
+                selectedIds.forEach((id: string) => {
+                  deleteItem(id);
+                  deleteFolder(id);
+                });
+                clearSelection();
+              },
+            }
+          );
           return;
         }
 
         if (selectedItemId) {
           e.preventDefault();
-          if (selectedItemType === 'folder') {
-            deleteFolder(selectedItemId);
-          } else {
-            deleteItem(selectedItemId);
-          }
-          clearSelection();
+          const targetName =
+            selectedItemType === 'folder'
+              ? folders.find((f) => f.id === selectedItemId)?.name || 'Folder'
+              : items.find((i) => i.id === selectedItemId)?.title || 'Note';
+
+          openDeleteDialog(
+            selectedItemId,
+            targetName,
+            selectedItemType === 'folder' ? 'folder' : 'note',
+            {
+              onConfirm: () => {
+                if (selectedItemType === 'folder') {
+                  deleteFolder(selectedItemId);
+                } else {
+                  deleteItem(selectedItemId);
+                }
+                clearSelection();
+              },
+            }
+          );
           return;
         }
       }

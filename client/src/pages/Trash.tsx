@@ -11,7 +11,6 @@ import {
   Folder as FolderIcon,
   FileText,
   X,
-  AlertTriangle,
   Info,
   CheckCircle2,
   Clock,
@@ -22,6 +21,7 @@ import { useNoteStore } from '../store/useNoteStore';
 import { useUIStore } from '../store/uiStore';
 import { GridSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
+import { DeleteDialog } from '../components/modals/DeleteDialog';
 import type { Folder, Item } from '../types';
 import { cn } from '../utils/cn';
 import { cardDropVariants, listRowDropVariants, cardLayoutTransition } from '../utils/animations';
@@ -1015,66 +1015,26 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
         )}
       </AnimatePresence>
 
-      {/* 5. Minimalist Confirmation Modal Dialog */}
-      <AnimatePresence>
-        {confirmModal.isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setConfirmModal({ isOpen: false, type: 'empty' })}
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
-            />
-
-            {/* Dialog Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 z-10 space-y-4"
-            >
-              <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-bold text-[#1F1F1F]">
-                  {confirmModal.type === 'empty'
-                    ? 'Empty Trash?'
-                    : confirmModal.type === 'batch_delete'
-                    ? `Permanently delete ${selectedIds.size} ${selectedIds.size === 1 ? 'item' : 'items'}?`
-                    : `Permanently delete "${confirmModal.targetName || 'this item'}"?`}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
-                  {confirmModal.type === 'empty'
-                    ? `All ${totalTrashCount} items in Trash will be permanently deleted from your account. This action cannot be undone.`
-                    : 'This action cannot be undone. You will not be able to recover these files.'}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmModal({ isOpen: false, type: 'empty' })}
-                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmAction}
-                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors cursor-pointer"
-                >
-                  {confirmModal.type === 'empty' ? 'Empty Trash' : 'Delete Forever'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* 5. Reusable DeleteDialog */}
+      <DeleteDialog
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, type: 'empty' })}
+        onConfirm={handleConfirmAction}
+        title={
+          confirmModal.type === 'empty'
+            ? 'Empty Trash?'
+            : confirmModal.type === 'batch_delete'
+            ? `Permanently delete ${selectedIds.size} ${selectedIds.size === 1 ? 'item' : 'items'}?`
+            : `Permanently delete "${confirmModal.targetName || 'this item'}"?`
+        }
+        description={
+          confirmModal.type === 'empty'
+            ? `All ${totalTrashCount} items in Trash will be permanently deleted from your account. This action cannot be undone.`
+            : 'This action cannot be undone. You will not be able to recover these files.'
+        }
+        confirmLabel={confirmModal.type === 'empty' ? 'Empty Trash' : 'Delete Forever'}
+        isPermanent={true}
+      />
 
       {/* 6. 30-Day Retention Policy Modal Dialog */}
       <AnimatePresence>

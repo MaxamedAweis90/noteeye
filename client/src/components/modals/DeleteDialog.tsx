@@ -1,13 +1,18 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2 } from '@/components/ui/icons';
+import { Trash2, AlertTriangle } from '@/components/ui/icons';
 
 export interface DeleteDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  title?: string;
+  description?: string;
   itemName?: string;
-  itemType?: 'note' | 'checklist' | 'folder' | 'item';
+  itemType?: 'note' | 'checklist' | 'folder' | 'item' | 'idea';
+  confirmLabel?: string;
+  cancelLabel?: string;
+  isPermanent?: boolean;
 }
 
 const springConfig = {
@@ -18,15 +23,20 @@ const springConfig = {
 
 /**
  * DeleteDialog Component — Clean Minimal Confirmation Modal
- * Confirms moving items or folders to trash with a soft warning badge,
- * item preview, and prominent rose action buttons.
+ * Reusable across the entire application for single items, bulk deletes,
+ * permanent deletions, and specific entities with customized titles and warnings.
  */
 export const DeleteDialog: React.FC<DeleteDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,
+  title,
+  description,
   itemName,
   itemType = 'item',
+  confirmLabel,
+  cancelLabel = 'Cancel',
+  isPermanent = false,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,7 +58,23 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
       ? 'folder'
       : itemType === 'checklist'
       ? 'checklist'
+      : itemType === 'idea'
+      ? 'idea'
       : 'note';
+
+  const dialogTitle =
+    title ||
+    (isPermanent ? 'Delete Forever?' : 'Move to Trash?');
+
+  const dialogDesc =
+    description ||
+    (isPermanent
+      ? 'This action cannot be undone. You will not be able to recover this.'
+      : `This ${typeLabel} will be moved to Trash and permanently deleted after 30 days.`);
+
+  const dialogConfirmLabel =
+    confirmLabel ||
+    (isPermanent ? 'Delete Forever' : 'Move to Trash');
 
   return (
     <AnimatePresence>
@@ -60,7 +86,7 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 bg-slate-900/20 backdrop-blur-[2px]"
+            className="fixed inset-0 bg-slate-900/30 backdrop-blur-[2px]"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -79,8 +105,12 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Minimal Warning Icon Badge */}
-            <div className="bg-rose-50 text-rose-500 p-2.5 rounded-2xl w-fit mb-3 flex items-center justify-center shadow-xs">
-              <Trash2 className="w-5 h-5 text-rose-600" />
+            <div className="bg-rose-50 text-rose-600 p-2.5 rounded-2xl w-fit mb-3 flex items-center justify-center shadow-xs">
+              {isPermanent ? (
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+              ) : (
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              )}
             </div>
 
             {/* Header & Body */}
@@ -88,7 +118,7 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
               id="delete-dialog-title"
               className="text-lg font-bold text-[#1F1F1F] mb-1 tracking-tight"
             >
-              Move to Trash?
+              {dialogTitle}
             </h3>
 
             {itemName && (
@@ -98,7 +128,7 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
             )}
 
             <p id="delete-dialog-desc" className="text-xs text-slate-500 leading-relaxed mb-6">
-              This {typeLabel} will be moved to Trash and permanently deleted after 30 days.
+              {dialogDesc}
             </p>
 
             {/* Actions */}
@@ -108,7 +138,7 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                Cancel
+                {cancelLabel}
               </button>
 
               <button
@@ -117,7 +147,7 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Move to Trash</span>
+                <span>{dialogConfirmLabel}</span>
               </button>
             </div>
           </motion.div>
@@ -126,3 +156,5 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
     </AnimatePresence>
   );
 };
+
+export default DeleteDialog;

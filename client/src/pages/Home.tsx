@@ -29,6 +29,7 @@ import { FolderCard } from '../components/FolderCard';
 import { NoteCard } from '../components/NoteCard';
 import { GridSkeleton, NoteCardSkeleton } from '../components/skeletons';
 import { DetailsToggleButton } from '../components/DetailsToggleButton';
+import { DeleteDialog } from '../components/modals/DeleteDialog';
 import { cn } from '../utils/cn';
 
 export interface HomeProps {
@@ -775,57 +776,15 @@ export const Home: React.FC<HomeProps> = ({
         )}
       </AnimatePresence>
 
-      {/* 8. Minimalist Confirmation Modal Dialog for Batch Trash */}
-      <AnimatePresence>
-        {confirmModal.isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setConfirmModal({ isOpen: false })}
-              className="absolute inset-0 bg-black/40 backdrop-blur-xs"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 z-10 space-y-4"
-            >
-              <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                <Trash2 className="w-5 h-5" />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-bold text-[#1F1F1F]">
-                  Move {selectedIds.size} {selectedIds.size === 1 ? 'item' : 'items'} to Trash?
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
-                  These items will be moved to Trash. You can restore them anytime within 30 days.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmModal({ isOpen: false })}
-                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBatchTrash}
-                  className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors cursor-pointer"
-                >
-                  Move to Trash
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* 8. Reusable DeleteDialog for Batch Trash */}
+      <DeleteDialog
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false })}
+        onConfirm={handleBatchTrash}
+        title={`Move ${selectedIds.size} ${selectedIds.size === 1 ? 'item' : 'items'} to Trash?`}
+        description="These items will be moved to Trash. You can restore them anytime within 30 days."
+        confirmLabel="Move to Trash"
+      />
     </motion.div>
   );
 };

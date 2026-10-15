@@ -28,6 +28,7 @@ import { authApi } from '../../api';
 import { PASTEL_PALETTE } from '../../types';
 import type { ItemType } from '../../types';
 import { handleSessionEndRedirect } from '../../utils/sessionNavigation';
+import { DeleteDialog } from '../modals/DeleteDialog';
 
 /**
  * SettingsModal Component — Minimalist Humane Redesign
@@ -83,6 +84,7 @@ export const SettingsModal: React.FC = () => {
   const [soundEffectsEnabled, setSoundEffectsEnabled] = useState(
     user.settings?.soundEffectsEnabled ?? true
   );
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
 
   // Password change state
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -838,9 +840,9 @@ export const SettingsModal: React.FC = () => {
               ) : (
                 <button
                   type="button"
-                  onClick={handleDeleteAccountDirectly}
+                  onClick={() => setIsDeleteAccountModalOpen(true)}
                   className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                  title="Delete account directly without confirmation"
+                  title="Delete account"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span>Delete Account</span>
@@ -877,6 +879,16 @@ export const SettingsModal: React.FC = () => {
           </div>
         </div>
       </motion.div>
+      {/* Delete Account Confirmation Dialog */}
+      <DeleteDialog
+        isOpen={isDeleteAccountModalOpen}
+        onClose={() => setIsDeleteAccountModalOpen(false)}
+        onConfirm={handleDeleteAccountDirectly}
+        title="Delete Account?"
+        description="Are you sure you want to delete your account? All your notes, folders, and workspace data will be scheduled for permanent deletion. You will have a 30-day grace period to recover your account."
+        confirmLabel="Delete Account"
+        isPermanent={true}
+      />
     </AnimatePresence>
   );
 };

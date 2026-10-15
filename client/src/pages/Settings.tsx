@@ -26,6 +26,7 @@ import { handleSessionEndRedirect } from '../utils/sessionNavigation';
 import { authApi } from '../api';
 import { PASTEL_PALETTE } from '../types';
 import type { ItemType } from '../types';
+import { DeleteDialog } from '../components/modals/DeleteDialog';
 
 /**
  * Settings Screen — Minimalist Humane Redesign
@@ -52,6 +53,7 @@ export const Settings: React.FC = () => {
   const [defaultType, setDefaultType] = useState<ItemType>(
     user.settings?.defaultNoteType || 'note'
   );
+  const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
 
   // Password change form states
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -740,9 +742,9 @@ export const Settings: React.FC = () => {
           ) : (
             <button
               type="button"
-              onClick={handleDeleteAccountDirectly}
+              onClick={() => setIsDeleteAccountModalOpen(true)}
               className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Delete account directly without confirmation"
+              title="Delete account"
             >
               <Trash2 className="w-4 h-4" />
               <span>Delete Account</span>
@@ -750,6 +752,17 @@ export const Settings: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <DeleteDialog
+        isOpen={isDeleteAccountModalOpen}
+        onClose={() => setIsDeleteAccountModalOpen(false)}
+        onConfirm={handleDeleteAccountDirectly}
+        title="Delete Account?"
+        description="Are you sure you want to delete your account? All your notes, folders, and workspace data will be scheduled for permanent deletion. You will have a 30-day grace period to recover your account."
+        confirmLabel="Delete Account"
+        isPermanent={true}
+      />
     </div>
   );
 };
