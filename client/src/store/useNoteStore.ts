@@ -6,6 +6,7 @@ import { useUIStore } from './uiStore';
 import { useSyncStore } from './syncStore';
 import { notesApi } from '../api/notesApi';
 import { foldersApi } from '../api/foldersApi';
+import { isMarketingDomain } from '../utils/domain';
 export { useNotesStore } from './notesStore';
 export { useFoldersStore } from './foldersStore';
 
@@ -17,6 +18,9 @@ const syncChannel =
 
 if (syncChannel) {
   syncChannel.onmessage = (event) => {
+    // Marketing domain should never respond to cross-tab workspace mutations
+    if (isMarketingDomain()) return;
+
     if (event.data?.type === 'workspace_mutation') {
       useNoteStore.getState().fetchWorkspaceData().catch(() => null);
     } else if (event.data?.type === 'note_moved') {

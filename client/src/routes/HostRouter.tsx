@@ -4,6 +4,7 @@ import { LandingPage } from '../pages/LandingPage';
 import { APP_URL, MARKETING_URL } from '../api/client';
 import { isMarketingDomain } from '../utils/domain';
 import { SplashScreen } from '../components/common/SplashScreen';
+import { SyncProvider } from '../components/SyncProvider';
 
 export { isMarketingDomain };
 
@@ -61,10 +62,10 @@ export const HostRouter: React.FC = () => {
   }
 
   return (
-    <>
+    <SyncProvider>
       <SplashScreen />
       <AppRouter />
-    </>
+    </SyncProvider>
   );
 };
 

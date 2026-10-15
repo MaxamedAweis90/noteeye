@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { BASE_URL } from '../api/client';
 import { flushOutboxQueue, getPendingOutbox } from '../lib/offlineDb';
+import { isMarketingDomain } from '../utils/domain';
 
 const OFFLINE_STORAGE_KEY = 'noteeye_is_offline';
 
@@ -112,6 +113,7 @@ export async function reportNetworkFailure() {
 // Global browser event listeners
 if (typeof window !== 'undefined') {
   window.addEventListener('offline', () => {
+    if (isMarketingDomain()) return;
     globalIsOffline = true;
     globalIsNetworkReconnected = false;
     setStoredOffline(true);
@@ -119,6 +121,7 @@ if (typeof window !== 'undefined') {
   });
 
   window.addEventListener('online', () => {
+    if (isMarketingDomain()) return;
     if (globalIsOffline) {
       globalIsNetworkReconnected = true;
       notifyAll();
@@ -127,6 +130,7 @@ if (typeof window !== 'undefined') {
 
   // Re-verify network status when the tab or PWA is resumed from background
   document.addEventListener('visibilitychange', () => {
+    if (isMarketingDomain()) return;
     if (document.visibilityState === 'visible') {
       pingConnection().then((reachable) => {
         if (!reachable) {

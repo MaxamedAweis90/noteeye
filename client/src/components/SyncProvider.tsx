@@ -8,6 +8,7 @@ import { useUserStore } from '../store/userStore';
 import { useSyncStore } from '../store/syncStore';
 import { userApi } from '../api';
 import { flushOutboxQueue } from '../lib/offlineDb';
+import { isMarketingDomain } from '../utils/domain';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,11 +29,12 @@ const POLL_MS = 3_500;
  * Local state is only replaced when the database returned something different.
  */
 const WorkspaceSync: React.FC = () => {
+  const isMarketing = isMarketingDomain();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const workspace = useQuery({
     queryKey: ['workspace'],
-    enabled: isAuthenticated,
+    enabled: !isMarketing && isAuthenticated,
     refetchInterval: () =>
       typeof document !== 'undefined' && document.hidden ? false : POLL_MS,
     queryFn: async () => {
@@ -43,7 +45,7 @@ const WorkspaceSync: React.FC = () => {
 
   useQuery({
     queryKey: ['profile'],
-    enabled: isAuthenticated,
+    enabled: !isMarketing && isAuthenticated,
     refetchInterval: () =>
       typeof document !== 'undefined' && document.hidden ? false : POLL_MS * 3,
     queryFn: async () => {
@@ -65,17 +67,21 @@ const WorkspaceSync: React.FC = () => {
 
   // Reflect pull results in the sync indicator
   useEffect(() => {
+    if (isMarketing) return;
     if (workspace.isSuccess && workspace.dataUpdatedAt) useSyncStore.getState().markPulled();
-  }, [workspace.isSuccess, workspace.dataUpdatedAt]);
+  }, [workspace.isSuccess, workspace.dataUpdatedAt, isMarketing]);
 
   useEffect(() => {
+    if (isMarketing) return;
     if (workspace.isError) {
       useSyncStore.getState().markPullFailed((workspace.error as Error)?.message || 'Sync failed');
     }
-  }, [workspace.isError, workspace.errorUpdatedAt, workspace.error]);
+  }, [workspace.isError, workspace.errorUpdatedAt, workspace.error, isMarketing]);
 
   // Login / logout / cross-tab / window focus / reconnect => refresh immediately
   useEffect(() => {
+    if (isMarketing) return;
+
     const refetch = () => {
       // Flush any queued mutations from offline/sleep first
       flushOutboxQueue(queryClient).catch(() => null);
@@ -106,7 +112,7 @@ const WorkspaceSync: React.FC = () => {
       window.removeEventListener('focus', refetch);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [isMarketing]);
 
   return null;
 };
@@ -137,9 +143,9 @@ export const SyncIndicator: React.FC = () => {
     };
   }, []);
 
-  // Suppress completely inside note editor (note editor has its own header pill)
+  // Suppress completely on marketing domain or inside note editor (note editor has its own header pill)
   const isEditor = pathname.includes('/notes') || pathname.includes('/note/');
-  if (!isAuthenticated || isEditor) return null;
+  if (isMarketingDomain() || !isAuthenticated || isEditor) return null;
 
   // Only show for cross-device incoming changes, errors, or offline (routine local writes save silently)
   const isVisible =
@@ -201,10 +207,18 @@ export const SyncIndicator: React.FC = () => {
   );
 };
 
-export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <QueryClientProvider client={queryClient}>
-    {children}
-    <WorkspaceSync />
-    <SyncIndicator />
-  </QueryClientProvider>
-);
+export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isMarketing = isMarketingDomain();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      {!isMarketing && (
+        <>
+          <WorkspaceSync />
+          <SyncIndicator />
+        </>
+      )}
+    </QueryClientProvider>
+  );
+};

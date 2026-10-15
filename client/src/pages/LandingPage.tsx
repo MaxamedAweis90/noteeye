@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/icons';
 import { APP_URL } from '../api/client';
 import { useAuthStore } from '../store/authStore';
-import { useUIStore } from '../store/uiStore';
 
 /* ═════════════════════════════════════════════════════════════
    DATA
@@ -496,21 +495,18 @@ export const LandingPage: React.FC = () => {
         title: 'Sign-in Required',
         description: 'Access to that workspace page is restricted. Please sign in to continue.',
       });
-      useUIStore.getState().showToast('Access restricted: Please sign in to view your workspace.');
     } else if (reason === 'revoked') {
       setAuthNotice({
         type: 'revoked',
         title: 'Session Terminated',
         description: 'This session was signed out from another device. Please sign in again to continue.',
       });
-      useUIStore.getState().showToast('Security Alert: Your session was signed out from another device.');
     } else if (reason === 'logout') {
       setAuthNotice({
         type: 'logout',
         title: 'Logged Out Successfully',
         description: 'You have been safely signed out of your Noteeye account.',
       });
-      useUIStore.getState().showToast('Signed out of Noteeye.');
     }
 
     const authToken = params.get('auth_token');
