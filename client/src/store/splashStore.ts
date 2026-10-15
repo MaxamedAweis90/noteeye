@@ -8,10 +8,13 @@ export interface SplashState {
   title: string;
   stepMessage: string;
   progress: number; // 0 to 100
+  isInitialBootDone: boolean;
 
   // Actions
   triggerLoginSplash: (userName: string, onComplete?: () => void) => void;
   triggerLogoutSplash: (onComplete?: () => void) => void;
+  setSplashProgress: (progress: number, stepMessage?: string) => void;
+  markInitialBootDone: () => void;
   closeSplash: () => void;
 }
 
@@ -21,6 +24,7 @@ export const useSplashStore = create<SplashState>((set) => ({
   title: '',
   stepMessage: '',
   progress: 0,
+  isInitialBootDone: false,
 
   triggerLoginSplash: (userName: string, onComplete?: () => void) => {
     const formattedName = (userName || 'User').trim();
@@ -56,7 +60,7 @@ export const useSplashStore = create<SplashState>((set) => ({
     const t4 = setTimeout(() => {
       set({ isActive: false, mode: null, progress: 0 });
       if (onComplete) onComplete();
-    }, 1380);
+    }, 1400);
 
     return () => {
       clearTimeout(t1);
@@ -92,13 +96,24 @@ export const useSplashStore = create<SplashState>((set) => ({
     const t3 = setTimeout(() => {
       set({ isActive: false, mode: null, progress: 0 });
       if (onComplete) onComplete();
-    }, 1050);
+    }, 1100);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
     };
+  },
+
+  setSplashProgress: (progress: number, stepMessage?: string) => {
+    set({
+      progress,
+      ...(stepMessage !== undefined ? { stepMessage } : {}),
+    });
+  },
+
+  markInitialBootDone: () => {
+    set({ isInitialBootDone: true });
   },
 
   closeSplash: () => {

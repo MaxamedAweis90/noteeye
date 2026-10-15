@@ -11,7 +11,6 @@ import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import { Profile } from '../pages/Profile';
 import { Settings } from '../pages/Settings';
-import { SplashLoader } from '../components/SplashLoader';
 import { useAuthStore } from '../store/authStore';
 import { useUserStore } from '../store/userStore';
 import { useNoteStore } from '../store/useNoteStore';
@@ -46,7 +45,7 @@ const GuestRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
 
   if (isCheckingAuth) {
-    return <SplashLoader />;
+    return null;
   }
 
   if (isAuthenticated) {
@@ -68,7 +67,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const location = useLocation();
 
   if (isCheckingAuth) {
-    return <SplashLoader />;
+    return null;
   }
 
   if (!isAuthenticated) {
@@ -90,7 +89,7 @@ const WorkspaceRoot: React.FC = () => {
   const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
 
   if (isCheckingAuth) {
-    return <SplashLoader />;
+    return null;
   }
 
   if (!isAuthenticated) {
@@ -184,8 +183,6 @@ export const AppRouter: React.FC = () => {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      {/* Global Splash Transition Overlay for Login & Logout */}
-      <SplashLoader />
 
       <Routes>
         {/* Workspace Root (Landing Page if guest, AppShell if logged in) */}
