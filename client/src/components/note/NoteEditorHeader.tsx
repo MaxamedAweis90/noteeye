@@ -28,6 +28,7 @@ export interface NoteEditorHeaderProps {
   isOffline: boolean;
   syncError: string | null;
   lastSavedTime: string;
+  isDirty?: boolean;
   onSaveNow: () => void;
   activeTableInfo: { table: HTMLTableElement; cell: HTMLTableCellElement } | null;
   selectedCellsCount: number;
@@ -55,6 +56,7 @@ export const NoteEditorHeader: React.FC<NoteEditorHeaderProps> = ({
   isOffline,
   syncError,
   lastSavedTime,
+  isDirty,
   onSaveNow,
   activeTableInfo,
   selectedCellsCount,
@@ -150,6 +152,14 @@ export const NoteEditorHeader: React.FC<NoteEditorHeaderProps> = ({
             <div className="flex items-center gap-1.5 text-amber-700 font-medium animate-fade-in">
               <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
               <span className="font-semibold">Offline</span>
+            </div>
+          ) : isDirty ? (
+            <div className="flex items-center gap-1.5 text-amber-700 font-medium animate-fade-in">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <span className="hidden sm:inline font-semibold">
+                Unsaved changes · Save
+              </span>
+              <span className="sm:hidden font-semibold">Save</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-emerald-700 font-medium animate-fade-in">

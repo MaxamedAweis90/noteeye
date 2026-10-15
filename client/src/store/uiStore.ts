@@ -31,6 +31,21 @@ export interface ClipboardState {
   action: 'copy' | 'cut';
 }
 
+export interface EditorDirtyState {
+  isDirty: boolean;
+  itemType?: 'note' | 'checklist' | 'idea';
+  title?: string;
+  onSaveAndExit?: () => Promise<void> | void;
+  onDiscardAndExit?: () => void;
+}
+
+export interface SaveDiscardModalState {
+  isOpen: boolean;
+  pendingPath: string | null;
+  pendingAction: (() => void) | null;
+  isBack: boolean;
+}
+
 export interface UIStoreState {
   // Modals
   isQuickEditOpen: boolean;
@@ -46,6 +61,8 @@ export interface UIStoreState {
   isSessionsOpen: boolean;
   isFeedbackOpen: boolean;
   activeSettingsSection: string | null;
+  editorDirtyState: EditorDirtyState | null;
+  saveDiscardModal: SaveDiscardModalState;
 
   // Inspector Panel
   selectedItem: { type: 'note' | 'folder'; id: string } | null;
@@ -91,6 +108,11 @@ export interface UIStoreState {
   closeSessionsModal: () => void;
   openFeedbackModal: () => void;
   closeFeedbackModal: () => void;
+  setEditorDirtyState: (state: EditorDirtyState | null) => void;
+  openSaveDiscardModal: (pendingPath?: string | null, isBack?: boolean, pendingAction?: (() => void) | null) => void;
+  closeSaveDiscardModal: () => void;
+  requestNavigation: (to: string | -1, navigateFn: (target: any) => void) => boolean;
+  requestAction: (actionFn: () => void) => boolean;
 
   // Actions - Selection & Inspector
   selectItem: (type: 'note' | 'folder', id: string) => void;
@@ -151,6 +173,13 @@ export const useUIStore = create<UIStoreState>()(
         isSessionsOpen: false,
         isFeedbackOpen: false,
         activeSettingsSection: null,
+        editorDirtyState: null,
+        saveDiscardModal: {
+          isOpen: false,
+          pendingPath: null,
+          pendingAction: null,
+          isBack: false,
+        },
 
         // Initial Inspector & Selection
         selectedItem: null,
@@ -276,6 +305,53 @@ export const useUIStore = create<UIStoreState>()(
           set({
             isFeedbackOpen: false,
           }),
+
+        setEditorDirtyState: (state: EditorDirtyState | null) =>
+          set({ editorDirtyState: state }),
+
+        openSaveDiscardModal: (pendingPath = null, isBack = false, pendingAction = null) =>
+          set({
+            saveDiscardModal: {
+              isOpen: true,
+              pendingPath,
+              pendingAction,
+              isBack: Boolean(isBack),
+            },
+          }),
+
+        closeSaveDiscardModal: () =>
+          set({
+            saveDiscardModal: {
+              isOpen: false,
+              pendingPath: null,
+              pendingAction: null,
+              isBack: false,
+            },
+          }),
+
+        requestNavigation: (to: string | -1, navigateFn: (target: any) => void) => {
+          const dirty = get().editorDirtyState;
+          if (dirty?.isDirty) {
+            if (to === -1) {
+              get().openSaveDiscardModal(null, true, null);
+            } else {
+              get().openSaveDiscardModal(to, false, null);
+            }
+            return false;
+          }
+          navigateFn(to);
+          return true;
+        },
+
+        requestAction: (actionFn: () => void) => {
+          const dirty = get().editorDirtyState;
+          if (dirty?.isDirty) {
+            get().openSaveDiscardModal(null, false, actionFn);
+            return false;
+          }
+          actionFn();
+          return true;
+        },
 
         // Selection Actions
         selectItem: (type: 'note' | 'folder', id: string) =>

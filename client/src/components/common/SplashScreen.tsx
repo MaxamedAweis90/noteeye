@@ -261,11 +261,11 @@ const AppSplashScreen: React.FC = () => {
         isDone && !isDisplayingTriggerSplash ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       style={{
-        backgroundColor: '#080C15',
+        backgroundColor: '#F8FAFD',
         backgroundImage: `
-          radial-gradient(circle at 50% 42%, #161D32 0%, #0C1222 55%, #050811 100%),
-          linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
+          radial-gradient(circle at 50% 40%, #FFFFFF 0%, #F1F5F9 55%, #E8EEF5 100%),
+          linear-gradient(to right, rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.02) 1px, transparent 1px)
         `,
         backgroundSize: '100% 100%, 48px 48px, 48px 48px',
       }}
@@ -284,31 +284,31 @@ const AppSplashScreen: React.FC = () => {
           className="flex flex-col items-center"
         >
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight font-display">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1F1F1F] tracking-tight font-display">
               {effectiveTitle}
             </h1>
             {isPWA && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-violet-500/15 text-violet-300 border border-violet-500/30">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-purple-50 text-purple-700 border border-purple-200/80">
                 PWA
               </span>
             )}
           </div>
-          <p className="text-[11px] tracking-[0.22em] font-medium text-slate-400 uppercase mt-1.5">
+          <p className="text-[11px] tracking-[0.22em] font-medium text-slate-500 uppercase mt-1.5">
             Calm Notes & Ideas · Workspace
           </p>
         </motion.div>
 
         {/* Gradient Progress Bar */}
-        <div className="w-56 sm:w-64 h-1.5 bg-slate-900/90 border border-white/10 rounded-full overflow-hidden mt-7 mb-3.5 relative shadow-inner">
+        <div className="w-56 sm:w-64 h-2 bg-slate-200/90 border border-slate-300/60 rounded-full overflow-hidden mt-7 mb-3.5 relative shadow-inner">
           <motion.div
-            className="h-full bg-gradient-to-r from-[#863BFF] via-[#7E14FF] to-[#47BFFF] rounded-full transition-all duration-200 ease-out shadow-[0_0_14px_rgba(134,59,255,0.65)]"
+            className="h-full bg-gradient-to-r from-[#863BFF] via-[#7E14FF] to-[#3B82F6] rounded-full transition-all duration-200 ease-out shadow-[0_0_12px_rgba(134,59,255,0.45)]"
             style={{ width: `${effectiveProgress}%` }}
           />
         </div>
 
         {/* Dynamic Status Text with Pulse Indicator */}
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           <span className="truncate max-w-[280px]">{effectiveMessage}</span>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, Folder as FolderIcon, FileText, CheckSquare, Lightbulb, Clock, ArrowRight } from '@/components/ui/icons';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { getRecentSearches, saveRecentSearch, removeRecentSearch } from '../utils/recentSearches';
 
 interface MobileSearchModalProps {
@@ -54,20 +55,26 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ isOpen, on
         .slice(0, 8)
     : [];
 
+  const requestNavigation = useUIStore((state) => state.requestNavigation);
+
   const handleSelectNote = (id: string, title: string) => {
-    if (title.trim()) {
-      setRecentSearches(saveRecentSearch(title.trim()));
-    }
-    onClose();
-    navigate(`/notes/${id}`);
+    requestNavigation(`/notes/${id}`, (target) => {
+      if (title.trim()) {
+        setRecentSearches(saveRecentSearch(title.trim()));
+      }
+      onClose();
+      navigate(target);
+    });
   };
 
   const handleSelectFolder = (id: string, name: string) => {
-    if (name.trim()) {
-      setRecentSearches(saveRecentSearch(name.trim()));
-    }
-    onClose();
-    navigate(`/folders/${id}`);
+    requestNavigation(`/folders/${id}`, (target) => {
+      if (name.trim()) {
+        setRecentSearches(saveRecentSearch(name.trim()));
+      }
+      onClose();
+      navigate(target);
+    });
   };
 
   const handleSelectRecent = (term: string) => {
@@ -82,10 +89,12 @@ export const MobileSearchModal: React.FC<MobileSearchModalProps> = ({ isOpen, on
 
   const handleViewAll = () => {
     if (cleanQuery) {
-      saveRecentSearch(cleanQuery);
-      useNoteStore.getState().setSearchQuery(cleanQuery);
-      onClose();
-      navigate(`/search?q=${encodeURIComponent(cleanQuery)}`);
+      requestNavigation(`/search?q=${encodeURIComponent(cleanQuery)}`, (target) => {
+        saveRecentSearch(cleanQuery);
+        useNoteStore.getState().setSearchQuery(cleanQuery);
+        onClose();
+        navigate(target);
+      });
     }
   };
 

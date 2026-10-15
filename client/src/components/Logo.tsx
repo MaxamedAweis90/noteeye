@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { MARKETING_URL } from '../api/client';
 import { isPWAMode } from '../pwa/registerSW';
 
@@ -85,7 +86,8 @@ export const Logo: React.FC<LogoProps> = ({
     }
 
     if (navigate) {
-      navigate('/');
+      const requestNavigation = useUIStore.getState().requestNavigation;
+      requestNavigation('/', (path) => navigate(path));
     } else {
       window.location.href = '/';
     }

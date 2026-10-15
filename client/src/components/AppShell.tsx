@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
 import { NoteModal } from './NoteModal';
-import { FolderModal, QuickEditModal, DeleteDialog, ConflictDialog } from './modals';
+import { FolderModal, QuickEditModal, DeleteDialog, ConflictDialog, SaveDiscardModal } from './modals';
 import { ProfileModal } from './profile/ProfileModal';
 import { SettingsModal } from './settings/SettingsModal';
 import { SessionsModal } from './settings/SessionsModal';
@@ -63,6 +63,49 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const clearClipboard = useUIStore((state) => state.clearClipboard);
   const toastMessage = useUIStore((state) => state.toastMessage);
   const showToast = useUIStore((state) => state.showToast);
+
+  const editorDirtyState = useUIStore((state) => state.editorDirtyState);
+  const saveDiscardModal = useUIStore((state) => state.saveDiscardModal);
+  const closeSaveDiscardModal = useUIStore((state) => state.closeSaveDiscardModal);
+  const setEditorDirtyState = useUIStore((state) => state.setEditorDirtyState);
+  const [isSavingDiscard, setIsSavingDiscard] = React.useState(false);
+
+  const handleConfirmSaveAndExit = async () => {
+    setIsSavingDiscard(true);
+    try {
+      if (editorDirtyState?.onSaveAndExit) {
+        await editorDirtyState.onSaveAndExit();
+      }
+      setEditorDirtyState(null);
+      const { pendingPath, pendingAction, isBack } = saveDiscardModal;
+      closeSaveDiscardModal();
+      if (isBack) {
+        navigate(-1);
+      } else if (pendingPath) {
+        navigate(pendingPath);
+      } else if (pendingAction) {
+        pendingAction();
+      }
+    } finally {
+      setIsSavingDiscard(false);
+    }
+  };
+
+  const handleConfirmDiscardAndExit = () => {
+    if (editorDirtyState?.onDiscardAndExit) {
+      editorDirtyState.onDiscardAndExit();
+    }
+    setEditorDirtyState(null);
+    const { pendingPath, pendingAction, isBack } = saveDiscardModal;
+    closeSaveDiscardModal();
+    if (isBack) {
+      navigate(-1);
+    } else if (pendingPath) {
+      navigate(pendingPath);
+    } else if (pendingAction) {
+      pendingAction();
+    }
+  };
 
   // Global Keyboard Shortcuts (Ctrl+K, Ctrl+N, Ctrl+Shift+N, Escape, Delete, Ctrl+I)
   useKeyboardShortcuts();
@@ -342,6 +385,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         }}
       />
       <ConflictDialog />
+      <SaveDiscardModal
+        isOpen={saveDiscardModal.isOpen}
+        onClose={closeSaveDiscardModal}
+        onSave={handleConfirmSaveAndExit}
+        onDiscard={handleConfirmDiscardAndExit}
+        itemName={editorDirtyState?.title}
+        itemType={editorDirtyState?.itemType}
+        isSaving={isSavingDiscard}
+      />
       <ProfileModal />
       <SettingsModal />
       <SessionsModal />

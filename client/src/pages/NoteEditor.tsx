@@ -134,6 +134,17 @@ export const NoteEditor: React.FC = () => {
     existingItem ? existingItem.id : isNewRoute ? "new" : null,
   );
   const isLocallyDirtyRef = useRef(false);
+  const initialSnapshotRef = useRef<{
+    title: string;
+    type: ItemType;
+    folderId: string | null;
+    content: string;
+    checklistItems: ChecklistItem[];
+    ideaItems: IdeaItem[];
+    color: string;
+    isFavorite: boolean;
+  } | null>(null);
+  const hasDiscardedRef = useRef(false);
 
   // Latest synchronous values ref — prevents stale closure data loss in autosave timeouts
   const latestValuesRef = useRef({
@@ -218,6 +229,8 @@ export const NoteEditor: React.FC = () => {
     if (existingItem && existingItem.id !== loadedIdRef.current) {
       loadedIdRef.current = existingItem.id;
       isLocallyDirtyRef.current = false;
+      hasDiscardedRef.current = false;
+      useUIStore.getState().setEditorDirtyState(null);
       setTitle(existingItem.title);
       setType(existingItem.type);
       const convertedHtml = markdownToHtml(existingItem.content || "");
@@ -225,16 +238,18 @@ export const NoteEditor: React.FC = () => {
       if (editorRef.current) {
         editorRef.current.innerHTML = convertedHtml;
       }
-      setChecklistItems(existingItem.checklistItems || []);
-      setIdeaItems(existingItem.ideaItems || []);
-      setColor(
+      const initChecklist = existingItem.checklistItems ? JSON.parse(JSON.stringify(existingItem.checklistItems)) : [];
+      const initIdeas = existingItem.ideaItems ? JSON.parse(JSON.stringify(existingItem.ideaItems)) : [];
+      setChecklistItems(initChecklist);
+      setIdeaItems(initIdeas);
+      const initColor =
         existingItem.color ||
-          (existingItem.type === "checklist"
-            ? "#CEEBFD"
-            : existingItem.type === "idea"
-            ? "#E5DEFA"
-            : DEFAULT_PASTEL_COLOR),
-      );
+        (existingItem.type === "checklist"
+          ? "#CEEBFD"
+          : existingItem.type === "idea"
+          ? "#E5DEFA"
+          : DEFAULT_PASTEL_COLOR);
+      setColor(initColor);
       setFolderId(existingItem.folderId);
       setIsFavorite(Boolean(existingItem.isFavorite));
       setSaveStatus("saved");
@@ -243,6 +258,16 @@ export const NoteEditor: React.FC = () => {
           ? format(new Date(existingItem.updatedAt), "h:mm a")
           : "Just now",
       );
+      initialSnapshotRef.current = {
+        title: existingItem.title,
+        type: existingItem.type,
+        folderId: existingItem.folderId,
+        content: convertedHtml,
+        checklistItems: initChecklist,
+        ideaItems: initIdeas,
+        color: initColor,
+        isFavorite: Boolean(existingItem.isFavorite),
+      };
     } else if (
       existingItem &&
       existingItem.id === loadedIdRef.current &&
@@ -291,6 +316,8 @@ export const NoteEditor: React.FC = () => {
     } else if (isNewRoute && loadedIdRef.current !== "new") {
       loadedIdRef.current = "new";
       isLocallyDirtyRef.current = false;
+      hasDiscardedRef.current = false;
+      useUIStore.getState().setEditorDirtyState(null);
       const rawType = searchParams.get("type");
       const paramType: ItemType =
         rawType === "checklist" ? "checklist" : rawType === "idea" ? "idea" : "note";
@@ -305,17 +332,27 @@ export const NoteEditor: React.FC = () => {
       setIdeaItems([]);
       const prefKey = useUserStore.getState().user.settings?.defaultNoteColor;
       const prefHex = prefKey ? colorKeyToHex(prefKey) : DEFAULT_PASTEL_COLOR;
-      setColor(
+      const initNewColor =
         paramType === "checklist" && (!prefKey || prefKey === "peach")
           ? "#CEEBFD"
           : paramType === "idea" && (!prefKey || prefKey === "peach")
           ? "#E5DEFA"
-          : prefHex,
-      );
+          : prefHex;
+      setColor(initNewColor);
       setFolderId(paramFolder);
       setIsFavorite(false);
       setSaveStatus("saved");
       setLastSavedTime("Just now");
+      initialSnapshotRef.current = {
+        title: "",
+        type: paramType,
+        folderId: paramFolder,
+        content: "",
+        checklistItems: [],
+        ideaItems: [],
+        color: initNewColor,
+        isFavorite: false,
+      };
     }
   }, [
     existingItem,
@@ -349,47 +386,92 @@ export const NoteEditor: React.FC = () => {
   // Debounced Autosave Timer
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const performSave = useCallback(() => {
-    if (!hasLoadedRef.current) return;
+  const performSave = useCallback(
+    (isManualConfirmed = false) => {
+      if (!hasLoadedRef.current || hasDiscardedRef.current) return;
 
-    // Read directly from latest values ref (guaranteed freshest state, zero closure staleness)
-    const {
-      title: curTitle,
-      type: curType,
-      folderId: curFolder,
-      checklistItems: curChecklist,
-      ideaItems: curIdeas,
-      color: curColor,
-      isFavorite: curFav,
-      activeId: curActiveId,
-    } = latestValuesRef.current;
+      // Read directly from latest values ref (guaranteed freshest state, zero closure staleness)
+      const {
+        title: curTitle,
+        type: curType,
+        folderId: curFolder,
+        checklistItems: curChecklist,
+        ideaItems: curIdeas,
+        color: curColor,
+        isFavorite: curFav,
+        activeId: curActiveId,
+      } = latestValuesRef.current;
 
-    // For rich text notes, read directly from editorRef.current.innerHTML to capture every typed character
-    const finalContent =
-      curType === "note" && editorRef.current
-        ? editorRef.current.innerHTML
-        : latestValuesRef.current.content;
+      // For rich text notes, read directly from editorRef.current.innerHTML to capture every typed character
+      const finalContent =
+        curType === "note" && editorRef.current
+          ? editorRef.current.innerHTML
+          : latestValuesRef.current.content;
 
-    latestValuesRef.current.content = finalContent;
+      latestValuesRef.current.content = finalContent;
 
-    const trimmedTitle = curTitle.trim();
-    const hasData =
-      trimmedTitle.length > 0 ||
-      finalContent.trim().length > 0 ||
-      curChecklist.length > 0 ||
-      (curIdeas && curIdeas.length > 0);
-    const fallbackTitle =
-      curType === "checklist"
-        ? "Untitled Checklist"
-        : curType === "idea"
-        ? "Untitled Idea"
-        : "Untitled Note";
+      const trimmedTitle = curTitle.trim();
+      const hasData =
+        trimmedTitle.length > 0 ||
+        finalContent.trim().length > 0 ||
+        curChecklist.length > 0 ||
+        (curIdeas && curIdeas.length > 0);
+      const fallbackTitle =
+        curType === "checklist"
+          ? "Untitled Checklist"
+          : curType === "idea"
+          ? "Untitled Idea"
+          : "Untitled Note";
 
-    if (!curActiveId) {
-      // Create new note only if there is meaningful content or title
-      if (hasData) {
+      if (!curActiveId) {
+        // Create new note only if there is meaningful content or title
+        if (hasData) {
+          setSaveStatus("saving");
+          const newItem = addItem({
+            title: trimmedTitle || fallbackTitle,
+            type: curType,
+            folderId: curFolder,
+            content: finalContent,
+            checklistItems: curChecklist,
+            ideaItems: curIdeas,
+            color: curColor,
+            isFavorite: curFav,
+          });
+          if (newItem) {
+            loadedIdRef.current = newItem.id;
+            setCreatedItemId(newItem.id);
+            latestValuesRef.current.activeId = newItem.id;
+            setSaveStatus("saved");
+            setLastSavedTime(format(new Date(), "h:mm:ss a"));
+            if (isManualConfirmed) {
+              isLocallyDirtyRef.current = false;
+              initialSnapshotRef.current = {
+                title: trimmedTitle || fallbackTitle,
+                type: curType,
+                folderId: curFolder,
+                content: finalContent,
+                checklistItems: JSON.parse(JSON.stringify(curChecklist)),
+                ideaItems: curIdeas ? JSON.parse(JSON.stringify(curIdeas)) : [],
+                color: curColor,
+                isFavorite: curFav,
+              };
+              useUIStore.getState().setEditorDirtyState(null);
+            }
+            navigate(`/notes/${newItem.id}`, { replace: true });
+          } else {
+            setSaveStatus("saved");
+          }
+        }
+      } else {
+        // Guard against saving an existing item if it hasn't been modified locally,
+        // or if the editor has not yet loaded this specific note ID.
+        if (!isLocallyDirtyRef.current || loadedIdRef.current !== curActiveId) {
+          return;
+        }
+
+        // Update existing item
         setSaveStatus("saving");
-        const newItem = addItem({
+        updateItem(curActiveId, {
           title: trimmedTitle || fallbackTitle,
           type: curType,
           folderId: curFolder,
@@ -399,54 +481,81 @@ export const NoteEditor: React.FC = () => {
           color: curColor,
           isFavorite: curFav,
         });
-        if (newItem) {
+        setSaveStatus("saved");
+        setLastSavedTime(format(new Date(), "h:mm:ss a"));
+        if (isManualConfirmed) {
           isLocallyDirtyRef.current = false;
-          loadedIdRef.current = newItem.id;
-          setCreatedItemId(newItem.id);
-          latestValuesRef.current.activeId = newItem.id;
-          setSaveStatus("saved");
-          setLastSavedTime(format(new Date(), "h:mm:ss a"));
-          navigate(`/notes/${newItem.id}`, { replace: true });
-        } else {
-          setSaveStatus("saved");
+          initialSnapshotRef.current = {
+            title: trimmedTitle || fallbackTitle,
+            type: curType,
+            folderId: curFolder,
+            content: finalContent,
+            checklistItems: JSON.parse(JSON.stringify(curChecklist)),
+            ideaItems: curIdeas ? JSON.parse(JSON.stringify(curIdeas)) : [],
+            color: curColor,
+            isFavorite: curFav,
+          };
+          useUIStore.getState().setEditorDirtyState(null);
         }
       }
-    } else {
-      // Guard against saving an existing item if it hasn't been modified locally,
-      // or if the editor has not yet loaded this specific note ID.
-      // This protects against clearing notes on mount/unmount in StrictMode or when simply viewing a note.
-      if (!isLocallyDirtyRef.current || loadedIdRef.current !== curActiveId) {
-        return;
-      }
+    },
+    [addItem, updateItem, navigate],
+  );
 
-      // Update existing item
-      setSaveStatus("saving");
-      updateItem(curActiveId, {
-        title: trimmedTitle || fallbackTitle,
-        type: curType,
-        folderId: curFolder,
-        content: finalContent,
-        checklistItems: curChecklist,
-        ideaItems: curIdeas,
-        color: curColor,
-        isFavorite: curFav,
-      });
-      isLocallyDirtyRef.current = false;
-      setSaveStatus("saved");
-      setLastSavedTime(format(new Date(), "h:mm:ss a"));
+  const handleSaveAndExit = useCallback(async () => {
+    performSave(true);
+  }, [performSave]);
+
+  const handleDiscardAndExit = useCallback(() => {
+    hasDiscardedRef.current = true;
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
     }
-  }, [addItem, updateItem, navigate]);
+    isLocallyDirtyRef.current = false;
+    const curActiveId = latestValuesRef.current.activeId;
+
+    if (curActiveId && !isNewRoute && initialSnapshotRef.current) {
+      updateItem(curActiveId, {
+        title: initialSnapshotRef.current.title,
+        type: initialSnapshotRef.current.type,
+        folderId: initialSnapshotRef.current.folderId,
+        content: initialSnapshotRef.current.content,
+        checklistItems: initialSnapshotRef.current.checklistItems,
+        ideaItems: initialSnapshotRef.current.ideaItems,
+        color: initialSnapshotRef.current.color,
+        isFavorite: initialSnapshotRef.current.isFavorite,
+      });
+    } else if (createdItemId) {
+      useNoteStore.getState().deleteItem(createdItemId);
+    }
+    useUIStore.getState().setEditorDirtyState(null);
+  }, [isNewRoute, updateItem, createdItemId]);
 
   // Trigger debounced autosave on value changes
   const triggerAutosave = useCallback(() => {
+    isLocallyDirtyRef.current = true;
     setSaveStatus("saving");
+    useUIStore.getState().setEditorDirtyState({
+      isDirty: true,
+      itemType: latestValuesRef.current.type,
+      title:
+        latestValuesRef.current.title ||
+        (latestValuesRef.current.type === "checklist"
+          ? "Untitled Checklist"
+          : latestValuesRef.current.type === "idea"
+          ? "Untitled Idea"
+          : "Untitled Note"),
+      onSaveAndExit: handleSaveAndExit,
+      onDiscardAndExit: handleDiscardAndExit,
+    });
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = setTimeout(() => {
-      performSave();
+      performSave(false);
     }, 450);
-  }, [performSave]);
+  }, [performSave, handleSaveAndExit, handleDiscardAndExit]);
 
   // Flush save on unmount or before navigating
   const flushSave = useCallback(() => {
@@ -454,56 +563,62 @@ export const NoteEditor: React.FC = () => {
       clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = null;
     }
-    performSave();
+    performSave(false);
   }, [performSave]);
 
   // Flush on unmount, page reload, tab switch, app backgrounding, or Ctrl+S / Cmd+S
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      flushSave();
-    };
-
-    const handleVisibilityChange = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
-        flushSave();
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isLocallyDirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
       }
     };
 
-    const handlePageHide = () => {
-      flushSave();
+    const handlePopState = () => {
+      if (isLocallyDirtyRef.current) {
+        window.history.pushState(null, '', window.location.href);
+        useUIStore.getState().openSaveDiscardModal(null, true);
+      }
     };
 
-    const handleWindowBlur = () => {
-      flushSave();
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden' && !hasDiscardedRef.current) {
+        flushSave();
+      }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        flushSave();
+        performSave(true);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
-    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('popstate', handlePopState);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('keydown', handleKeyDown);
-      flushSave();
+      if (!hasDiscardedRef.current && isLocallyDirtyRef.current) {
+        flushSave();
+      }
+      useUIStore.getState().setEditorDirtyState(null);
     };
-  }, [flushSave]);
+  }, [flushSave, performSave]);
 
   // Back Navigation Handler
   const handleBack = () => {
-    flushSave();
-    navigate(-1);
+    if (isLocallyDirtyRef.current) {
+      useUIStore.getState().openSaveDiscardModal(null, true);
+    } else {
+      navigate(-1);
+    }
   };
 
   // Move to Trash Handler — shows confirmation dialog
@@ -854,7 +969,8 @@ export const NoteEditor: React.FC = () => {
         isOffline={isOffline}
         syncError={syncError}
         lastSavedTime={lastSavedTime}
-        onSaveNow={() => performSave()}
+        isDirty={isLocallyDirtyRef.current}
+        onSaveNow={() => performSave(true)}
         activeTableInfo={activeTableInfo}
         selectedCellsCount={selectedCells.length}
         onOpenTableCustomizer={() => setIsTableCustomizerOpen(true)}

@@ -7,6 +7,7 @@ import { UserMenu } from "./UserMenu";
 import { MobileSearchModal } from "./MobileSearchModal";
 import { MobileUserDrawer } from "./MobileUserDrawer";
 import { useNoteStore } from "../store/useNoteStore";
+import { useUIStore } from "../store/uiStore";
 import type { Item } from "../types";
 import {
   getRecentSearches,
@@ -85,17 +86,21 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const requestNavigation = useUIStore((state) => state.requestNavigation);
+
   // Desktop search handlers: Only commit search on Enter or clicking 'All results'
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       const trimmed = inputValue.trim();
       if (trimmed) {
-        const updated = saveRecentSearch(trimmed);
-        setRecentSearches(updated);
-        setIsSearchFocused(false);
-        inputRef.current?.blur();
-        setSearchQuery(trimmed);
-        navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+        requestNavigation(`/search?q=${encodeURIComponent(trimmed)}`, (target) => {
+          const updated = saveRecentSearch(trimmed);
+          setRecentSearches(updated);
+          setIsSearchFocused(false);
+          inputRef.current?.blur();
+          setSearchQuery(trimmed);
+          navigate(target);
+        });
       }
     } else if (e.key === "Escape") {
       setIsSearchFocused(false);
@@ -105,15 +110,17 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
 
   const handleSelectRecent = useCallback(
     (term: string) => {
-      const updated = saveRecentSearch(term);
-      setRecentSearches(updated);
-      setInputValue(term);
-      setSearchQuery(term);
-      setIsSearchFocused(false);
-      inputRef.current?.blur();
-      navigate(`/search?q=${encodeURIComponent(term)}`);
+      requestNavigation(`/search?q=${encodeURIComponent(term)}`, (target) => {
+        const updated = saveRecentSearch(term);
+        setRecentSearches(updated);
+        setInputValue(term);
+        setSearchQuery(term);
+        setIsSearchFocused(false);
+        inputRef.current?.blur();
+        navigate(target);
+      });
     },
-    [navigate, setSearchQuery],
+    [navigate, setSearchQuery, requestNavigation],
   );
 
   const handleRemoveRecent = useCallback((search: string, e: React.MouseEvent) => {
@@ -124,44 +131,50 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
 
   const handleSelectFolder = useCallback(
     (folderId: string) => {
-      setIsSearchFocused(false);
-      inputRef.current?.blur();
-      setCurrentFolder(folderId);
-      navigate(`/folders/${folderId}`);
+      requestNavigation(`/folders/${folderId}`, (target) => {
+        setIsSearchFocused(false);
+        inputRef.current?.blur();
+        setCurrentFolder(folderId);
+        navigate(target);
+      });
     },
-    [navigate, setCurrentFolder],
+    [navigate, setCurrentFolder, requestNavigation],
   );
 
   const handleSelectItem = useCallback(
     (item: Item) => {
-      if (item.title?.trim()) {
-        const updated = saveRecentSearch(item.title);
-        setRecentSearches(updated);
-      }
-      setIsSearchFocused(false);
-      inputRef.current?.blur();
-      navigate(`/notes/${item.id}`);
+      requestNavigation(`/notes/${item.id}`, (target) => {
+        if (item.title?.trim()) {
+          const updated = saveRecentSearch(item.title);
+          setRecentSearches(updated);
+        }
+        setIsSearchFocused(false);
+        inputRef.current?.blur();
+        navigate(target);
+      });
     },
-    [navigate],
+    [navigate, requestNavigation],
   );
 
   const handleViewAllResults = useCallback(() => {
     const trimmed = inputValue.trim();
     if (trimmed) {
-      const updated = saveRecentSearch(trimmed);
-      setRecentSearches(updated);
-      setIsSearchFocused(false);
-      inputRef.current?.blur();
-      setSearchQuery(trimmed);
-      navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+      requestNavigation(`/search?q=${encodeURIComponent(trimmed)}`, (target) => {
+        const updated = saveRecentSearch(trimmed);
+        setRecentSearches(updated);
+        setIsSearchFocused(false);
+        inputRef.current?.blur();
+        setSearchQuery(trimmed);
+        navigate(target);
+      });
     }
-  }, [navigate, inputValue, setSearchQuery]);
+  }, [navigate, inputValue, setSearchQuery, requestNavigation]);
 
   const handleClearQuery = () => {
     setInputValue("");
     setSearchQuery("");
     if (location.pathname === "/search") {
-      navigate("/");
+      requestNavigation("/", (target) => navigate(target));
     }
     inputRef.current?.focus();
   };

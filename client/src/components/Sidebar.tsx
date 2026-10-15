@@ -1,15 +1,30 @@
 import React, { useMemo } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 import { CreateButton } from './CreateButton';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const requestNavigation = useUIStore((state) => state.requestNavigation);
   const isMobileSidebarOpen = useNoteStore((state) => state.isMobileSidebarOpen);
   const toggleMobileSidebar = useNoteStore((state) => state.toggleMobileSidebar);
   const setCurrentFolder = useNoteStore((state) => state.setCurrentFolder);
   const folders = useNoteStore((state) => state.folders);
   const items = useNoteStore((state) => state.items);
+
+  const handleNavClick = (e: React.MouseEvent, to: string, onProceed?: () => void) => {
+    const allowed = requestNavigation(to, (targetPath) => {
+      onProceed?.();
+      navigate(targetPath);
+    });
+    if (!allowed) {
+      e.preventDefault();
+    } else {
+      onProceed?.();
+    }
+  };
 
   const trashCount = useMemo(() => {
     const trashedFolders = folders.filter((f) => f.isDeleted).length;
@@ -34,9 +49,11 @@ export const Sidebar: React.FC = () => {
         {/* Tab 1: Home */}
         <NavLink
           to="/"
-          onClick={() => {
-            setCurrentFolder(null);
-            toggleMobileSidebar(false);
+          onClick={(e) => {
+            handleNavClick(e, '/', () => {
+              setCurrentFolder(null);
+              toggleMobileSidebar(false);
+            });
           }}
           className={`flex items-center gap-4 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
             isHomeActive
@@ -53,9 +70,11 @@ export const Sidebar: React.FC = () => {
         {/* Tab 2: Recents */}
         <NavLink
           to="/recents"
-          onClick={() => {
-            setCurrentFolder(null);
-            toggleMobileSidebar(false);
+          onClick={(e) => {
+            handleNavClick(e, '/recents', () => {
+              setCurrentFolder(null);
+              toggleMobileSidebar(false);
+            });
           }}
           className={`flex items-center gap-4 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
             isRecentsActive
@@ -72,9 +91,11 @@ export const Sidebar: React.FC = () => {
         {/* Tab 3: Favorites */}
         <NavLink
           to="/favorites"
-          onClick={() => {
-            setCurrentFolder(null);
-            toggleMobileSidebar(false);
+          onClick={(e) => {
+            handleNavClick(e, '/favorites', () => {
+              setCurrentFolder(null);
+              toggleMobileSidebar(false);
+            });
           }}
           className={`flex items-center gap-4 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
             isFavoritesActive
@@ -91,8 +112,10 @@ export const Sidebar: React.FC = () => {
         {/* Tab 4: Trash */}
         <NavLink
           to="/trash"
-          onClick={() => {
-            toggleMobileSidebar(false);
+          onClick={(e) => {
+            handleNavClick(e, '/trash', () => {
+              toggleMobileSidebar(false);
+            });
           }}
           className={`flex items-center gap-3.5 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer group ${
             isTrashActive

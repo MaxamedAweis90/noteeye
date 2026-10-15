@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Home,
@@ -14,6 +14,7 @@ import {
   X,
 } from '@/components/ui/icons';
 import { useNoteStore } from '../store/useNoteStore';
+import { useUIStore } from '../store/uiStore';
 
 const springTransition = {
   type: 'spring' as const,
@@ -30,6 +31,9 @@ const springTransition = {
  */
 export const MobileBottomNav: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const requestNavigation = useUIStore((state) => state.requestNavigation);
+  const requestAction = useUIStore((state) => state.requestAction);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
 
   const openNoteModal = useNoteStore((state) => state.openNoteModal);
@@ -41,9 +45,18 @@ export const MobileBottomNav: React.FC = () => {
   const isFavoritesActive = location.pathname === '/favorites';
   const isTrashActive = location.pathname === '/trash';
 
-  const handleNavClick = () => {
-    setCurrentFolder(null);
-    setIsCreateMenuOpen(false);
+  const handleNavClick = (e: React.MouseEvent, to: string) => {
+    const allowed = requestNavigation(to, (targetPath) => {
+      setCurrentFolder(null);
+      setIsCreateMenuOpen(false);
+      navigate(targetPath);
+    });
+    if (!allowed) {
+      e.preventDefault();
+    } else {
+      setCurrentFolder(null);
+      setIsCreateMenuOpen(false);
+    }
   };
 
   // Close create menu on route change
@@ -86,7 +99,7 @@ export const MobileBottomNav: React.FC = () => {
         {/* Tab 1: Home */}
         <NavLink
           to="/"
-          onClick={handleNavClick}
+          onClick={(e) => handleNavClick(e, '/')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isHomeActive
               ? 'text-[#001D35] font-semibold'
@@ -106,7 +119,7 @@ export const MobileBottomNav: React.FC = () => {
         {/* Tab 2: Recents */}
         <NavLink
           to="/recents"
-          onClick={handleNavClick}
+          onClick={(e) => handleNavClick(e, '/recents')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isRecentsActive
               ? 'text-[#001D35] font-semibold'
@@ -190,8 +203,10 @@ export const MobileBottomNav: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setIsCreateMenuOpen(false);
-                        openNoteModal('note');
+                        requestAction(() => {
+                          setIsCreateMenuOpen(false);
+                          openNoteModal('note');
+                        });
                       }}
                       className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                     >
@@ -203,8 +218,10 @@ export const MobileBottomNav: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setIsCreateMenuOpen(false);
-                        openNoteModal('checklist');
+                        requestAction(() => {
+                          setIsCreateMenuOpen(false);
+                          openNoteModal('checklist');
+                        });
                       }}
                       className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                     >
@@ -216,8 +233,10 @@ export const MobileBottomNav: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setIsCreateMenuOpen(false);
-                        openNoteModal('idea');
+                        requestAction(() => {
+                          setIsCreateMenuOpen(false);
+                          openNoteModal('idea');
+                        });
                       }}
                       className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                     >
@@ -233,8 +252,10 @@ export const MobileBottomNav: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      setIsCreateMenuOpen(false);
-                      openFolderModal();
+                      requestAction(() => {
+                        setIsCreateMenuOpen(false);
+                        openFolderModal();
+                      });
                     }}
                     className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                   >
@@ -250,7 +271,7 @@ export const MobileBottomNav: React.FC = () => {
         {/* Tab 3: Favorites */}
         <NavLink
           to="/favorites"
-          onClick={handleNavClick}
+          onClick={(e) => handleNavClick(e, '/favorites')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isFavoritesActive
               ? 'text-[#001D35] font-semibold'
@@ -270,7 +291,7 @@ export const MobileBottomNav: React.FC = () => {
         {/* Tab 4: Trash */}
         <NavLink
           to="/trash"
-          onClick={handleNavClick}
+          onClick={(e) => handleNavClick(e, '/trash')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isTrashActive
               ? 'text-[#001D35] font-semibold'

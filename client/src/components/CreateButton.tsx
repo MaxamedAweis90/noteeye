@@ -9,6 +9,7 @@ import {
   Lightbulb,
 } from "@/components/ui/icons";
 import { useNoteStore } from "../store/useNoteStore";
+import { useUIStore } from "../store/uiStore";
 import type { ItemType } from "../types";
 
 export type CreateActionType = "note" | "checklist" | "idea" | "folder";
@@ -58,16 +59,20 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const handleAction = (type: CreateActionType) => {
-    setIsOpen(false);
-    onActionSelected?.();
-    onSelect?.(type);
+  const requestAction = useUIStore((state) => state.requestAction);
 
-    if (type === "folder") {
-      openFolderModal();
-    } else {
-      openNoteModal(type as ItemType);
-    }
+  const handleAction = (type: CreateActionType) => {
+    requestAction(() => {
+      setIsOpen(false);
+      onActionSelected?.();
+      onSelect?.(type);
+
+      if (type === "folder") {
+        openFolderModal();
+      } else {
+        openNoteModal(type as ItemType);
+      }
+    });
   };
 
   return (
