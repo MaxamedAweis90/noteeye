@@ -9,7 +9,6 @@ import {
   Folder,
   Heart,
   Keyboard,
-  Menu,
   MessageCircle,
   MousePointer2,
   Moon,
@@ -20,13 +19,11 @@ import {
   Search,
   Star,
   Users,
-  X,
   Zap,
-  Lock,
-  ShieldAlert,
 } from '@/components/ui/icons';
 import { APP_URL } from '../api/client';
 import { useAuthStore } from '../store/authStore';
+import { LandingNavbar, type AuthNotice } from '../components/landing/LandingNavbar';
 
 /* ═════════════════════════════════════════════════════════════
    DATA
@@ -434,16 +431,11 @@ const DemoPlayer: React.FC = () => {
    PAGE
    ═════════════════════════════════════════════════════════════ */
 
-export interface AuthNotice {
-  type: 'unauthorized' | 'revoked' | 'logout';
-  title: string;
-  description: string;
-}
+export type { AuthNotice };
 
 export const LandingPage: React.FC = () => {
   const authStoreIsAuth = useAuthStore((state) => state.isAuthenticated);
   const logout = useAuthStore((state) => state.logout);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [authNotice, setAuthNotice] = useState<AuthNotice | null>(null);
 
@@ -584,163 +576,16 @@ export const LandingPage: React.FC = () => {
       id="home"
       className="min-h-screen bg-white text-[#1F1F1F] font-sans antialiased overflow-x-hidden selection:bg-sky-200 selection:text-sky-950"
     >
-      {/* ───────────── 1. TOP NAVIGATION ───────────── */}
-      <header className="absolute top-0 inset-x-0 z-50">
-        {/* Authorization Alert Notification Banner */}
-        {authNotice && (
-          <div
-            className={`text-white border-b px-4 py-2.5 shadow-md transition-all ${
-              authNotice.type === 'logout'
-                ? 'bg-[#002B1D] border-emerald-500/30'
-                : authNotice.type === 'revoked'
-                ? 'bg-[#2B0E14] border-rose-500/30'
-                : 'bg-[#001D35] border-white/10'
-            }`}
-          >
-            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs sm:text-sm">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                    authNotice.type === 'logout'
-                      ? 'bg-emerald-400/20 text-emerald-400'
-                      : authNotice.type === 'revoked'
-                      ? 'bg-rose-400/20 text-rose-300'
-                      : 'bg-amber-400/20 text-amber-300'
-                  }`}
-                >
-                  {authNotice.type === 'revoked' ? (
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                  ) : authNotice.type === 'logout' ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <Lock className="w-3.5 h-3.5 text-amber-300" />
-                  )}
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-                  <span className="font-semibold text-white">{authNotice.title}:</span>
-                  <span className="text-slate-300 text-xs">{authNotice.description}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <a
-                  href={loginUrl}
-                  className={`px-3 py-1 rounded-lg text-white text-xs font-semibold shadow-xs transition-all active:scale-95 ${
-                    authNotice.type === 'logout'
-                      ? 'bg-emerald-600 hover:bg-emerald-700'
-                      : authNotice.type === 'revoked'
-                      ? 'bg-rose-600 hover:bg-rose-700'
-                      : 'bg-[#0B57D0] hover:bg-[#0041A2]'
-                  }`}
-                >
-                  Sign in
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setAuthNotice(null)}
-                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  aria-label="Dismiss notice"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="h-20 max-w-7xl mx-auto px-6 flex items-center justify-between select-none">
-          <a href="#home" className="flex items-center gap-2.5 group">
-            <img
-              src="/noteeye_logo.png"
-              alt="Noteeye logo"
-              className="w-10 h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
-            />
-            <span className="text-xl font-bold tracking-tight">Noteeye</span>
-          </a>
-
-          <nav className="hidden md:flex items-center gap-9 text-sm font-medium text-[#444746]">
-            {NAV_LINKS.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className="relative hover:text-[#1F1F1F] transition-colors after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-[#1F1F1F] hover:after:w-full after:transition-all after:duration-300"
-              >
-                {l.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            {isLoggedIn ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="hidden sm:inline-flex px-4 py-2 text-sm font-semibold rounded-xl border border-transparent hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  Log out
-                </button>
-                <a
-                  href={workspaceHref}
-                  className="px-5 py-2.5 text-sm font-semibold text-white bg-[#1F1F1F] hover:bg-black rounded-xl transition-colors"
-                >
-                  Open Noteeye
-                </a>
-              </>
-            ) : (
-              <>
-                <a
-                  href={loginUrl}
-                  className="px-4 py-2 text-sm font-semibold rounded-xl border border-transparent hover:bg-slate-50 transition-colors"
-                >
-                  Log in
-                </a>
-                <a
-                  href={registerUrl}
-                  className="px-5 py-2.5 text-sm font-semibold text-white bg-[#1F1F1F] hover:bg-black rounded-xl transition-colors"
-                >
-                  Sign up
-                </a>
-              </>
-            )}
-            <button
-              type="button"
-              aria-label="Toggle menu"
-              onClick={() => setMobileOpen((o) => !o)}
-              className="md:hidden ml-1 p-2 rounded-xl hover:bg-white/70 cursor-pointer"
-            >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-        {mobileOpen && (
-          <motion.nav
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden mx-6 rounded-2xl bg-white/95 backdrop-blur border border-slate-100 shadow-lg p-2"
-          >
-            {NAV_LINKS.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                onClick={() => setMobileOpen(false)}
-                className="block px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-50"
-              >
-                {l.label}
-              </a>
-            ))}
-            {isLoggedIn && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-50 cursor-pointer"
-              >
-                Log out
-              </button>
-            )}
-          </motion.nav>
-        )}
-      </header>
+      {/* ───────────── 1. FLOATING PILL NAVBAR & SESSION BAR ───────────── */}
+      <LandingNavbar
+        authNotice={authNotice}
+        onDismissAuthNotice={() => setAuthNotice(null)}
+        isLoggedIn={isLoggedIn}
+        loginUrl={loginUrl}
+        registerUrl={registerUrl}
+        workspaceHref={workspaceHref}
+        onLogout={handleLogout}
+      />
 
       {/* ───────────── 2. HERO ───────────── */}
       <section className="relative pt-32 sm:pt-36 pb-16 bg-gradient-to-b from-[#BFE0FB] via-[#DDF1FC] to-white">
