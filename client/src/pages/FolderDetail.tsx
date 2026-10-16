@@ -91,10 +91,10 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] truncate">
+          <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] dark:text-slate-100 truncate">
             {folder.name}
           </h3>
-          <p className="text-xs text-slate-500 truncate mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
             {itemCount === 0
               ? "Empty folder"
               : `${itemCount} ${itemCount === 1 ? "item" : "items"}`}
@@ -104,7 +104,7 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
 
       {/* Right Meta & Actions */}
       <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        <span className="text-[11px] sm:text-xs text-slate-500 font-medium hidden md:inline">
+        <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium hidden md:inline">
           {formattedDate}
         </span>
 
@@ -232,16 +232,16 @@ const NoteListItem: React.FC<NoteListItemProps> = ({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] truncate">
+            <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] dark:text-slate-100 truncate">
               {item.title}
             </h3>
           </div>
 
-          <p className="text-xs text-slate-700/75 truncate mt-0.5">
+          <p className="text-xs text-slate-700/75 dark:text-slate-400 truncate mt-0.5">
             {isChecklist
               ? `${completedCount}/${totalCount} completed • ${checklistItems.map((c) => c.text).join(", ") || "No tasks"}`
               : item.content || (
-                  <span className="italic text-slate-400">Empty note...</span>
+                  <span className="italic text-slate-400 dark:text-slate-500">Empty note...</span>
                 )}
           </p>
         </div>
@@ -249,7 +249,7 @@ const NoteListItem: React.FC<NoteListItemProps> = ({
 
       {/* Right Meta & Actions */}
       <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        <span className="text-[11px] sm:text-xs text-slate-600/80 font-medium hidden md:inline">
+        <span className="text-[11px] sm:text-xs text-slate-600/80 dark:text-slate-400 font-medium hidden md:inline">
           {formattedDate}
         </span>
 
@@ -466,11 +466,11 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
   if (!folder) {
     return (
       <div className="w-full flex flex-col items-center justify-center py-24 text-center select-none animate-fade-in">
-        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-4 shadow-xs">
-          <AlertCircle className="w-7 h-7 text-amber-600" />
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400 flex items-center justify-center mb-4 shadow-xs">
+          <AlertCircle className="w-7 h-7 text-amber-600 dark:text-amber-400" />
         </div>
-        <h2 className="text-xl font-bold text-[#1F1F1F]">Folder not found</h2>
-        <p className="text-sm text-slate-500 max-w-sm mt-1 mb-6">
+        <h2 className="text-xl font-bold text-[#1F1F1F] dark:text-slate-100">Folder not found</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-6">
           This collection may have been deleted, moved to trash, or does not
           exist.
         </p>
@@ -885,13 +885,13 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
       {totalItemsCount === 0 ? (
         /* Empty Folder State */
         <div className="flex flex-col items-center justify-center py-20 text-center select-none animate-fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-xs">
-            <FolderIcon className="w-7 h-7 text-slate-400" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mb-4 shadow-xs">
+            <FolderIcon className="w-7 h-7 text-slate-400 dark:text-slate-500" />
           </div>
-          <h2 className="text-lg font-bold text-[#1F1F1F]">
+          <h2 className="text-lg font-bold text-[#1F1F1F] dark:text-slate-100">
             This folder is empty
           </h2>
-          <p className="text-sm text-slate-500 max-w-sm mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">
             Add notes, checklists, or create nested subfolders inside this
             collection.
           </p>
@@ -899,7 +899,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
             <button
               type="button"
               onClick={() => openFolderModal()}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[#1F1F1F] text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-[#1F1F1F] dark:text-slate-100 text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
             >
               <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
               <span>New Folder</span>
@@ -915,9 +915,9 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
             <button
               type="button"
               onClick={() => handleCreateNote("idea")}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-purple-200 dark:border-purple-800/60 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
             >
-              <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+              <Lightbulb className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               <span>New Idea</span>
             </button>
           </div>

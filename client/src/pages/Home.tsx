@@ -575,24 +575,24 @@ export const Home: React.FC<HomeProps> = ({
         {totalCollectionCount === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-20 text-center select-none animate-fade-in">
-            <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mb-4 shadow-xs">
               {isSearching ? (
-                <Search className="w-7 h-7 text-slate-400" />
+                <Search className="w-7 h-7 text-slate-400 dark:text-slate-500" />
               ) : currentFolder ? (
-                <FolderIcon className="w-7 h-7 text-slate-400" />
+                <FolderIcon className="w-7 h-7 text-slate-400 dark:text-slate-500" />
               ) : (
-                <FileText className="w-7 h-7 text-slate-400" />
+                <FileText className="w-7 h-7 text-slate-400 dark:text-slate-500" />
               )}
             </div>
 
-            <h2 className="text-lg font-bold text-[#1F1F1F]">
+            <h2 className="text-lg font-bold text-[#1F1F1F] dark:text-slate-100">
               {isSearching
                 ? 'No matching results found'
                 : currentFolder
                 ? 'This folder is empty'
                 : 'No notes yet'}
             </h2>
-            <p className="text-sm text-slate-500 max-w-sm mt-1">
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">
               {isSearching
                 ? `No notes or folders matching "${searchQuery}".`
                 : currentFolder
@@ -605,7 +605,7 @@ export const Home: React.FC<HomeProps> = ({
                 <button
                   type="button"
                   onClick={() => openFolderModal()}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-[#1F1F1F] text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-[#1F1F1F] dark:text-slate-100 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                 >
                   <FolderPlus className="w-3.5 h-3.5 text-amber-500" />
                   <span>New Folder</span>

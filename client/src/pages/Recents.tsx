@@ -108,7 +108,7 @@ const NoteListItem: React.FC<NoteListItemProps> = ({ item, onOpen, onEdit, onDel
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] truncate">
+            <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] dark:text-slate-100 truncate">
               {item.title}
             </h3>
             {item.isFavorite && (
@@ -116,17 +116,17 @@ const NoteListItem: React.FC<NoteListItemProps> = ({ item, onOpen, onEdit, onDel
             )}
           </div>
 
-          <p className="text-xs text-slate-700/75 truncate mt-0.5">
+          <p className="text-xs text-slate-700/75 dark:text-slate-400 truncate mt-0.5">
             {isChecklist
               ? `${completedCount}/${totalCount} completed • ${checklistItems.map((c) => c.text).join(', ') || 'No tasks'}`
-              : item.content || <span className="italic text-slate-400">Empty note...</span>}
+              : item.content || <span className="italic text-slate-400 dark:text-slate-500">Empty note...</span>}
           </p>
         </div>
       </div>
 
       {/* Right Meta & Quick Action Buttons */}
       <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-        <span className="text-[11px] sm:text-xs text-slate-600/80 font-medium hidden md:inline">
+        <span className="text-[11px] sm:text-xs text-slate-600/80 dark:text-slate-400 font-medium hidden md:inline">
           {formattedDate}
         </span>
 

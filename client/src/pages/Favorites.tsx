@@ -70,22 +70,22 @@ const NoteListItem: React.FC<NoteListItemProps> = ({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] truncate">
+            <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] dark:text-slate-100 truncate">
               {item.title}
             </h3>
           </div>
 
-          <p className="text-xs text-slate-700/75 truncate mt-0.5">
+          <p className="text-xs text-slate-700/75 dark:text-slate-400 truncate mt-0.5">
             {isChecklist
               ? `${completedCount}/${totalCount} completed • ${checklistItems.map((c) => c.text).join(', ') || 'No tasks'}`
-              : item.content || <span className="italic text-slate-400">Empty note...</span>}
+              : item.content || <span className="italic text-slate-400 dark:text-slate-500">Empty note...</span>}
           </p>
         </div>
       </div>
 
       {/* Right Meta & Actions */}
       <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        <span className="text-[11px] sm:text-xs text-slate-600/80 font-medium hidden md:inline">
+        <span className="text-[11px] sm:text-xs text-slate-600/80 dark:text-slate-400 font-medium hidden md:inline">
           {formattedDate}
         </span>
 
@@ -173,7 +173,7 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
   return (
     <div
       onClick={onOpen}
-      className="w-full rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 sm:gap-4 bg-[#F5F2FF] hover:bg-[#EFEAFF] border border-[#7B61FF]/15 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
+      className="w-full rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 sm:gap-4 bg-[#F5F2FF] dark:bg-purple-950/20 hover:bg-[#EFEAFF] dark:hover:bg-purple-950/40 border border-[#7B61FF]/15 dark:border-purple-800/40 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group select-none"
     >
       {/* Left Icon + Title + Count */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -182,10 +182,10 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] truncate">
+          <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] dark:text-slate-100 truncate">
             {folder.name}
           </h3>
-          <p className="text-xs text-slate-500 truncate mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
             {itemCount === 0 ? 'Empty folder' : `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
           </p>
         </div>
@@ -193,7 +193,7 @@ const FolderListItem: React.FC<FolderListItemProps> = ({
 
       {/* Right Meta & Actions */}
       <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        <span className="text-[11px] sm:text-xs text-slate-500 font-medium hidden md:inline">
+        <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium hidden md:inline">
           {formattedDate}
         </span>
 

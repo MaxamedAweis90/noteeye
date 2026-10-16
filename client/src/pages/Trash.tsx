@@ -683,11 +683,11 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
       {totalTrashCount === 0 ? (
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-20 text-center select-none animate-fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-xs">
-            <Trash2 className="w-7 h-7 text-slate-400" />
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mb-4 shadow-xs">
+            <Trash2 className="w-7 h-7 text-slate-400 dark:text-slate-500" />
           </div>
-          <h2 className="text-lg font-bold text-[#1F1F1F]">Trash is empty</h2>
-          <p className="text-sm text-slate-500 max-w-sm mt-1">
+          <h2 className="text-lg font-bold text-[#1F1F1F] dark:text-slate-100">Trash is empty</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">
             Items you delete will show up here for 30 days before being permanently removed.
           </p>
         </div>
@@ -812,15 +812,15 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                       <Check className="w-3 h-3 stroke-[3]" />
                     </button>
 
-                    <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                      <FolderIcon className="w-4 h-4 fill-purple-700" />
+                    <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 flex items-center justify-center shrink-0">
+                      <FolderIcon className="w-4 h-4 fill-purple-700 dark:fill-purple-400" />
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] truncate">
+                      <h3 className="font-bold text-sm sm:text-base text-[#1F1F1F] dark:text-slate-100 truncate">
                         {folder.name}
                       </h3>
-                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {count === 0 ? 'Empty folder' : `${count} items`}
                       </p>
                     </div>
@@ -834,7 +834,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                         restoreFolder(folder.id);
                       }}
                       title="Restore"
-                      className="p-1.5 text-slate-600 hover:text-[#0B57D0] hover:bg-white rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-[#0B57D0] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                     >
                       <RotateCcw className="w-4 h-4" />
                     </button>
@@ -851,7 +851,7 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
                         })
                       }}
                       title="Delete forever"
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1052,16 +1052,16 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 z-10 space-y-4"
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-slate-800 z-10 space-y-4 text-slate-800 dark:text-slate-100"
             >
               <div className="flex items-center justify-between">
-                <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                   <Clock className="w-5 h-5" />
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowPolicyModal(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   aria-label="Close dialog"
                 >
                   <X className="w-4 h-4" />
@@ -1069,31 +1069,31 @@ export const Trash: React.FC<TrashProps> = ({ isLoading = false }) => {
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-[#1F1F1F]">
+                <h3 className="text-lg font-bold text-[#1F1F1F] dark:text-slate-100">
                   30-Day Trash Retention Policy
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                   How Noteeye keeps your deleted files secure and manages storage:
                 </p>
               </div>
 
-              <div className="space-y-3 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100 text-xs text-slate-600">
+              <div className="space-y-3 bg-slate-50/80 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700/80 text-xs text-slate-600 dark:text-slate-300">
                 <div className="flex items-start gap-2.5">
-                  <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <p>
-                    <strong className="text-slate-800">Automatic Purge:</strong> Items moved to Trash stay for 30 days before being permanently deleted.
+                    <strong className="text-slate-800 dark:text-slate-100">Automatic Purge:</strong> Items moved to Trash stay for 30 days before being permanently deleted.
                   </p>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <RotateCcw className="w-4 h-4 text-[#0B57D0] shrink-0 mt-0.5" />
+                  <RotateCcw className="w-4 h-4 text-[#0B57D0] dark:text-blue-400 shrink-0 mt-0.5" />
                   <p>
-                    <strong className="text-slate-800">Full Recovery:</strong> You can restore any note or folder back to its workspace anytime within this period.
+                    <strong className="text-slate-800 dark:text-slate-100">Full Recovery:</strong> You can restore any note or folder back to its workspace anytime within this period.
                   </p>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <Trash2 className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                   <p>
-                    <strong className="text-slate-800">Instant Empty:</strong> Use "Empty Trash now" whenever you want to clear all items permanently right away.
+                    <strong className="text-slate-800 dark:text-slate-100">Instant Empty:</strong> Use "Empty Trash now" whenever you want to clear all items permanently right away.
                   </p>
                 </div>
               </div>

@@ -11,11 +11,11 @@ interface NoteEditorNotFoundProps {
 export const NoteEditorNotFound: React.FC<NoteEditorNotFoundProps> = ({ onReturnHome }) => {
   return (
     <div className="w-full flex flex-col items-center justify-center py-24 text-center select-none animate-fade-in">
-      <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-xs">
-        <AlertCircle className="w-7 h-7 text-slate-400" />
+      <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mb-4 shadow-xs">
+        <AlertCircle className="w-7 h-7 text-slate-400 dark:text-slate-500" />
       </div>
-      <h2 className="text-xl font-bold text-[#1F1F1F]">Note not found</h2>
-      <p className="text-sm text-slate-500 max-w-sm mt-1 mb-6">
+      <h2 className="text-xl font-bold text-[#1F1F1F] dark:text-slate-100">Note not found</h2>
+      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-6">
         This note may have been deleted, moved to trash, or does not exist.
       </p>
       <button
