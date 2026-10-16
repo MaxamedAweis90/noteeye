@@ -190,32 +190,32 @@ export const SessionsModal: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-50 bg-[#F8FAFD] flex flex-col overflow-y-auto custom-scrollbar select-none"
+        className="fixed inset-0 z-50 bg-[#F8FAFD] dark:bg-[#0B0F17] flex flex-col overflow-y-auto custom-scrollbar select-none text-slate-800 dark:text-slate-100"
       >
         {/* Sticky Top Header Bar: Close 'X' + Esc Hint on TOP-LEFT, Title on TOP-RIGHT */}
-        <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 dark:bg-[#0B0F17]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800">
           {/* Top-Left: Close X Button + Desktop Esc Hint */}
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={closeSessionsModal}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 dark:text-slate-400 dark:hover:text-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 dark:border-slate-700 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
               aria-label="Close Active Sessions screen"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
-            <span className="hidden sm:inline text-xs text-slate-400 font-normal select-none">
+            <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-500 font-normal select-none">
               Press Esc to close
             </span>
           </div>
 
           {/* Top-Right: Title */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Security
             </span>
-            <h1 className="text-lg sm:text-xl font-bold text-[#1F1F1F] tracking-tight">
+            <h1 className="text-lg sm:text-xl font-bold text-[#1F1F1F] dark:text-slate-100 tracking-tight">
               Active Sessions
             </h1>
           </div>
@@ -226,8 +226,8 @@ export const SessionsModal: React.FC = () => {
           {/* Section Introduction */}
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-sm font-semibold text-[#1F1F1F]">Connected Devices</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <h2 className="text-sm font-semibold text-[#1F1F1F] dark:text-slate-100">Connected Devices</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Devices currently signed into your Noteeye account.
               </p>
             </div>
@@ -236,7 +236,7 @@ export const SessionsModal: React.FC = () => {
               type="button"
               onClick={() => fetchSessions(true)}
               disabled={isLoading || isRefreshing}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
               title="Refresh session list"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -246,7 +246,7 @@ export const SessionsModal: React.FC = () => {
 
           {/* Future Feature Notice (If dismissed, stays hidden) */}
           {mainDeviceNotice && (
-            <div className="p-3 bg-slate-100 rounded-xl flex items-start gap-2.5 text-xs text-slate-700 border border-slate-200/80">
+            <div className="p-3 bg-slate-100 dark:bg-slate-800/80 rounded-xl flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700">
               <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <span>{mainDeviceNotice}</span>
@@ -254,7 +254,7 @@ export const SessionsModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMainDeviceNotice(null)}
-                className="text-xs font-medium text-slate-500 hover:text-slate-800 cursor-pointer"
+                className="text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 cursor-pointer"
               >
                 Dismiss
               </button>
@@ -262,18 +262,18 @@ export const SessionsModal: React.FC = () => {
           )}
 
           {/* Minimalist Sessions List Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
             {isLoading ? (
-              <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
-                <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+              <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
+                <Loader2 className="w-4 h-4 animate-spin text-slate-500 dark:text-slate-400" />
                 <span className="text-xs">Loading sessions...</span>
               </div>
             ) : sessions.length === 0 ? (
-              <div className="py-12 text-center text-xs text-slate-500">
+              <div className="py-12 text-center text-xs text-slate-500 dark:text-slate-400">
                 No active session records found.
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {sessions.map((session) => {
                   const isRevoking = revokingId === session.id;
                   const deviceLabel =
@@ -286,28 +286,28 @@ export const SessionsModal: React.FC = () => {
                   return (
                     <div
                       key={session.id}
-                      className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors"
+                      className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors"
                     >
                       {/* Left: Device Icon & Information */}
                       <div className="flex items-center gap-3.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
                           {getDeviceIcon(session.deviceType)}
                         </div>
 
                         <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-[#1F1F1F] truncate">
+                            <span className="text-sm font-medium text-[#1F1F1F] dark:text-slate-100 truncate">
                               {deviceLabel} – {session.osName}
                             </span>
                             {session.isCurrent && (
-                              <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                              <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/50 px-2 py-0.5 rounded-md border border-emerald-200/60">
                                 This device
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5 truncate">
-                            <span className="text-slate-600">{session.browserName}</span>
+                          <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                            <span className="text-slate-600 dark:text-slate-300">{session.browserName}</span>
                             <span>•</span>
                             <span className="font-mono text-[11px]">{session.ipAddress}</span>
                             <span>•</span>
@@ -326,7 +326,7 @@ export const SessionsModal: React.FC = () => {
                               `Upcoming: Designating "${session.osName}" as your primary trusted device will require email verification.`
                             )
                           }
-                          className="hidden md:inline text-xs text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                          className="hidden md:inline text-xs text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors cursor-pointer"
                           title="Set as main device"
                         >
                           Set as main
@@ -337,7 +337,7 @@ export const SessionsModal: React.FC = () => {
                             type="button"
                             onClick={() => handleRevoke(session)}
                             disabled={isRevoking}
-                            className="text-xs font-medium text-slate-500 hover:text-red-600 transition-colors cursor-pointer disabled:opacity-50 px-2 py-1"
+                            className="text-xs font-medium text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50 px-2 py-1"
                           >
                             {isRevoking ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -346,7 +346,7 @@ export const SessionsModal: React.FC = () => {
                             )}
                           </button>
                         ) : (
-                          <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium px-2 py-1">
+                          <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-medium px-2 py-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             <span>Active now</span>
                           </div>
@@ -360,15 +360,15 @@ export const SessionsModal: React.FC = () => {
 
             {/* Bottom Action: Log out all other sessions */}
             {otherSessions.length > 0 && !isLoading && (
-              <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-slate-500">
+              <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   {otherSessions.length} other {otherSessions.length === 1 ? 'session' : 'sessions'} active
                 </span>
                 <button
                   type="button"
                   onClick={handleRevokeOthers}
                   disabled={isRevokingOthers}
-                  className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  className="text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {isRevokingOthers ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

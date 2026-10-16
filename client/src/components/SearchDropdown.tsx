@@ -99,7 +99,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -6, scale: 0.98 }}
         transition={springPhysics}
-        className="absolute top-12 left-0 w-full bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 p-2"
+        className="absolute top-12 left-0 w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 p-2"
         role="listbox"
         aria-label="Search suggestions"
         onMouseDown={(e) => {
@@ -112,7 +112,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
           {!isQueryMode && (
             <>
               <div className="px-3 py-1.5 flex items-center justify-between">
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase select-none">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase select-none">
                   Recent Searches
                 </span>
               </div>
@@ -123,11 +123,11 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                   layout="position"
                   transition={springPhysics}
                   onClick={() => onSelectRecent(search)}
-                  className="hover:bg-[#F1F5F9] rounded-xl px-3 py-2 cursor-pointer transition-colors flex items-center justify-between group"
+                  className="hover:bg-[#F1F5F9] dark:hover:bg-slate-700/70 rounded-xl px-3 py-2 cursor-pointer transition-colors flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="text-sm text-[#1F1F1F] font-medium truncate">
+                    <span className="text-sm text-[#1F1F1F] dark:text-slate-100 font-medium truncate">
                       {search}
                     </span>
                   </div>
@@ -135,7 +135,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                   <button
                     type="button"
                     onClick={(e) => onRemoveRecent(search, e)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-200/70 rounded-full text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-200/70 dark:hover:bg-slate-600 rounded-full text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all cursor-pointer"
                     aria-label={`Remove recent search for ${search}`}
                   >
                     <X className="w-3.5 h-3.5" />
@@ -150,8 +150,8 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
             <>
               {matches.length === 0 ? (
                 <div className="px-3 py-4 text-center">
-                  <p className="text-xs text-slate-500">
-                    No results found for &ldquo;<span className="font-semibold text-slate-700">{trimmedQuery}</span>&rdquo;
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    No results found for &ldquo;<span className="font-semibold text-slate-700 dark:text-slate-200">{trimmedQuery}</span>&rdquo;
                   </p>
                 </div>
               ) : (
@@ -164,11 +164,11 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         layout="position"
                         transition={springPhysics}
                         onClick={() => onSelectFolder(folder.id, folder.name)}
-                        className="hover:bg-[#F1F5F9] rounded-xl px-3 py-2 cursor-pointer transition-colors flex items-center justify-between group"
+                        className="hover:bg-[#F1F5F9] dark:hover:bg-slate-700/70 rounded-xl px-3 py-2 cursor-pointer transition-colors flex items-center justify-between group"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <FolderIcon className="w-4 h-4 text-amber-500 shrink-0" />
-                          <span className="text-sm font-medium text-[#1F1F1F] truncate">
+                          <span className="text-sm font-medium text-[#1F1F1F] dark:text-slate-100 truncate">
                             {folder.name}
                           </span>
                         </div>
@@ -188,17 +188,17 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                       layout="position"
                       transition={springPhysics}
                       onClick={() => onSelectItem(item)}
-                      className="hover:bg-[#F1F5F9] rounded-xl px-3 py-2 cursor-pointer transition-colors flex items-center justify-between group"
+                      className="hover:bg-[#F1F5F9] dark:hover:bg-slate-700/70 rounded-xl px-3 py-2 cursor-pointer transition-colors flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         {isIdea ? (
-                          <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
+                          <Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                         ) : isChecklist ? (
-                          <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         ) : (
-                          <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                         )}
-                        <span className="text-sm font-medium text-[#1F1F1F] truncate">
+                        <span className="text-sm font-medium text-[#1F1F1F] dark:text-slate-100 truncate">
                           {item.title || (isIdea ? 'Untitled Idea' : isChecklist ? 'Untitled Checklist' : 'Untitled Note')}
                         </span>
                       </div>
@@ -212,15 +212,15 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
 
               {/* Footer Row (Shown Whenever Query Is Typed) */}
               <motion.div layout="position" transition={springPhysics}>
-                <div className="h-px bg-slate-100 my-1" />
+                <div className="h-px bg-slate-100 dark:bg-slate-700 my-1" />
                 <div className="flex items-center justify-between px-2 pt-0.5">
                   <span className="text-[11px] text-slate-400 select-none">
-                    Press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[10px]">Enter ↵</kbd>
+                    Press <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono text-[10px]">Enter ↵</kbd>
                   </span>
                   <button
                     type="button"
                     onClick={onViewAllResults}
-                    className="text-xs font-semibold text-[#0B57D0] flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
+                    className="text-xs font-semibold text-[#0B57D0] dark:text-blue-400 flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/50 cursor-pointer transition-colors"
                   >
                     <span>All results</span>
                     <CornerDownLeft className="w-3.5 h-3.5 stroke-[2.5]" />

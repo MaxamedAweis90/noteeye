@@ -285,7 +285,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   };
 
   return (
-    <div className="h-screen w-full bg-[#F8FAFD] text-[#1F1F1F] font-sans antialiased relative selection:bg-[#C2E7FF] selection:text-[#001D35] overflow-hidden">
+    <div className="h-screen w-full bg-[#F8FAFD] dark:bg-[#0B0F17] text-[#1F1F1F] dark:text-slate-100 font-sans antialiased relative selection:bg-[#C2E7FF] dark:selection:bg-sky-900 selection:text-[#001D35] dark:selection:text-sky-100 overflow-hidden transition-colors duration-200">
       {/* 1. Outer App Shell: Top Navigation Bar (Fixed h-16, bg-#F8FAFD) */}
       <TopNav />
 
@@ -294,19 +294,19 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* 3. Inner Floating Content Workspace (Google Drive Multi-Island Spatial Architecture) */}
       <div className="pl-0 md:pl-64 h-screen overflow-hidden">
-        <main className="pt-16 pr-2 md:pr-4 pb-4 h-full bg-[#F8FAFD] flex gap-3 lg:gap-4 items-start overflow-hidden">
+        <main className="pt-16 pr-2 md:pr-4 pb-4 h-full bg-[#F8FAFD] dark:bg-[#0B0F17] flex gap-3 lg:gap-4 items-start overflow-hidden transition-colors duration-200">
           {/* Main Floating Content Workspace Island ("content loader") */}
           <div
             id="workspace-content-island"
             onClick={handleCanvasClick}
             onContextMenu={handleCanvasContextMenu}
-            className="bg-white rounded-2xl md:rounded-[24px] h-full max-h-[calc(100vh-5rem)] px-4 sm:px-6 lg:px-8 pb-24 sm:pb-6 lg:pb-8 pt-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] flex flex-col flex-1 transition-all min-w-0 overflow-y-auto custom-scrollbar"
+            className="bg-white dark:bg-[#111827] dark:border dark:border-slate-800/80 rounded-2xl md:rounded-[24px] h-full max-h-[calc(100vh-5rem)] px-4 sm:px-6 lg:px-8 pb-24 sm:pb-6 lg:pb-8 pt-0 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.08)] dark:shadow-none flex flex-col flex-1 transition-all min-w-0 overflow-y-auto custom-scrollbar"
           >
             {children ? (
               children
             ) : (
               <div className="flex flex-col w-full h-full min-h-[calc(100vh-8rem)] items-center justify-center">
-                <p className="text-xl text-[#737785] font-handwriting select-none">
+                <p className="text-xl text-[#737785] dark:text-slate-500 font-handwriting select-none">
                   nothing to show!
                 </p>
               </div>

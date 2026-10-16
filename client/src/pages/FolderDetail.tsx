@@ -499,16 +499,16 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
       {/* Sticky Header Container (Flush at Top of Workspace Island) */}
       <div
         className={cn(
-          "sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 space-y-3",
+          "sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 space-y-3",
           isScrolled
-            ? "border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]"
-            : "border-b border-slate-100/60 shadow-none",
+            ? "border-b border-slate-100 dark:border-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+            : "border-b border-slate-100/60 dark:border-slate-800/60 shadow-none",
         )}
       >
         {/* 1. Hierarchical Breadcrumb Trail with Drop Targets */}
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 select-none overflow-x-auto py-1 scrollbar-none"
+          className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 select-none overflow-x-auto py-1 scrollbar-none"
         >
           <Link
             to="/"
@@ -567,7 +567,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
               "flex items-center gap-1 transition-colors shrink-0 px-1.5 py-0.5 rounded-lg",
               dragOverBreadcrumbId === "root"
                 ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400 font-bold"
-                : "text-slate-400 hover:text-slate-800",
+                : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
             )}
           >
             <Home className="w-3.5 h-3.5" />
@@ -577,9 +577,9 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
             const isCurrent = idx === breadcrumbTrail.length - 1;
             return (
               <React.Fragment key={f.id}>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
                 {isCurrent ? (
-                  <span className="text-[#1F1F1F] font-bold truncate max-w-[200px] sm:max-w-xs px-1.5 py-0.5">
+                  <span className="text-[#1F1F1F] dark:text-slate-100 font-bold truncate max-w-[200px] sm:max-w-xs px-1.5 py-0.5">
                     {f.name}
                   </span>
                 ) : (
@@ -644,7 +644,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                       "transition-colors truncate max-w-[160px] px-1.5 py-0.5 rounded-lg",
                       dragOverBreadcrumbId === f.id
                         ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400 font-bold"
-                        : "text-slate-400 hover:text-slate-800",
+                        : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
                     )}
                   >
                     {f.name}
@@ -665,7 +665,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] tracking-tight truncate">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] dark:text-slate-100 tracking-tight truncate">
                   {folder.name}
                 </h1>
 
@@ -677,7 +677,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                     onClick={() => openFolderModal(folder)}
                     title="Rename folder"
                     aria-label="Rename folder"
-                    className="p-1.5 rounded-full text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-full text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
@@ -692,7 +692,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                         : "Add to favorites"
                     }
                     aria-label="Toggle favorite"
-                    className="p-1.5 rounded-full transition-colors cursor-pointer hover:bg-slate-100"
+                    className="p-1.5 rounded-full transition-colors cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
                     <Star
                       className={cn(
@@ -711,7 +711,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                       onClick={() => setIsMenuOpen((prev) => !prev)}
                       title="Folder options"
                       aria-label="Folder options"
-                      className="p-1.5 rounded-full text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-full text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
@@ -722,14 +722,14 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                           className="fixed inset-0 z-30"
                           onClick={() => setIsMenuOpen(false)}
                         />
-                        <div className="absolute left-0 top-8 z-40 w-44 bg-white rounded-xl shadow-lg border border-slate-200 py-1 animate-fade-in text-xs select-none">
+                        <div className="absolute left-0 top-8 z-40 w-44 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 py-1 animate-fade-in text-xs select-none">
                           <button
                             type="button"
                             onClick={() => {
                               setIsMenuOpen(false);
                               openFolderModal(folder);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-left cursor-pointer"
                           >
                             <Pencil className="w-3.5 h-3.5 text-slate-400" />
                             <span>Rename folder</span>
@@ -740,7 +740,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                               setIsMenuOpen(false);
                               toggleFavoriteFolder(folder.id);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 font-medium text-left cursor-pointer"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-left cursor-pointer"
                           >
                             <Star
                               className={cn(
@@ -766,7 +766,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                                 "folder",
                               );
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 font-medium text-left cursor-pointer border-t border-slate-100"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-red-600 dark:text-rose-400 hover:bg-red-50 dark:hover:bg-rose-950/40 font-medium text-left cursor-pointer border-t border-slate-100 dark:border-slate-800"
                           >
                             <Trash2 className="w-3.5 h-3.5 text-red-500" />
                             <span>Delete folder</span>
@@ -780,7 +780,7 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
 
               {/* Sub-Header Meta Pill */}
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full">
                   {subfolders.length > 0 && folderNotes.length > 0
                     ? `${subfolders.length} ${subfolders.length === 1 ? "folder" : "folders"}, ${folderNotes.length} ${folderNotes.length === 1 ? "note" : "notes"} inside`
                     : subfolders.length > 0
@@ -789,8 +789,8 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                         ? `${folderNotes.length} ${folderNotes.length === 1 ? "note" : "notes"} inside`
                         : "Empty folder"}
                 </span>
-                <span className="text-slate-300 text-xs">•</span>
-                <span className="text-xs text-slate-400 font-medium">
+                <span className="text-slate-300 dark:text-slate-600 text-xs">•</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                   Updated {formattedFolderDate}
                 </span>
               </div>
@@ -803,9 +803,9 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
             <button
               type="button"
               onClick={() => openFolderModal()}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[#1F1F1F] text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-[#1F1F1F] dark:text-slate-100 text-xs font-semibold shadow-2xs transition-colors cursor-pointer active:scale-95"
             >
-              <FolderPlus className="w-4 h-4 text-purple-600" />
+              <FolderPlus className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span>New folder</span>
             </button>
 
@@ -823,14 +823,14 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
             <button
               type="button"
               onClick={() => handleCreateNote("idea")}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
             >
-              <Lightbulb className="w-4 h-4 text-purple-600" />
+              <Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span>New idea</span>
             </button>
 
             {/* View Mode Toggle */}
-            <div className="bg-slate-100 p-1 rounded-full flex items-center gap-0.5 border border-black/[0.04]">
+            <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-full flex items-center gap-0.5 border border-black/[0.04] dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
@@ -838,8 +838,8 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                 className={cn(
                   "flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer",
                   viewMode === "grid"
-                    ? "bg-white text-[#0B57D0] shadow-xs font-semibold"
-                    : "text-slate-500 hover:text-slate-800",
+                    ? "bg-white dark:bg-slate-700 text-[#0B57D0] dark:text-sky-400 shadow-xs font-semibold"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
                 )}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -851,8 +851,8 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
                 className={cn(
                   "flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer",
                   viewMode === "list"
-                    ? "bg-white text-[#0B57D0] shadow-xs font-semibold"
-                    : "text-slate-500 hover:text-slate-800",
+                    ? "bg-white dark:bg-slate-700 text-[#0B57D0] dark:text-sky-400 shadow-xs font-semibold"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
                 )}
               >
                 <List className="w-4 h-4" />
@@ -868,9 +868,9 @@ export const FolderDetail: React.FC<FolderDetailProps> = ({
               onClick={() =>
                 setSortOrder((prev) => (prev === "recent" ? "name" : "recent"))
               }
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-black/[0.04] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium border border-black/[0.04] dark:border-slate-700 transition-colors cursor-pointer"
             >
-              <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+              <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               <span>
                 {sortOrder === "recent"
                   ? "Date modified"

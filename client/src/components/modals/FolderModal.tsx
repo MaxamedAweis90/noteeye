@@ -84,7 +84,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
             transition={springConfig}
-            className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-md w-full z-50 relative flex flex-col"
+            className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-slate-800 max-w-md w-full z-50 relative flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-label={isRenameMode ? 'Rename folder' : 'New folder'}
@@ -93,14 +93,14 @@ export const FolderModal: React.FC<FolderModalProps> = ({
             {/* Top Row: Visual Tab Badge & Close Trigger */}
             <div className="flex items-start justify-between">
               {/* Stylized Folder Tab Badge */}
-              <div className="bg-amber-100 text-amber-600 p-2.5 rounded-2xl w-fit mb-3 flex items-center justify-center shadow-xs">
-                <FolderIcon className="w-5 h-5 fill-amber-500/20 text-amber-600" />
+              <div className="bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 p-2.5 rounded-2xl w-fit mb-3 flex items-center justify-center shadow-xs">
+                <FolderIcon className="w-5 h-5 fill-amber-500/20 text-amber-600 dark:text-amber-400" />
               </div>
 
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
                 aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
@@ -108,10 +108,10 @@ export const FolderModal: React.FC<FolderModalProps> = ({
             </div>
 
             {/* Title & Prompt */}
-            <h3 className="text-xl font-bold text-[#1F1F1F] mb-1 tracking-tight">
+            <h3 className="text-xl font-bold text-[#1F1F1F] dark:text-slate-100 mb-1 tracking-tight">
               {isRenameMode ? 'Rename folder' : 'New folder'}
             </h3>
-            <p className="text-xs text-slate-500 mb-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               {isRenameMode
                 ? 'Update the title of your folder collection'
                 : 'Enter a name to create a new folder collection'}
@@ -125,7 +125,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Folder name"
-                className="bg-[#EDF2FC] px-4 py-2.5 rounded-xl text-sm font-medium text-[#1F1F1F] outline-none border border-transparent focus:border-amber-400 focus:bg-white w-full transition-colors"
+                className="bg-[#EDF2FC] dark:bg-slate-800 dark:focus:bg-slate-900 px-4 py-2.5 rounded-xl text-sm font-medium text-[#1F1F1F] dark:text-slate-100 outline-none border border-transparent dark:border-slate-700 focus:border-amber-400 dark:focus:border-amber-400 focus:bg-white w-full transition-colors"
                 required
               />
 
@@ -134,7 +134,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="text-sm font-medium text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                  className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 px-4 py-2 rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

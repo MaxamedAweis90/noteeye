@@ -182,7 +182,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 bg-[#F8FAFD] select-none ${className}`}
+        className={`fixed top-0 left-0 right-0 z-40 bg-[#F8FAFD] dark:bg-[#0B0F17] border-b border-transparent dark:border-slate-800/60 select-none transition-colors duration-200 ${className}`}
       >
         <div className="h-16 px-4 md:px-6 flex items-center justify-between w-full select-none bg-transparent gap-3 md:gap-4">
           {/* 1. Left Section: Noteeye Brand Logo Component */}
@@ -198,11 +198,11 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
             >
               {/* Pill Input Container */}
               <div
-                className={`w-full h-11 px-4 rounded-full bg-[#EDF2FC] border border-transparent focus-within:border-slate-300 focus-within:bg-white flex items-center gap-3 transition-colors duration-200 shadow-sm relative ${
-                  isSearchFocused ? "bg-white border-slate-300 shadow-md" : ""
+                className={`w-full h-11 px-4 rounded-full bg-[#EDF2FC] dark:bg-slate-800/90 border border-transparent dark:border-slate-700/80 focus-within:border-slate-300 dark:focus-within:border-slate-600 focus-within:bg-white dark:focus-within:bg-slate-900 flex items-center gap-3 transition-colors duration-200 shadow-sm relative ${
+                  isSearchFocused ? "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 shadow-md" : ""
                 }`}
               >
-                <Search className="w-[18px] h-[18px] text-slate-500 shrink-0 select-none" />
+                <Search className="w-[18px] h-[18px] text-slate-500 dark:text-slate-400 shrink-0 select-none" />
 
                 <input
                   id="noteeye-main-search-input"
@@ -216,7 +216,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Search in Noteeye (Ctrl+K)"
-                  className="w-full bg-transparent border-0 outline-none text-sm text-[#1F1F1F] placeholder-slate-500 font-normal"
+                  className="w-full bg-transparent border-0 outline-none text-sm text-[#1F1F1F] dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 font-normal"
                   aria-label="Search notes, checklists, and folders"
                 />
 
@@ -224,7 +224,7 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
                   <button
                     type="button"
                     onClick={handleClearQuery}
-                    className="p-1 text-slate-400 hover:text-slate-700 rounded-full transition-colors cursor-pointer shrink-0"
+                    className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full transition-colors cursor-pointer shrink-0"
                     aria-label="Clear search"
                   >
                     <X className="w-4 h-4" />
@@ -254,11 +254,11 @@ export const TopNav: React.FC<TopNavProps> = ({ className = "" }) => {
             <button
               type="button"
               onClick={() => setIsMobileSearchOpen(true)}
-              className="flex md:hidden w-9 h-9 rounded-full bg-[#EDF2FC] hover:bg-[#E2E8F4] border border-slate-200/80 items-center justify-center text-slate-600 shadow-2xs active:scale-95 transition-transform cursor-pointer shrink-0"
+              className="flex md:hidden w-9 h-9 rounded-full bg-[#EDF2FC] dark:bg-slate-800 hover:bg-[#E2E8F4] dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 items-center justify-center text-slate-600 dark:text-slate-300 shadow-2xs active:scale-95 transition-transform cursor-pointer shrink-0"
               aria-label="Open search popup"
               title="Search in Noteeye"
             >
-              <Search className="w-4 h-4 text-slate-600 shrink-0" />
+              <Search className="w-4 h-4 text-slate-600 dark:text-slate-300 shrink-0" />
             </button>
 
             <UserMenu onMobileAvatarClick={() => setIsMobileUserDrawerOpen(true)} />

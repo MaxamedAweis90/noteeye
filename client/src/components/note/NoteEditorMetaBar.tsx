@@ -40,11 +40,11 @@ export const NoteEditorMetaBar: React.FC<NoteEditorMetaBarProps> = ({
             ? "Untitled Idea"
             : "Untitled Note"
         }
-        className="w-full bg-transparent border-0 outline-none text-2xl sm:text-4xl font-display font-extrabold text-[#1F1F1F] placeholder-slate-400/80 mb-3 tracking-tight focus:ring-0 leading-tight"
+        className="w-full bg-transparent border-0 outline-none text-2xl sm:text-4xl font-display font-extrabold text-[#1F1F1F] dark:text-slate-100 placeholder-slate-400/80 dark:placeholder-slate-500 mb-3 tracking-tight focus:ring-0 leading-tight"
       />
 
       {/* Meta Bar: Timestamp, Word Count, Autosaved Badge & Type Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600/80 pb-3 mb-6 border-b border-black/[0.04]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600/80 dark:text-slate-400 pb-3 mb-6 border-b border-black/[0.04] dark:border-slate-800">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="flex items-center gap-1 font-medium">
             <Clock className="w-3.5 h-3.5" />
@@ -59,20 +59,20 @@ export const NoteEditorMetaBar: React.FC<NoteEditorMetaBarProps> = ({
         </div>
 
         {/* Mode Badge Indicator */}
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-medium text-xs self-start sm:self-auto border border-slate-200/60">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium text-xs self-start sm:self-auto border border-slate-200/60 dark:border-slate-700/60">
           {type === "checklist" ? (
             <>
-              <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
+              <CheckSquare className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Checklist</span>
             </>
           ) : type === "idea" ? (
             <>
-              <Lightbulb className="w-3.5 h-3.5 text-purple-600" />
+              <Lightbulb className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               <span>Idea Board</span>
             </>
           ) : (
             <>
-              <FileText className="w-3.5 h-3.5 text-blue-600" />
+              <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <span>Note</span>
             </>
           )}

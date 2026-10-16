@@ -94,7 +94,7 @@ export const MobileBottomNav: React.FC = () => {
       {/* Fixed Bottom Bar */}
       <nav
         aria-label="Mobile Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-3 py-2 flex items-center justify-around select-none shadow-[0_-2px_12px_rgba(0,0,0,0.03)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800 px-3 py-2 flex items-center justify-around select-none shadow-[0_-2px_12px_rgba(0,0,0,0.03)] dark:shadow-none transition-colors duration-200"
       >
         {/* Tab 1: Home */}
         <NavLink
@@ -102,13 +102,13 @@ export const MobileBottomNav: React.FC = () => {
           onClick={(e) => handleNavClick(e, '/')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isHomeActive
-              ? 'text-[#001D35] font-semibold'
-              : 'text-slate-500 hover:text-slate-800 font-medium'
+              ? 'text-[#001D35] dark:text-sky-200 font-semibold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
           }`}
         >
           <div
             className={`w-10 h-6.5 rounded-full flex items-center justify-center transition-all ${
-              isHomeActive ? 'bg-[#C2E7FF]' : 'bg-transparent'
+              isHomeActive ? 'bg-[#C2E7FF] dark:bg-sky-950/80' : 'bg-transparent'
             }`}
           >
             <Home className="w-4.5 h-4.5" />
@@ -122,13 +122,13 @@ export const MobileBottomNav: React.FC = () => {
           onClick={(e) => handleNavClick(e, '/recents')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isRecentsActive
-              ? 'text-[#001D35] font-semibold'
-              : 'text-slate-500 hover:text-slate-800 font-medium'
+              ? 'text-[#001D35] dark:text-sky-200 font-semibold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
           }`}
         >
           <div
             className={`w-10 h-6.5 rounded-full flex items-center justify-center transition-all ${
-              isRecentsActive ? 'bg-[#C2E7FF]' : 'bg-transparent'
+              isRecentsActive ? 'bg-[#C2E7FF] dark:bg-sky-950/80' : 'bg-transparent'
             }`}
           >
             <Clock className="w-4.5 h-4.5" />
@@ -149,8 +149,8 @@ export const MobileBottomNav: React.FC = () => {
             style={{ transformOrigin: 'bottom center' }}
             className={`select-none overflow-hidden ${
               isCreateMenuOpen
-                ? 'absolute bottom-0 w-56 bg-white border border-slate-200/90 rounded-2xl p-2 shadow-2xl z-50 flex flex-col text-[#1F1F1F]'
-                : 'w-12 h-12 rounded-2xl bg-[#1F1F1F] text-white flex items-center justify-center shadow-lg hover:bg-black transition-colors cursor-pointer border border-slate-800'
+                ? 'absolute bottom-0 w-56 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 rounded-2xl p-2 shadow-2xl z-50 flex flex-col text-[#1F1F1F] dark:text-slate-100'
+                : 'w-12 h-12 rounded-2xl bg-[#1F1F1F] dark:bg-blue-600 text-white flex items-center justify-center shadow-lg hover:bg-black dark:hover:bg-blue-700 transition-colors cursor-pointer border border-slate-800 dark:border-blue-500'
             }`}
             onClick={!isCreateMenuOpen ? () => setIsCreateMenuOpen(true) : undefined}
           >
@@ -181,7 +181,7 @@ export const MobileBottomNav: React.FC = () => {
                 >
                   {/* A. Top Header Row */}
                   <div className="flex justify-between items-center px-2 py-1.5 mb-1">
-                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase select-none">
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase select-none">
                       CREATE NEW
                     </span>
                     <button
@@ -190,7 +190,7 @@ export const MobileBottomNav: React.FC = () => {
                         e.stopPropagation();
                         setIsCreateMenuOpen(false);
                       }}
-                      className="p-1 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
                       aria-label="Close creation menu"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -208,9 +208,9 @@ export const MobileBottomNav: React.FC = () => {
                           openNoteModal('note');
                         });
                       }}
-                      className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                      className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                     >
-                      <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                       <span>New note</span>
                     </button>
 
@@ -223,9 +223,9 @@ export const MobileBottomNav: React.FC = () => {
                           openNoteModal('checklist');
                         });
                       }}
-                      className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                      className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                     >
-                      <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>New checklist</span>
                     </button>
 
@@ -238,15 +238,15 @@ export const MobileBottomNav: React.FC = () => {
                           openNoteModal('idea');
                         });
                       }}
-                      className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                      className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                     >
-                      <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
+                      <Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                       <span>New idea</span>
                     </button>
                   </div>
 
                   {/* C. Divider */}
-                  <div className="h-px bg-slate-100 my-1 mx-1" />
+                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-1" />
 
                   {/* D. Folder Action */}
                   <button
@@ -257,9 +257,9 @@ export const MobileBottomNav: React.FC = () => {
                         openFolderModal();
                       });
                     }}
-                    className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                    className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                   >
-                    <Folder className="w-4 h-4 text-amber-500 shrink-0" />
+                    <Folder className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                     <span>New folder</span>
                   </button>
                 </motion.div>
@@ -274,13 +274,13 @@ export const MobileBottomNav: React.FC = () => {
           onClick={(e) => handleNavClick(e, '/favorites')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isFavoritesActive
-              ? 'text-[#001D35] font-semibold'
-              : 'text-slate-500 hover:text-slate-800 font-medium'
+              ? 'text-[#001D35] dark:text-sky-200 font-semibold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
           }`}
         >
           <div
             className={`w-10 h-6.5 rounded-full flex items-center justify-center transition-all ${
-              isFavoritesActive ? 'bg-[#C2E7FF]' : 'bg-transparent'
+              isFavoritesActive ? 'bg-[#C2E7FF] dark:bg-sky-950/80' : 'bg-transparent'
             }`}
           >
             <Star className="w-4.5 h-4.5" />
@@ -294,13 +294,13 @@ export const MobileBottomNav: React.FC = () => {
           onClick={(e) => handleNavClick(e, '/trash')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all ${
             isTrashActive
-              ? 'text-[#001D35] font-semibold'
-              : 'text-slate-500 hover:text-slate-800 font-medium'
+              ? 'text-[#001D35] dark:text-sky-200 font-semibold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
           }`}
         >
           <div
             className={`w-10 h-6.5 rounded-full flex items-center justify-center transition-all ${
-              isTrashActive ? 'bg-[#C2E7FF]' : 'bg-transparent'
+              isTrashActive ? 'bg-[#C2E7FF] dark:bg-sky-950/80' : 'bg-transparent'
             }`}
           >
             <Trash2 className="w-4.5 h-4.5" />

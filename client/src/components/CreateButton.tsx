@@ -80,10 +80,10 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
       <motion.div
         layout
         transition={springTransition}
-        className={`bg-white border border-slate-200/80 select-none overflow-hidden ${
+        className={`bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 select-none overflow-hidden ${
           isOpen
             ? "w-full sm:w-56 p-2 rounded-2xl shadow-xl flex flex-col z-50"
-            : "w-full h-12 px-5 rounded-2xl shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer transition-shadow"
+            : "w-full h-12 px-5 rounded-2xl shadow-md hover:shadow-lg dark:shadow-slate-950/40 flex items-center justify-center cursor-pointer transition-shadow"
         }`}
         onClick={!isOpen ? () => setIsOpen(true) : undefined}
       >
@@ -98,10 +98,10 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
-              className="w-full flex items-center justify-center gap-2.5 text-[#1F1F1F] font-semibold text-sm cursor-pointer border-0 bg-transparent p-0 outline-none"
+              className="w-full flex items-center justify-center gap-2.5 text-[#1F1F1F] dark:text-slate-100 font-semibold text-sm cursor-pointer border-0 bg-transparent p-0 outline-none"
               aria-label="Create new item"
             >
-              <Plus className="w-[18px] h-[18px] text-[#0B57D0] stroke-[2.5] shrink-0" />
+              <Plus className="w-[18px] h-[18px] text-[#0B57D0] dark:text-blue-400 stroke-[2.5] shrink-0" />
               <span>Create</span>
             </motion.button>
           ) : (
@@ -116,7 +116,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
             >
               {/* A. Top Header Row */}
               <div className="flex justify-between items-center px-2 py-1.5 mb-1">
-                <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase select-none">
+                <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase select-none">
                   CREATE NEW
                 </span>
                 <button
@@ -125,7 +125,7 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                     e.stopPropagation();
                     setIsOpen(false);
                   }}
-                  className="p-1 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="p-1 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
                   aria-label="Close creation menu"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -138,9 +138,9 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                 <button
                   type="button"
                   onClick={() => handleAction("note")}
-                  className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                  className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                 >
-                  <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span>New note</span>
                 </button>
 
@@ -148,9 +148,9 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                 <button
                   type="button"
                   onClick={() => handleAction("checklist")}
-                  className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                  className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                 >
-                  <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span>New checklist</span>
                 </button>
 
@@ -158,23 +158,23 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
                 <button
                   type="button"
                   onClick={() => handleAction("idea")}
-                  className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                  className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
                 >
-                  <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
+                  <Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                   <span>New idea</span>
                 </button>
               </div>
 
               {/* C. Divider */}
-              <div className="h-px bg-slate-100 my-1 mx-1" />
+              <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-1" />
 
               {/* D. Folder Action */}
               <button
                 type="button"
                 onClick={() => handleAction("folder")}
-                className="hover:bg-slate-100 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
+                className="hover:bg-slate-100 dark:hover:bg-slate-700/70 rounded-xl px-2.5 py-2 flex items-center gap-2.5 text-sm font-medium text-[#1F1F1F] dark:text-slate-100 transition-colors cursor-pointer text-left w-full border-0 bg-transparent"
               >
-                <Folder className="w-4 h-4 text-amber-500 shrink-0" />
+                <Folder className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                 <span>New folder</span>
               </button>
             </motion.div>

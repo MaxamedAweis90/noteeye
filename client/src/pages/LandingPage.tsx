@@ -1,24 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight,
-  Calendar,
   Check,
-  CheckCircle2,
+  CheckSquare,
   Cloud,
+  FileText,
   Folder,
   Heart,
   Keyboard,
+  Lightbulb,
   MessageCircle,
   MousePointer2,
   Moon,
+  Palette,
   Pause,
   PenTool,
   Play,
   Repeat,
   Search,
   Star,
-  Users,
   Zap,
 } from '@/components/ui/icons';
 import { APP_URL } from '../api/client';
@@ -39,24 +40,47 @@ const NAV_LINKS = [
   { label: 'About', href: '#about' },
 ];
 
-const STATS = [
-  { value: '2014', label: 'App Excellence Award' },
-  { value: '2015', label: 'Innovation in Design' },
-  { value: '2025', label: 'Global Recognition' },
-  { value: '1M+', label: 'Downloads' },
+const GITHUB_URL = 'https://github.com/MaxamedAweis90';
+const DEVELOPER_NAME = 'Maxamed Aweis';
+const DEVELOPER_HANDLE = '@MaxamedAweis90';
+
+const ROTATING_HERO_WORDS = [
+  { text: 'notes.', font: 'font-display', color: 'text-slate-900' },
+  { text: 'checklists.', font: 'font-sans', color: 'text-slate-900' },
+  { text: 'ideas.', font: 'font-handwriting text-5xl sm:text-7xl lg:text-8xl leading-none font-bold', color: 'text-purple-700' },
 ];
 
-const AVATARS = [
-  '/avatars/avatar-1.jpg',
-  '/avatars/avatar-2.jpg',
-  '/avatars/avatar-3.jpg',
-  '/avatars/avatar-4.jpg',
+const ROTATING_DOCS = [
+  { name: 'Rich Notes', type: 'Editor & Tables', icon: FileText, color: 'text-sky-600 bg-sky-50' },
+  { name: 'Checklists', type: 'Tasks & Progress', icon: CheckSquare, color: 'text-emerald-600 bg-emerald-50' },
+  { name: 'Idea Boards', type: 'Kanban Flow', icon: Lightbulb, color: 'text-purple-600 bg-purple-50' },
+];
+
+const PASTEL_THEMES_LOOP = [
+  { name: 'Warm Peach', hex: '#FDE3C9', border: '#F8CBA6' },
+  { name: 'Mint Sage', hex: '#C7F3DE', border: '#A3E5C5' },
+  { name: 'Soft Sky', hex: '#CEEBFD', border: '#ADD9FA' },
+  { name: 'Soft Lavender', hex: '#E5DEFA', border: '#CEC2F5' },
+  { name: 'Rose Petal', hex: '#FCDDEC', border: '#F7BEDE' },
+  { name: 'Buttercup Yellow', hex: '#FEF3C7', border: '#FDE68A' },
+];
+
+const ROTATING_SPEED = [
+  { title: 'Offline-First', desc: 'No internet needed' },
+  { title: 'Instant PWA', desc: 'Desktop & mobile' },
+  { title: 'Local Cache', desc: 'Zero loading lag' },
+];
+
+const ROTATING_FREE = [
+  { title: '100% Free', desc: 'No paywalls' },
+  { title: 'Open Source', desc: 'Full transparency' },
+  { title: 'Solo Built', desc: 'By Maxamed Aweis' },
 ];
 
 const FEATURE_TILES = [
-  { title: 'Workspace Management', icon: Folder, bg: '#F3E3D3', fg: '#8B5A2B' },
-  { title: 'Calendar Sync', icon: Calendar, bg: '#FFE3C2', fg: '#E8730C' },
-  { title: 'Collab', icon: Users, bg: '#D6EEFB', fg: '#0284C7' },
+  { title: 'Notes Management', icon: Folder, bg: '#F3E3D3', fg: '#8B5A2B' },
+  { title: 'Smart Checklists', icon: CheckSquare, bg: '#FFE3C2', fg: '#E8730C' },
+  { title: 'Pastel Themes', icon: Palette, bg: '#D6EEFB', fg: '#0284C7' },
   { title: 'Rapid Search', icon: Search, bg: '#FFF3C4', fg: '#CA8A04' },
   { title: 'Key Shortcuts', icon: Keyboard, bg: '#FFE7B3', fg: '#D97706' },
   { title: 'Day & Night', icon: Moon, bg: '#FFF1B8', fg: '#B45309' },
@@ -66,60 +90,63 @@ const FEATURE_TILES = [
 
 const PLANS = [
   {
-    name: 'Basic',
-    price: 'Free',
-    suffix: '',
-    tint: 'from-[#E6F6FB] to-white',
-    border: 'border-slate-200',
+    name: 'Personal',
+    price: '$0',
+    suffix: ' / forever',
+    description: 'Fast local thought capture and offline note-taking',
+    tint: 'from-[#EBF7FD] to-white',
+    border: 'border-[#BFE0FB]',
+    badge: null,
     popular: false,
-    features: ['Standard tools', 'Custom lists', 'Standard notes', 'Local & cloud sync'],
+    ctaText: 'Start Writing',
+    href: undefined as string | undefined,
+    features: [
+      'Unlimited notes & checklists',
+      'All 6 pastel theme accents',
+      'Instant local offline cache',
+      'Quick keyboard shortcuts',
+      'Table editor & markdown support',
+    ],
   },
   {
-    name: 'Structure',
-    price: '$5',
-    suffix: '/mo',
-    tint: 'from-[#E9E1FB] to-white',
+    name: 'Complete Workspace',
+    price: '$0',
+    suffix: ' / forever',
+    description: 'The complete multi-device personal cloud experience',
+    tint: 'from-[#F2EEFD] to-white',
     border: 'border-[#C9B8F5]',
+    badge: '100% Free • Recommended',
     popular: true,
-    features: ['Featured features', 'Customizable lists', 'Color & card themes', 'Extra storage limits'],
+    ctaText: 'Launch Noteeye Free',
+    href: undefined as string | undefined,
+    features: [
+      'Everything in Personal',
+      'Cloud account & multi-device sync',
+      'Idea Boards & task kanban flow',
+      'Installable PWA for mobile & desktop',
+      'Instant search history & filters',
+    ],
   },
   {
-    name: 'Premium',
-    price: '$10',
-    suffix: '/mo',
-    tint: 'from-[#FFE9DA] to-white',
-    border: 'border-[#F8CBB0]',
+    name: 'Open Source',
+    price: '$0',
+    suffix: ' / open source',
+    description: 'For developers who value complete data sovereignty',
+    tint: 'from-[#FFF4EC] to-white',
+    border: 'border-[#FED7AA]',
+    badge: null,
     popular: false,
-    features: ['Unlimited features', 'All lists & folders', 'Priority support', 'Early access to new tools'],
+    ctaText: 'View on GitHub',
+    href: GITHUB_URL,
+    features: [
+      'Full MIT licensed source code',
+      'Self-host with your own database',
+      'Zero tracking or analytics',
+      'Community contributions & forks',
+      'Direct developer updates',
+    ],
   },
 ];
-
-const TESTIMONIALS = {
-  features: {
-    avatar: AVATARS[1],
-    name: 'Jesse S. Sir.',
-    quote:
-      'Noteeye has completely transformed the way I organize my thoughts. Embedding mathematical equations is finally clutter-free.',
-  },
-  matrix: {
-    avatar: AVATARS[2],
-    name: 'Leon H. Frick',
-    quote:
-      'Switching to Noteeye was the best decision for my workflow. The super-fast performance and key shortcuts have saved me hours every week.',
-  },
-  writing: {
-    avatar: AVATARS[0],
-    name: 'Lisa M. Wong',
-    quote:
-      'The smart writing flow is a game-changer. I just enter a prompt and my ideas land on the page in a structure I never had to fight for.',
-  },
-  pricing: {
-    avatar: AVATARS[3],
-    name: 'Inez V. Cox',
-    quote:
-      'Upgrading to the Structure plan was a game-changer. Unlimited notes and seamless syncing boosted our team’s productivity.',
-  },
-};
 
 /* ═════════════════════════════════════════════════════════════
    SMALL BUILDING BLOCKS
@@ -176,20 +203,25 @@ const DarkButton: React.FC<{
   );
 };
 
-const TestimonialStrip: React.FC<{ t: { avatar: string; name: string; quote: string } }> = ({ t }) => (
-  <Reveal className="max-w-5xl mx-auto px-4 sm:px-6">
-    <figure className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 rounded-2xl border border-slate-100 bg-white/80 backdrop-blur px-6 py-5 shadow-xs">
-      <blockquote className="text-sm sm:text-[15px] leading-relaxed text-[#444746] max-w-2xl">
-        “{t.quote}”
-      </blockquote>
-      <figcaption className="flex items-center gap-3 shrink-0 sm:pl-6 sm:border-l border-slate-100">
-        <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
-          <img src={t.avatar} alt={t.name} className="w-full h-full object-cover scale-[1.15]" />
-        </div>
-        <span className="text-sm font-semibold text-[#1F1F1F]">{t.name}</span>
-      </figcaption>
-    </figure>
-  </Reveal>
+const GhostButton: React.FC<{
+  children: React.ReactNode;
+  href: string;
+  className?: string;
+  external?: boolean;
+}> = ({ children, href, className = '', external }) => (
+  <a
+    href={href}
+    className={`inline-flex items-center justify-center gap-2 px-7 py-3 text-sm font-semibold text-[#1F1F1F] bg-white/80 backdrop-blur border border-slate-200 hover:border-slate-300 hover:bg-white rounded-full shadow-xs hover:scale-105 transition-all duration-300 ${className}`}
+    {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+  >
+    {children}
+  </a>
+);
+
+const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg viewBox="0 0 24 24" className={`fill-current ${className}`} aria-hidden>
+    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+  </svg>
 );
 
 /** Slow-moving volumetric cloud puffs used behind hero & footer */
@@ -439,6 +471,29 @@ export const LandingPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [authNotice, setAuthNotice] = useState<AuthNotice | null>(null);
 
+  // Rotating animated ticker states for Hero section
+  const [wordIndex, setWordIndex] = useState(0);
+  const [docIndex, setDocIndex] = useState(0);
+  const [themeIndex, setThemeIndex] = useState(0);
+  const [speedIndex, setSpeedIndex] = useState(0);
+  const [freeIndex, setFreeIndex] = useState(0);
+
+  useEffect(() => {
+    const wTimer = setInterval(() => setWordIndex((i) => (i + 1) % ROTATING_HERO_WORDS.length), 2200);
+    const dTimer = setInterval(() => setDocIndex((i) => (i + 1) % ROTATING_DOCS.length), 2400);
+    const tTimer = setInterval(() => setThemeIndex((i) => (i + 1) % PASTEL_THEMES_LOOP.length), 2000);
+    const sTimer = setInterval(() => setSpeedIndex((i) => (i + 1) % ROTATING_SPEED.length), 2600);
+    const fTimer = setInterval(() => setFreeIndex((i) => (i + 1) % ROTATING_FREE.length), 2800);
+
+    return () => {
+      clearInterval(wTimer);
+      clearInterval(dTimer);
+      clearInterval(tTimer);
+      clearInterval(sTimer);
+      clearInterval(fTimer);
+    };
+  }, []);
+
   // Directly check both storage and zustand store to immediately catch active session on render
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -571,6 +626,21 @@ export const LandingPage: React.FC = () => {
     window.location.href = isLoggedIn ? workspaceHref : `${registerUrl}${q}`;
   };
 
+  // Strictly enforce light mode on the landing page and restore user's preferred theme on exit
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('dark');
+    root.style.colorScheme = 'light';
+    return () => {
+      const saved = (localStorage.getItem('noteeye-theme') as 'light' | 'dark' | 'system') || 'system';
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (saved === 'system' && systemDark)) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      }
+    };
+  }, []);
+
   return (
     <div
       id="home"
@@ -591,61 +661,73 @@ export const LandingPage: React.FC = () => {
       <section className="relative pt-32 sm:pt-36 pb-16 bg-gradient-to-b from-[#BFE0FB] via-[#DDF1FC] to-white">
         <CloudLayer />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 text-center">
-          <motion.div
+          {/* Top developer badge */}
+          <motion.a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noreferrer"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex flex-col items-center gap-1.5 mb-7"
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-slate-200/80 bg-white/90 backdrop-blur-sm text-xs sm:text-[13px] font-medium text-slate-700 shadow-xs hover:bg-white hover:text-slate-900 transition-colors"
           >
-            <div className="flex -space-x-2.5">
-              {AVATARS.map((src, i) => (
-                <div
-                  key={src}
-                  className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-white shadow-sm"
-                  style={{ zIndex: AVATARS.length - i }}
-                >
-                  <img src={src} alt="" className="w-full h-full object-cover scale-[1.15]" />
-                </div>
-              ))}
-            </div>
-            <div className="inline-flex items-center gap-2 border border-slate-200 bg-white/80 rounded-full px-3 py-1 text-xs font-medium text-[#444746]">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span className="font-bold text-[#1F1F1F]">4.9</span>
-              <span className="text-slate-300">|</span>
-              <span>500+ reviews</span>
-            </div>
-          </motion.div>
+            <span className="text-base leading-none">✨</span>
+            Crafted by <strong className="font-semibold text-slate-900">{DEVELOPER_NAME} ({DEVELOPER_HANDLE})</strong>
+            <span className="text-slate-300">•</span>
+            Independent &amp; Free Personal Workspace
+          </motion.a>
 
+          {/* Headline with 3-Font Animated Word Switcher */}
           <motion.h1
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight leading-[1.08] text-[#1F1F1F]"
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold tracking-tight leading-[1.12] text-[#1F1F1F]"
           >
-            Organize Your Notes,
+            One calm workspace for your
             <br />
-            Tasks, and Ideas
+            <span className="inline-block relative overflow-hidden align-bottom h-[1.25em] min-w-[200px] sm:min-w-[340px] text-center">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={ROTATING_HERO_WORDS[wordIndex].text}
+                  initial={{ opacity: 0, y: 32 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -32 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className={`inline-block ${ROTATING_HERO_WORDS[wordIndex].font} ${ROTATING_HERO_WORDS[wordIndex].color}`}
+                >
+                  {ROTATING_HERO_WORDS[wordIndex].text}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </motion.h1>
+
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25 }}
-            className="mt-5 text-sm sm:text-base text-[#444746]"
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-4 sm:mt-5 text-sm sm:text-base text-[#444746] max-w-2xl mx-auto font-sans leading-relaxed"
           >
-            All your notes, folders, and checklists in one calm workspace.
+            Write rich documents, track checklists with live progress, and organize ideas on visual
+            Kanban boards — crafted in soft pastels without corporate bloat.
           </motion.p>
+
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.35 }}
-            className="mt-8"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <DarkButton href={primaryHref} className="px-8 py-3.5 text-base">
               {isLoggedIn ? 'Open Noteeye' : 'Try For Free'}
+              <ArrowRight className="w-4 h-4 ml-0.5" />
             </DarkButton>
+            <GhostButton href={GITHUB_URL} external className="px-7 py-3.5 text-base">
+              <GithubIcon className="w-4 h-4" /> View on GitHub
+            </GhostButton>
           </motion.div>
 
-          {/* Interactive video showcase (3D perspective) */}
+          {/* Interactive video showcase (3D perspective preserved as-is) */}
           <div className="mt-14 sm:mt-16" style={{ perspective: 1800 }}>
             <motion.div
               initial={{ opacity: 0, rotateX: 16, y: 60 }}
@@ -659,14 +741,127 @@ export const LandingPage: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Global stats */}
-          <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-0 md:divide-x divide-slate-200/70">
-            {STATS.map((s, i) => (
-              <Reveal key={s.label} delay={i * 0.08} className="px-4">
-                <p className="text-3xl sm:text-4xl font-extrabold tracking-tight">{s.value}</p>
-                <p className="mt-1 text-xs sm:text-sm text-[#5E5E5E]">{s.label}</p>
-              </Reveal>
-            ))}
+          {/* Infinite Looping Project Metrics Bento Grid (Figma-styled) */}
+          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Col 1: Document Formats Loop */}
+            <div className="rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between shadow-xs text-left h-28 sm:h-32 transition-transform hover:-translate-y-0.5">
+              <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Document Formats
+              </p>
+              <div className="relative overflow-hidden h-8 sm:h-9">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={ROTATING_DOCS[docIndex].name}
+                    initial={{ opacity: 0, y: 22 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -22 }}
+                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center gap-2"
+                  >
+                    <span className={`p-1.5 rounded-lg ${ROTATING_DOCS[docIndex].color}`}>
+                      {React.createElement(ROTATING_DOCS[docIndex].icon, { className: 'w-4 h-4' })}
+                    </span>
+                    <span className="text-base sm:text-lg font-bold font-display text-slate-900 truncate">
+                      {ROTATING_DOCS[docIndex].name}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <p className="text-[11px] text-slate-500 truncate font-sans">
+                {ROTATING_DOCS[docIndex].type}
+              </p>
+            </div>
+
+            {/* Col 2: Pastel Themes Circle Loop */}
+            <div className="rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between shadow-xs text-left h-28 sm:h-32 transition-transform hover:-translate-y-0.5">
+              <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Pastel Themes
+              </p>
+              <div className="relative overflow-hidden h-8 sm:h-9">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={PASTEL_THEMES_LOOP[themeIndex].name}
+                    initial={{ opacity: 0, y: 22 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -22 }}
+                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center gap-2.5"
+                  >
+                    <span
+                      className="w-5 h-5 rounded-full border shadow-2xs shrink-0"
+                      style={{
+                        backgroundColor: PASTEL_THEMES_LOOP[themeIndex].hex,
+                        borderColor: PASTEL_THEMES_LOOP[themeIndex].border,
+                      }}
+                    />
+                    <span className="text-base sm:text-lg font-bold font-display text-slate-900 truncate">
+                      {PASTEL_THEMES_LOOP[themeIndex].name}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <p className="text-[11px] text-slate-500 truncate font-mono">
+                {PASTEL_THEMES_LOOP[themeIndex].hex.toUpperCase()} • 6 Shades
+              </p>
+            </div>
+
+            {/* Col 3: Architecture / Speed Loop */}
+            <div className="rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between shadow-xs text-left h-28 sm:h-32 transition-transform hover:-translate-y-0.5">
+              <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Speed &amp; Storage
+              </p>
+              <div className="relative overflow-hidden h-8 sm:h-9">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={ROTATING_SPEED[speedIndex].title}
+                    initial={{ opacity: 0, y: 22 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -22 }}
+                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+                      <Zap className="w-4 h-4" />
+                    </span>
+                    <span className="text-base sm:text-lg font-bold font-display text-slate-900 truncate">
+                      {ROTATING_SPEED[speedIndex].title}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <p className="text-[11px] text-slate-500 truncate font-sans">
+                {ROTATING_SPEED[speedIndex].desc}
+              </p>
+            </div>
+
+            {/* Col 4: Open & Free Craft Loop */}
+            <div className="rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between shadow-xs text-left h-28 sm:h-32 transition-transform hover:-translate-y-0.5">
+              <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Access &amp; Craft
+              </p>
+              <div className="relative overflow-hidden h-8 sm:h-9">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={ROTATING_FREE[freeIndex].title}
+                    initial={{ opacity: 0, y: 22 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -22 }}
+                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+                      <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    </span>
+                    <span className="text-base sm:text-lg font-bold font-display text-slate-900 truncate">
+                      {ROTATING_FREE[freeIndex].title}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <p className="text-[11px] text-slate-500 truncate font-sans">
+                {ROTATING_FREE[freeIndex].desc}
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -674,7 +869,7 @@ export const LandingPage: React.FC = () => {
       {/* ───────────── 3. MASTER YOUR KNOWLEDGE ───────────── */}
       <section id="features" className="py-20 sm:py-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <SectionHeading>{'Master Your Knowledge with\nDigital Notecards'}</SectionHeading>
+          <SectionHeading>{'Organize Notes with\nPastel Themes & Folders'}</SectionHeading>
 
           <div className="mt-14 flex flex-col md:flex-row gap-6">
             {/* Left: beige note */}
@@ -685,7 +880,7 @@ export const LandingPage: React.FC = () => {
                 </h3>
                 <div className="flex items-end justify-between gap-4">
                   <DarkButton href={primaryHref} className="px-5 py-2.5">
-                    Thumbnail
+                    Start Writing
                   </DarkButton>
                   <motion.div
                     whileHover={{ rotate: 0, scale: 1.05 }}
@@ -695,7 +890,7 @@ export const LandingPage: React.FC = () => {
                     <span className="h-1.5 w-full rounded-full bg-slate-100" />
                     <span className="h-1.5 w-4/5 rounded-full bg-slate-100" />
                     <span className="h-1.5 w-3/5 rounded-full bg-slate-100" />
-                    <span className="mt-auto text-[10px] font-semibold text-slate-400">∑ x² + y²</span>
+                    <span className="mt-auto text-[10px] font-semibold text-slate-400">noteeye.app</span>
                   </motion.div>
                 </div>
               </div>
@@ -706,12 +901,12 @@ export const LandingPage: React.FC = () => {
               <div className="relative h-full min-h-[340px] rounded-[2rem] bg-[#D8F1F7] p-8 sm:p-10 overflow-hidden">
                 <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-lg p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Electrical Engineering
+                    Personal Workspace
                   </p>
-                  <p className="mt-1 text-lg font-bold">Electronic Switch</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">Pastel Notes &amp; Folders</p>
                   <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                    A transistor is a semiconductor device used to amplify or switch electronic
-                    signals and electrical power…
+                    Organize your thoughts into clean folders, customize with 6 pastel colors, and
+                    capture ideas with zero latency or distraction.
                   </p>
                   <div className="mt-4 flex gap-4 text-slate-400">
                     <Heart className="w-4 h-4" />
@@ -726,67 +921,95 @@ export const LandingPage: React.FC = () => {
                 >
                   <FountainPen size={84} />
                 </motion.div>
-                <h3 className="relative z-10 mt-8 text-3xl sm:text-4xl font-bold tracking-tight leading-tight max-w-xs ml-auto text-right">
+                <h3 className="relative z-10 mt-8 text-3xl sm:text-4xl font-bold tracking-tight leading-tight max-w-xs ml-auto text-right text-slate-900">
                   Powerful, Flexible Digital Notes
                 </h3>
               </div>
             </Reveal>
           </div>
         </div>
-        <div className="mt-10">
-          <TestimonialStrip t={TESTIMONIALS.features} />
-        </div>
+        <div className="h-20 sm:h-28" aria-hidden="true" />
       </section>
 
       {/* ───────────── 4. PLANNING ───────────── */}
       <section className="py-16 sm:py-24 bg-gradient-to-b from-white via-[#F6FAFE] to-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <SectionHeading>{'Planning that feels easy\nand effortless'}</SectionHeading>
+          <SectionHeading>{'Notes, Checklists & Ideas\nIn One Seamless Flow'}</SectionHeading>
 
           <div className="mt-16 grid grid-cols-2 lg:grid-cols-4 gap-5">
-            {/* Orange — calendar */}
+            {/* Peach — Rich Notes */}
             <Reveal delay={0}>
               <motion.div
                 whileHover={{ y: -8, rotate: -1.5 }}
-                className="h-72 rounded-[1.75rem] bg-gradient-to-b from-[#FFB36B] to-[#FF9A52] p-5 flex flex-col justify-between shadow-lg text-white"
+                className="h-72 rounded-[1.75rem] bg-[#FDE3C9] border border-[#F8CBA6] p-5 flex flex-col justify-between shadow-md text-slate-900"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white/90 text-[#E8730C] flex items-center justify-center shadow">
-                  <Calendar className="w-6 h-6" />
+                <div className="flex items-center justify-between">
+                  <div className="w-11 h-11 rounded-2xl bg-white/90 text-[#C2410C] flex items-center justify-center shadow-xs">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#C2410C] bg-white/60 px-2.5 py-0.5 rounded-full">
+                    Rich Docs
+                  </span>
                 </div>
                 <div>
-                  <p className="text-4xl font-extrabold leading-none">18 June</p>
-                  <p className="mt-2 text-sm font-medium opacity-90">• Today</p>
-                  <p className="text-xs opacity-80">Monday</p>
+                  <p className="text-xl sm:text-2xl font-display font-bold text-slate-900">
+                    Rich Notes
+                  </p>
+                  <div className="mt-2.5 rounded-xl bg-white/80 border border-[#F8CBA6]/60 p-3 shadow-2xs space-y-1.5">
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                      <span className="px-1 bg-slate-100 rounded">H1</span>
+                      <span className="px-1 bg-slate-100 rounded italic">I</span>
+                      <span className="px-1 bg-slate-100 rounded underline">U</span>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-800 truncate">
+                      Architecture &amp; Specs
+                    </p>
+                    <div className="flex gap-1 pt-0.5">
+                      <span className="h-1 w-8 rounded-full bg-[#C2410C]/30" />
+                      <span className="h-1 w-5 rounded-full bg-[#C2410C]/20" />
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </Reveal>
 
-            {/* Purple — tasks */}
+            {/* Mint — Smart Checklists */}
             <Reveal delay={0.1} y={44}>
               <motion.div
                 whileHover={{ y: -8 }}
-                className="h-72 rounded-[1.75rem] bg-gradient-to-b from-[#D8C7FB] to-[#BFA6F5] p-5 flex flex-col justify-between shadow-lg"
+                className="h-72 rounded-[1.75rem] bg-[#C7F3DE] border border-[#A3E5C5] p-5 flex flex-col justify-between shadow-md text-slate-900"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white text-[#7C3AED] flex items-center justify-center shadow">
-                  <CheckCircle2 className="w-6 h-6" />
+                <div className="flex items-center justify-between">
+                  <div className="w-11 h-11 rounded-2xl bg-white/90 text-[#047857] flex items-center justify-center shadow-xs">
+                    <CheckSquare className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#047857] bg-white/60 px-2.5 py-0.5 rounded-full">
+                    Tasks
+                  </span>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">Tasks</p>
-                  <div className="mt-3 space-y-2">
-                    {['Write report', 'Plan schedule'].map((t, i) => (
+                  <p className="text-xl sm:text-2xl font-display font-bold text-slate-900">
+                    Checklists
+                  </p>
+                  <div className="mt-2.5 space-y-2">
+                    {[
+                      { text: 'Refine pastel themes', done: true },
+                      { text: 'Sync to offline PWA', done: true },
+                      { text: 'Ship v2.0 release', done: false },
+                    ].map((item) => (
                       <div
-                        key={t}
-                        className="flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 text-xs font-medium"
+                        key={item.text}
+                        className="flex items-center gap-2 rounded-xl bg-white/80 border border-[#A3E5C5]/60 px-2.5 py-1.5 text-xs font-medium text-slate-800 shadow-2xs"
                       >
-                        {t}
                         <span
-                          className={`w-8 h-4 rounded-full relative ${i === 0 ? 'bg-[#7C3AED]' : 'bg-slate-300'}`}
+                          className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 ${
+                            item.done ? 'bg-[#047857] text-white' : 'border border-slate-300 bg-white'
+                          }`}
                         >
-                          <span
-                            className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${
-                              i === 0 ? 'right-0.5' : 'left-0.5'
-                            }`}
-                          />
+                          {item.done && <Check className="w-3 h-3 stroke-[3]" />}
+                        </span>
+                        <span className={`truncate ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>
+                          {item.text}
                         </span>
                       </div>
                     ))}
@@ -795,30 +1018,46 @@ export const LandingPage: React.FC = () => {
               </motion.div>
             </Reveal>
 
-            {/* Pink — journal */}
+            {/* Lavender — Idea Boards */}
             <Reveal delay={0.2}>
               <motion.div
                 whileHover={{ y: -8, rotate: 1.5 }}
-                className="h-72 rounded-[1.75rem] bg-gradient-to-b from-[#FFC4DD] to-[#FFA6CB] p-5 flex flex-col justify-between shadow-lg"
+                className="h-72 rounded-[1.75rem] bg-[#E5DEFA] border border-[#CEC2F5] p-5 flex flex-col justify-between shadow-md text-slate-900"
               >
-                <div className="w-12 h-12 rounded-2xl bg-white text-[#DB2777] flex items-center justify-center shadow">
-                  <Heart className="w-6 h-6" />
+                <div className="flex items-center justify-between">
+                  <div className="w-11 h-11 rounded-2xl bg-white/90 text-[#7E22CE] flex items-center justify-center shadow-xs">
+                    <Lightbulb className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#7E22CE] bg-white/60 px-2.5 py-0.5 rounded-full">
+                    Kanban
+                  </span>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">Journal</p>
-                  <div className="mt-3 rounded-xl bg-white/80 p-3">
-                    <p className="text-xs font-semibold">Today</p>
-                    <div className="mt-2 space-y-1.5">
-                      <span className="block h-1.5 w-full rounded-full bg-pink-200" />
-                      <span className="block h-1.5 w-4/5 rounded-full bg-pink-200" />
-                      <span className="block h-1.5 w-2/3 rounded-full bg-pink-200" />
+                  <p className="text-xl sm:text-2xl font-display font-bold text-slate-900">
+                    Idea Board
+                  </p>
+                  <div className="mt-2.5 space-y-1.5">
+                    <div className="rounded-xl bg-white/80 border border-[#CEC2F5]/60 p-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700">
+                          Ideas Column
+                        </span>
+                        <span className="text-[10px] text-slate-400">Today</span>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-800 mt-1 truncate">
+                        Voice capture to text
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between px-2 text-[11px] font-semibold text-purple-800">
+                      <span>Completed</span>
+                      <span>✓ Shipped</span>
                     </div>
                   </div>
                 </div>
               </motion.div>
             </Reveal>
 
-            {/* Blue / yellow — folding curl */}
+            {/* Blue / yellow — folding curl (kept as-is) */}
             <Reveal delay={0.3} y={44}>
               <motion.div
                 whileHover={{ y: -8, rotate: -1 }}
@@ -842,7 +1081,7 @@ export const LandingPage: React.FC = () => {
       {/* ───────────── 5. EVERYTHING IN ONE APP ───────────── */}
       <section className="py-16 sm:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <SectionHeading>{'Everything You Need\nIn One App'}</SectionHeading>
+          <SectionHeading>{'Every Essential Tool\nFor Your Daily Workflow'}</SectionHeading>
 
           <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
             {FEATURE_TILES.map((f, i) => {
@@ -871,31 +1110,31 @@ export const LandingPage: React.FC = () => {
             <DarkButton href="#features">View Features</DarkButton>
           </Reveal>
         </div>
-        <div className="mt-14">
-          <TestimonialStrip t={TESTIMONIALS.matrix} />
-        </div>
+        <div className="h-20 sm:h-28" aria-hidden="true" />
       </section>
 
       {/* ───────────── 6. THINKING FLOWS INTO WRITING ───────────── */}
       <section id="about" className="py-16 sm:py-24 bg-gradient-to-b from-white via-[#F4F9FE] to-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <SectionHeading>{'Where Thinking Flows\nStraight Into Writing'}</SectionHeading>
+          <SectionHeading>{'From Fleeting Ideas\nTo Structured Notes'}</SectionHeading>
 
           <div className="relative mt-16 max-w-3xl mx-auto min-h-[380px] sm:min-h-[420px]">
-            {/* Back panel: note editor */}
+            {/* Back panel: idea editor */}
             <Reveal className="absolute left-0 top-0 w-[86%] sm:w-[62%]">
               <div className="rounded-2xl bg-white border border-slate-200 shadow-xl p-5">
                 <div className="flex items-center justify-between text-[10px] font-semibold tracking-wider text-slate-400">
-                  <span>TAKE EDIT</span>
+                  <span>IDEA DETAILS</span>
                   <span className="flex gap-1">
                     <span className="w-2 h-2 rounded-full bg-slate-200" />
                     <span className="w-2 h-2 rounded-full bg-slate-200" />
                     <span className="w-2 h-2 rounded-full bg-slate-200" />
                   </span>
                 </div>
-                <p className="mt-4 text-sm font-bold">What’s the note to stop today?</p>
-                <div className="mt-2 h-10 rounded-xl bg-slate-50 border border-slate-100" />
-                <p className="mt-4 text-sm font-bold">Content</p>
+                <p className="mt-4 text-sm font-bold text-slate-900">Idea Title</p>
+                <div className="mt-2 h-10 rounded-xl bg-slate-50 border border-slate-100 px-3 flex items-center text-xs font-medium text-slate-700">
+                  Offline-first Sync &amp; Pastel Themes
+                </div>
+                <p className="mt-4 text-sm font-bold text-slate-900">Description</p>
                 <div className="mt-2 rounded-xl bg-slate-50 border border-slate-100 p-3">
                   <Handwriting className="w-full h-10" />
                 </div>
@@ -909,10 +1148,9 @@ export const LandingPage: React.FC = () => {
                 transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                 className="rounded-2xl bg-white shadow-2xl border border-slate-100 p-5 text-xs sm:text-sm leading-relaxed text-[#444746]"
               >
-                A writer’s a conundrum once, each editor, adjusting thy artistry; thoughts, evolving
-                naked iterations, in regard run in the lowest conventions.
+                Capture quick thoughts, color-code with pastel themes, and organize your daily workflow with zero friction and instant local cache.
                 <div className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-[#0B57D0]">
-                  <Check className="w-3.5 h-3.5" /> Saved to Journal
+                  <Check className="w-3.5 h-3.5" /> Saved to Notes
                 </div>
               </motion.div>
             </Reveal>
@@ -929,7 +1167,7 @@ export const LandingPage: React.FC = () => {
                 <span className="w-5 h-5 rounded-md bg-[#0B57D0] text-white flex items-center justify-center">
                   <Check className="w-3.5 h-3.5" />
                 </span>
-                <span className="text-xs font-semibold">Draft outline</span>
+                <span className="text-xs font-semibold">Completed</span>
               </div>
             </motion.div>
             <motion.div
@@ -941,15 +1179,13 @@ export const LandingPage: React.FC = () => {
             </motion.div>
           </div>
         </div>
-        <div className="mt-14">
-          <TestimonialStrip t={TESTIMONIALS.writing} />
-        </div>
+        <div className="h-20 sm:h-28" aria-hidden="true" />
       </section>
 
       {/* ───────────── 7. PRICING ───────────── */}
       <section id="pricing" className="py-16 sm:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <SectionHeading>{'Smart Pricing For\nModern Teams.'}</SectionHeading>
+          <SectionHeading>{'Simple, Transparent, and\n100% Free Forever.'}</SectionHeading>
 
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
             {PLANS.map((p, i) => (
@@ -960,13 +1196,14 @@ export const LandingPage: React.FC = () => {
                     p.popular ? 'shadow-xl md:scale-[1.04]' : 'shadow-sm'
                   }`}
                 >
-                  {p.popular && (
-                    <span className="absolute top-5 right-5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-[#7C3AED] rounded-full">
-                      Popular
+                  {p.badge && (
+                    <span className="absolute top-5 right-5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-[#7C3AED] rounded-full shadow-xs">
+                      {p.badge}
                     </span>
                   )}
-                  <p className="text-xl font-bold">{p.name}</p>
-                  <p className="mt-4 text-4xl font-extrabold tracking-tight">
+                  <p className="text-xl font-bold text-slate-900">{p.name}</p>
+                  <p className="mt-1 text-xs text-slate-500 leading-normal">{p.description}</p>
+                  <p className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900">
                     {p.price}
                     <span className="text-sm font-medium text-slate-500">{p.suffix}</span>
                   </p>
@@ -978,17 +1215,15 @@ export const LandingPage: React.FC = () => {
                       </li>
                     ))}
                   </ul>
-                  <DarkButton href={primaryHref} className="mt-8 w-full">
-                    Get Started
+                  <DarkButton href={p.href || primaryHref} className="mt-8 w-full">
+                    {p.ctaText}
                   </DarkButton>
                 </motion.div>
               </Reveal>
             ))}
           </div>
         </div>
-        <div className="mt-14">
-          <TestimonialStrip t={TESTIMONIALS.pricing} />
-        </div>
+        <div className="h-20 sm:h-28" aria-hidden="true" />
       </section>
 
       {/* ───────────── 8. FINAL CTA & FOOTER ───────────── */}
@@ -1018,16 +1253,16 @@ export const LandingPage: React.FC = () => {
               style={{ clipPath: 'polygon(0 0, 100% 100%, 0 100%)' }}
             />
             <p className="text-2xl sm:text-3xl font-handwriting font-bold leading-snug text-[#5C4600] whitespace-pre-line -rotate-2">
-              {'Your space for\nnotes and docs.'}
+              {'Your space for\nnotes, checklists\n& ideas.'}
             </p>
           </motion.div>
 
           <Reveal className="mt-14">
-            <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tight">
-              Simple Notes. Powerful Docs.
+            <h2 className="text-3xl sm:text-5xl font-display font-bold tracking-tight text-slate-900">
+              Your Thoughts, Beautifully Organized.
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-[#444746]">
-              Write notes and documents seamlessly — organized, fast, and distraction free.
+            <p className="mt-3 text-sm sm:text-base text-[#444746] max-w-xl mx-auto">
+              Capture thoughts, organize checklists, and build ideas with 6 pastel themes — offline-first, fast, and 100% free.
             </p>
           </Reveal>
 
@@ -1044,7 +1279,7 @@ export const LandingPage: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Search or enter your email…"
+                placeholder="Enter your email to start writing free…"
                 className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-slate-400"
               />
               <button
@@ -1061,8 +1296,11 @@ export const LandingPage: React.FC = () => {
             <Reveal className="flex flex-col items-center gap-6">
               <a href="#home" className="flex items-center gap-2.5">
                 <img src="/noteeye_logo.png" alt="Noteeye logo" className="w-9 h-9 object-contain" />
-                <span className="text-lg font-bold">Noteeye</span>
+                <span className="text-lg font-bold text-slate-900">Noteeye</span>
               </a>
+              <p className="text-sm text-slate-600 max-w-sm text-center">
+                The personal, offline-first workspace for notes, checklists, and idea boards.
+              </p>
               <nav className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm font-medium text-[#444746]">
                 {NAV_LINKS.map((l) => (
                   <a key={l.label} href={l.href} className="hover:text-[#1F1F1F] transition-colors">
@@ -1071,7 +1309,7 @@ export const LandingPage: React.FC = () => {
                 ))}
               </nav>
 
-              <div className="grid grid-cols-4 gap-3 sm:gap-4 w-full max-w-md">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-xs">
                 {SOCIALS.map((s) => (
                   <motion.a
                     key={s.label}
@@ -1089,8 +1327,12 @@ export const LandingPage: React.FC = () => {
                 ))}
               </div>
 
-              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2 pt-6 border-t border-white/70 text-xs text-[#444746]">
-                <span>noteeye.vercel.app</span>
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-white/70 text-xs text-[#444746]">
+                <div className="flex items-center gap-2">
+                  <span>Crafted by <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="font-semibold text-slate-800 hover:underline">Maxamed Aweis</a></span>
+                  <span>•</span>
+                  <span>Open Source (MIT)</span>
+                </div>
                 <span>© {new Date().getFullYear()} Noteeye. All rights reserved.</span>
               </div>
             </Reveal>
@@ -1102,26 +1344,21 @@ export const LandingPage: React.FC = () => {
   );
 };
 
-/* Brand glyphs (lucide v1 dropped brand icons) — Simple Icons paths */
+/* Brand glyphs for project socials & links */
 const SOCIALS = [
   {
-    label: 'Facebook',
-    href: 'https://facebook.com',
-    path: 'M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.026 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.931-1.956 1.887v2.263h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z',
+    label: 'GitHub Profile',
+    href: GITHUB_URL,
+    path: 'M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12',
   },
   {
-    label: 'LinkedIn',
-    href: 'https://linkedin.com',
-    path: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zM7.119 20.452H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z',
+    label: 'Website (engaweis.dev)',
+    href: 'https://engaweis.dev',
+    path: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
   },
   {
-    label: 'Dribbble',
-    href: 'https://dribbble.com',
-    path: 'M12 24C5.385 24 0 18.615 0 12S5.385 0 12 0s12 5.385 12 12-5.385 12-12 12zm10.12-10.358c-.35-.11-3.17-.953-6.384-.438 1.34 3.684 1.887 6.684 1.992 7.308a10.174 10.174 0 0 0 4.392-6.87zm-6.115 7.808c-.153-.9-.75-4.032-2.19-7.77l-.066.02c-5.79 2.015-7.86 6.025-8.04 6.4a10.15 10.15 0 0 0 6.29 2.166c1.42 0 2.77-.29 4.006-.816zm-11.62-2.58c.232-.4 3.045-5.055 8.332-6.765.135-.045.27-.084.405-.12-.26-.585-.54-1.167-.832-1.74C7.17 11.775 2.206 11.71 1.756 11.7l-.004.312c0 2.633.998 5.037 2.634 6.855zm-2.42-8.955c.46.008 4.683.026 9.477-1.248-1.698-3.018-3.53-5.558-3.8-5.928-2.868 1.35-5.01 3.99-5.676 7.17zM9.6 2.052c.282.38 2.145 2.914 3.822 6 3.645-1.365 5.19-3.44 5.373-3.702-1.81-1.61-4.19-2.586-6.795-2.586-.825 0-1.63.1-2.4.285zm10.335 3.483c-.218.29-1.935 2.493-5.724 4.04.24.49.47.985.68 1.486.075.18.15.36.22.53 3.41-.43 6.8.26 7.14.33-.02-2.42-.88-4.64-2.31-6.38z',
-  },
-  {
-    label: 'Instagram',
-    href: 'https://instagram.com',
+    label: 'Instagram (@engaweis)',
+    href: 'https://www.instagram.com/engaweis/',
     path: 'M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z',
   },
 ];

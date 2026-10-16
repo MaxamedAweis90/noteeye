@@ -41,7 +41,7 @@ export const RichTextEditorSection = forwardRef<HTMLDivElement, RichTextEditorSe
           onKeyUp={onKeyUp}
           onMouseUp={onMouseUp}
           data-placeholder="Start typing your note here..."
-          className="rich-editor w-full flex-1 min-h-[420px] bg-transparent border-0 outline-none text-base leading-relaxed text-[#1F1F1F] font-normal focus:ring-0 select-text cursor-text"
+          className="rich-editor w-full flex-1 min-h-[420px] bg-transparent border-0 outline-none text-base leading-relaxed text-[#1F1F1F] dark:text-slate-100 font-normal focus:ring-0 select-text cursor-text"
         />
       </div>
     );

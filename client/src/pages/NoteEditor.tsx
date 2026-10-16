@@ -952,7 +952,7 @@ export const NoteEditor: React.FC = () => {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.98, y: 8 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full flex flex-col flex-1 bg-white relative select-none sm:select-text"
+      className="w-full flex flex-col flex-1 bg-white dark:bg-[#111827] text-[#1F1F1F] dark:text-slate-100 relative select-none sm:select-text transition-colors duration-200"
     >
       {/* 1. Top Navigation & Action Header */}
       <NoteEditorHeader

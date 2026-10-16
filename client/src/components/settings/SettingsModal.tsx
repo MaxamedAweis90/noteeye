@@ -316,32 +316,32 @@ export const SettingsModal: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-50 bg-[#F8FAFD] flex flex-col overflow-y-auto custom-scrollbar select-none"
+        className="fixed inset-0 z-50 bg-[#F8FAFD] dark:bg-[#0B0F17] flex flex-col overflow-y-auto custom-scrollbar select-none"
       >
         {/* Sticky Top Header Bar: Close 'X' on TOP-LEFT, Title on TOP-RIGHT */}
-        <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 dark:bg-[#0B0F17]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800">
           {/* Top-Left: Close X Button + Desktop Esc Hint */}
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={requestClose}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs"
               aria-label="Close Settings screen"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
-            <span className="hidden sm:inline text-xs text-slate-400 font-normal select-none">
+            <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-500 font-normal select-none">
               Press Esc to close
             </span>
           </div>
 
           {/* Top-Right: Title */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Preferences
             </span>
-            <h1 className="text-lg sm:text-xl font-bold text-[#1F1F1F] tracking-tight">
+            <h1 className="text-lg sm:text-xl font-bold text-[#1F1F1F] dark:text-slate-100 tracking-tight">
               Settings
             </h1>
           </div>
@@ -375,10 +375,10 @@ export const SettingsModal: React.FC = () => {
           )}
 
           {/* Section 1: Appearance & Editor Preferences */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-2xs flex flex-col gap-5">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/70 dark:border-slate-800 shadow-2xs flex flex-col gap-5">
             <div className="flex items-center gap-2.5">
-              <Sliders className="w-4 h-4 text-slate-600" />
-              <h2 className="text-sm font-semibold text-[#1F1F1F] tracking-tight">
+              <Sliders className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <h2 className="text-sm font-semibold text-[#1F1F1F] dark:text-slate-100 tracking-tight">
                 Appearance & Editor Preferences
               </h2>
             </div>
@@ -386,10 +386,10 @@ export const SettingsModal: React.FC = () => {
             {/* Default Note Color Swatches */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
               <div className="flex flex-col">
-                <span className="text-xs font-medium text-slate-700">
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Default Note Color
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
                   New cards automatically apply this pastel tone.
                 </span>
               </div>
@@ -403,7 +403,7 @@ export const SettingsModal: React.FC = () => {
                       type="button"
                       onClick={() => setDefaultColor(color.key)}
                       className={`w-7 h-7 rounded-full border transition-all cursor-pointer flex items-center justify-center ${color.bgClass} ${color.borderClass} ${
-                        isSelected ? 'ring-2 ring-slate-800 scale-110 shadow-xs' : 'hover:scale-105 opacity-80'
+                        isSelected ? 'ring-2 ring-slate-800 dark:ring-white scale-110 shadow-xs' : 'hover:scale-105 opacity-80'
                       }`}
                       title={color.name}
                     >
@@ -414,20 +414,20 @@ export const SettingsModal: React.FC = () => {
               </div>
             </div>
 
-            <div className="h-px bg-slate-100" />
+            <div className="h-px bg-slate-100 dark:bg-slate-800" />
 
             {/* Default Note Type Segmented Pill */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-xs font-medium text-slate-700">
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Default Note Type
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
                   Initial format when creating blank cards.
                 </span>
               </div>
 
-              <div className="flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200/60">
+              <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60">
                 {(['note', 'checklist', 'idea'] as const).map((typeOption) => (
                   <button
                     key={typeOption}
@@ -435,8 +435,8 @@ export const SettingsModal: React.FC = () => {
                     onClick={() => setDefaultType(typeOption)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-all cursor-pointer ${
                       defaultType === typeOption
-                        ? 'bg-white text-slate-900 shadow-2xs font-semibold'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-semibold'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
                     {typeOption}
@@ -447,15 +447,15 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           {/* Section 2: Keyboard Shortcuts Options */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-2xs flex flex-col gap-5">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/70 dark:border-slate-800 shadow-2xs flex flex-col gap-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Keyboard className="w-4 h-4 text-slate-600" />
+                <Keyboard className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                 <div className="flex flex-col">
-                  <h2 className="text-sm font-semibold text-[#1F1F1F] tracking-tight">
+                  <h2 className="text-sm font-semibold text-[#1F1F1F] dark:text-slate-100 tracking-tight">
                     Keyboard Shortcuts
                   </h2>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
                     Master accelerator keybindings.
                   </span>
                 </div>
@@ -465,20 +465,20 @@ export const SettingsModal: React.FC = () => {
                 type="button"
                 onClick={() => setShortcutsEnabled(!shortcutsEnabled)}
                 className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                  shortcutsEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
+                  shortcutsEnabled ? 'bg-[#1F1F1F] dark:bg-white' : 'bg-slate-300 dark:bg-slate-700'
                 }`}
               >
                 <span
-                  className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${
-                    shortcutsEnabled ? 'left-6' : 'left-1'
+                  className={`w-4 h-4 rounded-full absolute top-1 transition-transform ${
+                    shortcutsEnabled ? 'left-6 bg-white dark:bg-slate-900' : 'left-1 bg-white dark:bg-slate-400'
                   }`}
                 />
               </button>
             </div>
 
             {/* Modifier Key */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFD] border border-slate-200/60">
-              <span className="text-xs font-medium text-slate-700">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFD] dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
+              <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 Modifier Key
               </span>
               <div className="flex items-center gap-1.5">
@@ -489,8 +489,8 @@ export const SettingsModal: React.FC = () => {
                     onClick={() => setModifierKey(key)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
                       modifierKey === key
-                        ? 'bg-[#1F1F1F] text-white shadow-2xs'
-                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                        ? 'bg-[#1F1F1F] dark:bg-slate-100 text-white dark:text-slate-900 shadow-2xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {key}
@@ -500,27 +500,27 @@ export const SettingsModal: React.FC = () => {
             </div>
 
             {/* Keybindings Reference */}
-            <div className="overflow-hidden rounded-xl border border-slate-200/60">
+            <div className="overflow-hidden rounded-xl border border-slate-200/60 dark:border-slate-700/60">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#F8FAFD] border-b border-slate-200/60 text-slate-500 font-semibold">
+                <thead className="bg-[#F8FAFD] dark:bg-slate-800/80 border-b border-slate-200/60 dark:border-slate-700/60 text-slate-500 dark:text-slate-400 font-semibold">
                   <tr>
                     <th className="py-2 px-3.5">Action</th>
                     <th className="py-2 px-3.5">Keybinding</th>
                     <th className="py-2 px-3.5 hidden sm:table-cell">Description</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {shortcutsList.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50">
-                      <td className="py-2 px-3.5 font-medium text-slate-800">
+                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="py-2 px-3.5 font-medium text-slate-800 dark:text-slate-200">
                         {item.label}
                       </td>
                       <td className="py-2 px-3.5">
-                        <kbd className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[11px] font-semibold text-slate-700">
+                        <kbd className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                           {item.keyCombo}
                         </kbd>
                       </td>
-                      <td className="py-2 px-3.5 text-slate-400 hidden sm:table-cell">
+                      <td className="py-2 px-3.5 text-slate-400 dark:text-slate-500 hidden sm:table-cell">
                         {item.desc}
                       </td>
                     </tr>
@@ -531,15 +531,15 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           {/* Section 3: PWA Notifications Control */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-2xs flex flex-col gap-5">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/70 dark:border-slate-800 shadow-2xs flex flex-col gap-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Bell className="w-4 h-4 text-slate-600" />
+                <Bell className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                 <div className="flex flex-col">
-                  <h2 className="text-sm font-semibold text-[#1F1F1F] tracking-tight">
+                  <h2 className="text-sm font-semibold text-[#1F1F1F] dark:text-slate-100 tracking-tight">
                     PWA Notifications
                   </h2>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
                     Push alerts, daily review reminders, and auditory feedback.
                   </span>
                 </div>
@@ -548,8 +548,8 @@ export const SettingsModal: React.FC = () => {
               <span
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${
                   notificationPermission === 'granted'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
                 {notificationPermission === 'granted' ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
@@ -558,12 +558,12 @@ export const SettingsModal: React.FC = () => {
             </div>
 
             {/* Master Push Toggle / Grant Button */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#F8FAFD] border border-slate-200/60">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#F8FAFD] dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
               <div className="flex flex-col">
-                <span className="text-xs font-medium text-slate-800">
+                <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
                   Push Notifications
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
                   Receive reminder alerts directly on this device.
                 </span>
               </div>
@@ -572,7 +572,7 @@ export const SettingsModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleRequestNotificationPermission}
-                  className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] text-white hover:bg-black text-xs font-semibold transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[#1F1F1F] dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-black dark:hover:bg-white text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Grant Access
                 </button>
@@ -581,12 +581,12 @@ export const SettingsModal: React.FC = () => {
                   type="button"
                   onClick={() => setNotificationsEnabled(!notificationsEnabled)}
                   className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    notificationsEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
+                    notificationsEnabled ? 'bg-[#1F1F1F] dark:bg-white' : 'bg-slate-300 dark:bg-slate-700'
                   }`}
                 >
                   <span
-                    className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${
-                      notificationsEnabled ? 'left-6' : 'left-1'
+                    className={`w-4 h-4 rounded-full absolute top-1 transition-transform ${
+                      notificationsEnabled ? 'left-6 bg-white dark:bg-slate-900' : 'left-1 bg-white dark:bg-slate-400'
                     }`}
                   />
                 </button>
@@ -596,12 +596,12 @@ export const SettingsModal: React.FC = () => {
             {/* Daily Reminder Time */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Calendar className="w-4 h-4 text-slate-400" />
+                <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium text-slate-700">
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                     Daily Reminder Time
                   </span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
                     Review notes and checklist deadlines.
                   </span>
                 </div>
@@ -612,18 +612,18 @@ export const SettingsModal: React.FC = () => {
                   type="time"
                   value={dailyReminderTime}
                   onChange={(e) => setDailyReminderTime(e.target.value)}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-mono font-medium text-slate-800"
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-medium text-slate-800 dark:text-slate-200"
                 />
                 <button
                   type="button"
                   onClick={() => setDailyReminderEnabled(!dailyReminderEnabled)}
                   className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                    dailyReminderEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
+                    dailyReminderEnabled ? 'bg-[#1F1F1F] dark:bg-white' : 'bg-slate-300 dark:bg-slate-700'
                   }`}
                 >
                   <span
-                    className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${
-                      dailyReminderEnabled ? 'left-6' : 'left-1'
+                    className={`w-4 h-4 rounded-full absolute top-1 transition-transform ${
+                      dailyReminderEnabled ? 'left-6 bg-white dark:bg-slate-900' : 'left-1 bg-white dark:bg-slate-400'
                     }`}
                   />
                 </button>
@@ -633,12 +633,12 @@ export const SettingsModal: React.FC = () => {
             {/* Sound Effects */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Volume2 className="w-4 h-4 text-slate-400" />
+                <Volume2 className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium text-slate-700">
+                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                     Sound Effects
                   </span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
                     Subtle auditory chime on checklist completion.
                   </span>
                 </div>
@@ -648,12 +648,12 @@ export const SettingsModal: React.FC = () => {
                 type="button"
                 onClick={() => setSoundEffectsEnabled(!soundEffectsEnabled)}
                 className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
-                  soundEffectsEnabled ? 'bg-[#1F1F1F]' : 'bg-slate-300'
+                  soundEffectsEnabled ? 'bg-[#1F1F1F] dark:bg-white' : 'bg-slate-300 dark:bg-slate-700'
                 }`}
               >
                 <span
-                  className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${
-                    soundEffectsEnabled ? 'left-6' : 'left-1'
+                  className={`w-4 h-4 rounded-full absolute top-1 transition-transform ${
+                    soundEffectsEnabled ? 'left-6 bg-white dark:bg-slate-900' : 'left-1 bg-white dark:bg-slate-400'
                   }`}
                 />
               </button>
@@ -664,7 +664,7 @@ export const SettingsModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleTestNotification}
-                className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer"
               >
                 Send Test Notification
               </button>
@@ -672,15 +672,15 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           {/* Section 4: Security & Password */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-2xs flex flex-col gap-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/70 dark:border-slate-800 shadow-2xs flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Lock className="w-4 h-4 text-slate-600" />
+                <Lock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                 <div className="flex flex-col">
-                  <h2 className="text-sm font-semibold text-[#1F1F1F] tracking-tight">
+                  <h2 className="text-sm font-semibold text-[#1F1F1F] dark:text-slate-100 tracking-tight">
                     Security & Password
                   </h2>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
                     Update account authentication password.
                   </span>
                 </div>
@@ -690,7 +690,7 @@ export const SettingsModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsChangingPassword(true)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   Change Password
                 </button>
@@ -700,7 +700,7 @@ export const SettingsModal: React.FC = () => {
             {isChangingPassword && (
               <form onSubmit={handleChangePassword} className="pt-2 flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-slate-700">
+                  <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                     Current Password
                   </label>
                   <input
@@ -709,13 +709,13 @@ export const SettingsModal: React.FC = () => {
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Enter current password"
                     required
-                    className="w-full bg-[#F8FAFD] border border-slate-200 px-3.5 py-2 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none"
+                    className="w-full bg-[#F8FAFD] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
                   />
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 flex flex-col gap-1">
-                    <label className="text-xs font-medium text-slate-700">
+                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                       New Password
                     </label>
                     <input
@@ -725,12 +725,12 @@ export const SettingsModal: React.FC = () => {
                       placeholder="Min. 6 characters"
                       required
                       minLength={6}
-                      className="w-full bg-[#F8FAFD] border border-slate-200 px-3.5 py-2 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none"
+                      className="w-full bg-[#F8FAFD] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
                     />
                   </div>
 
                   <div className="flex-1 flex flex-col gap-1">
-                    <label className="text-xs font-medium text-slate-700">
+                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                       Confirm New Password
                     </label>
                     <input
@@ -739,7 +739,7 @@ export const SettingsModal: React.FC = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Repeat new password"
                       required
-                      className="w-full bg-[#F8FAFD] border border-slate-200 px-3.5 py-2 rounded-xl text-sm text-slate-800 placeholder-slate-400 outline-none"
+                      className="w-full bg-[#F8FAFD] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none"
                     />
                   </div>
                 </div>
@@ -748,14 +748,14 @@ export const SettingsModal: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsChangingPassword(false)}
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isPasswordLoading}
-                    className="px-4 py-1.5 rounded-lg bg-[#1F1F1F] text-white hover:bg-black text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-4 py-1.5 rounded-lg bg-[#1F1F1F] dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-black dark:hover:bg-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {isPasswordLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Update Password</span>
@@ -766,34 +766,34 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           {/* Section 5: Data & Storage */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-2xs flex flex-col gap-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/70 dark:border-slate-800 shadow-2xs flex flex-col gap-4">
             <div className="flex items-center gap-2.5">
-              <Database className="w-4 h-4 text-slate-600" />
-              <h2 className="text-sm font-semibold text-[#1F1F1F] tracking-tight">
+              <Database className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <h2 className="text-sm font-semibold text-[#1F1F1F] dark:text-slate-100 tracking-tight">
                 Data & Storage
               </h2>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-[#F8FAFD] border border-slate-200/60">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-[#F8FAFD] dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60">
               <div className="flex flex-col">
-                <span className="text-xs font-medium text-slate-800">
+                <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
                   Trash Auto-Retention
                 </span>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Soft-deleted notes and folders are permanently cleaned after 30 days.
                 </span>
               </div>
-              <span className="text-xs font-mono font-semibold text-slate-600 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+              <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
                 30 Days
               </span>
             </div>
 
             <div className="flex items-center justify-between pt-1">
               <div className="flex flex-col">
-                <span className="text-xs font-medium text-slate-700">
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Export Archive
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
                   Download your complete workspace as an offline JSON package.
                 </span>
               </div>
@@ -801,7 +801,7 @@ export const SettingsModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleExportData}
-                className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs"
+                className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Export Data</span>
@@ -810,7 +810,7 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           {/* Section 6: Account Danger Zone */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/70 shadow-2xs flex flex-col gap-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/70 dark:border-slate-800 shadow-2xs flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -822,9 +822,9 @@ export const SettingsModal: React.FC = () => {
                     handleSessionEndRedirect('logout');
                   });
                 }}
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2 transition-colors cursor-pointer"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-2 transition-colors cursor-pointer"
               >
-                <LogOut className="w-4 h-4 text-slate-500" />
+                <LogOut className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                 <span>Log out</span>
               </button>
 
@@ -832,7 +832,7 @@ export const SettingsModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleRecoverAccount}
-                  className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>Recover Account</span>
@@ -841,7 +841,7 @@ export const SettingsModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsDeleteAccountModalOpen(true)}
-                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1.5 transition-colors cursor-pointer"
                   title="Delete account"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -853,16 +853,16 @@ export const SettingsModal: React.FC = () => {
         </div>
 
         {/* Sticky Save / Discard bar — active only when there are unsaved changes */}
-        <div className="sticky bottom-0 z-30 bg-[#F8FAFD]/95 backdrop-blur-sm border-t border-slate-200/70 px-5 sm:px-8 py-3">
+        <div className="sticky bottom-0 z-30 bg-[#F8FAFD]/95 dark:bg-[#0B0F17]/95 backdrop-blur-sm border-t border-slate-200/70 dark:border-slate-800 px-5 sm:px-8 py-3">
           <div className="max-w-3xl mx-auto flex items-center justify-end gap-2.5">
-            <span className="mr-auto text-[11px] text-slate-400">
+            <span className="mr-auto text-[11px] text-slate-400 dark:text-slate-500">
               {isDirty ? 'You have unsaved changes' : 'All changes saved'}
             </span>
             <button
               type="button"
               onClick={loadDraft}
               disabled={!isDirty || isSavingSettings}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Discard</span>
@@ -871,7 +871,7 @@ export const SettingsModal: React.FC = () => {
               type="button"
               onClick={handleSaveSettings}
               disabled={!isDirty || isSavingSettings}
-              className="px-5 py-2 rounded-xl bg-[#1F1F1F] text-white hover:bg-black text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
+              className="px-5 py-2 rounded-xl bg-[#1F1F1F] dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-black dark:hover:bg-white text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {isSavingSettings && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Save Changes</span>

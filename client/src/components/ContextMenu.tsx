@@ -308,7 +308,7 @@ export const ContextMenu: React.FC = () => {
         exit={{ opacity: 0, scale: 0.94 }}
         transition={{ duration: 0.12, ease: 'easeOut' }}
         style={{ left: clampedX, top: clampedY }}
-        className="fixed z-50 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 select-none text-xs"
+        className="fixed z-50 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 select-none text-xs text-slate-800 dark:text-slate-100"
       >
         {contextMenu.type === 'canvas' ? (
           // Variant A: Empty Space Context Menu
@@ -319,15 +319,15 @@ export const ContextMenu: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handlePaste(activeFolderId)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-[#0B57D0] hover:bg-blue-50 rounded-xl cursor-pointer transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-[#0B57D0] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl cursor-pointer transition-colors text-left"
                 >
-                  <Clipboard className="w-4 h-4 text-[#0B57D0] shrink-0" />
+                  <Clipboard className="w-4 h-4 text-[#0B57D0] dark:text-blue-400 shrink-0" />
                   <span>
                     Paste {clipboardItem.type === 'folder' ? 'Folder' : 'Note'}
                     {clipboardItem.name ? ` (${clipboardItem.name.slice(0, 12)}${clipboardItem.name.length > 12 ? '...' : ''})` : ''}
                   </span>
                 </button>
-                <div className="h-px bg-slate-100 my-1" />
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
               </>
             )}
 
@@ -337,9 +337,9 @@ export const ContextMenu: React.FC = () => {
                 closeContextMenu();
                 openNoteModal('note');
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <FileText className="w-4 h-4 text-slate-500 shrink-0" />
+              <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
               <span>New Note</span>
             </button>
 
@@ -349,9 +349,9 @@ export const ContextMenu: React.FC = () => {
                 closeContextMenu();
                 openNoteModal('checklist');
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <CheckSquare className="w-4 h-4 text-slate-500 shrink-0" />
+              <CheckSquare className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
               <span>New Checklist</span>
             </button>
 
@@ -361,9 +361,9 @@ export const ContextMenu: React.FC = () => {
                 closeContextMenu();
                 openNoteModal('idea');
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <Lightbulb className="w-4 h-4 text-purple-600 shrink-0" />
+              <Lightbulb className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
               <span>New Idea</span>
             </button>
 
@@ -373,13 +373,13 @@ export const ContextMenu: React.FC = () => {
                 closeContextMenu();
                 openFolderModal();
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <FolderIcon className="w-4 h-4 text-purple-600 shrink-0" />
+              <FolderIcon className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
               <span>New Folder</span>
             </button>
 
-            <div className="h-px bg-slate-100 my-1" />
+            <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
             <button
               type="button"
@@ -387,9 +387,9 @@ export const ContextMenu: React.FC = () => {
                 closeContextMenu();
                 toggleDetailsPanel();
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <Info className="w-4 h-4 text-[#0B57D0] shrink-0" />
+              <Info className="w-4 h-4 text-[#0B57D0] dark:text-blue-400 shrink-0" />
               <span>Toggle Details Panel</span>
             </button>
           </div>
@@ -398,10 +398,10 @@ export const ContextMenu: React.FC = () => {
           <div className="space-y-0.5">
             {/* 1. Quick Color Palette Swatches (For Notes) */}
             {targetNote && (
-              <div className="px-3 py-1.5 mb-1 bg-slate-50/80 rounded-xl border border-slate-100">
-                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <div className="px-3 py-1.5 mb-1 bg-slate-50/80 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
                   <span className="flex items-center gap-1">
-                    <Palette className="w-3 h-3 text-slate-400" />
+                    <Palette className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                     Color
                   </span>
                   <span>
@@ -439,9 +439,9 @@ export const ContextMenu: React.FC = () => {
             <button
               type="button"
               onClick={handleOpen}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <ExternalLink className="w-4 h-4 text-slate-500 shrink-0" />
+              <ExternalLink className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
               <span>Open</span>
             </button>
 
@@ -449,18 +449,18 @@ export const ContextMenu: React.FC = () => {
             <button
               type="button"
               onClick={handleCut}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <Scissors className="w-4 h-4 text-slate-500 shrink-0" />
+              <Scissors className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
               <span>Cut</span>
             </button>
 
             <button
               type="button"
               onClick={handleCopy}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <Copy className="w-4 h-4 text-slate-500 shrink-0" />
+              <Copy className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
               <span>Copy</span>
             </button>
 
@@ -471,34 +471,34 @@ export const ContextMenu: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handlePaste(targetFolder.id)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-[#0B57D0] hover:bg-blue-50 rounded-xl cursor-pointer transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-[#0B57D0] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl cursor-pointer transition-colors text-left"
                   >
-                    <CornerDownRight className="w-4 h-4 text-[#0B57D0] shrink-0" />
+                    <CornerDownRight className="w-4 h-4 text-[#0B57D0] dark:text-blue-400 shrink-0" />
                     <span>Paste into folder</span>
                   </button>
                 )}
                 <button
                   type="button"
                   onClick={handleAddNoteToFolder}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
                 >
-                  <Plus className="w-4 h-4 text-purple-600 shrink-0" />
+                  <Plus className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                   <span>Add note here</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleAddFolderToFolder}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
                 >
-                  <FolderPlus className="w-4 h-4 text-amber-500 shrink-0" />
+                  <FolderPlus className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                   <span>Add subfolder here</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleRenameFolder}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
                 >
-                  <Pencil className="w-4 h-4 text-slate-500 shrink-0" />
+                  <Pencil className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                   <span>Rename folder</span>
                 </button>
               </>
@@ -510,41 +510,41 @@ export const ContextMenu: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleDuplicate}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
                 >
-                  <Copy className="w-4 h-4 text-slate-500 shrink-0" />
+                  <Copy className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                   <span>Duplicate note</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleCopyText}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
                 >
                   {copied ? (
-                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   ) : (
-                    <Clipboard className="w-4 h-4 text-slate-500 shrink-0" />
+                    <Clipboard className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
                   )}
                   <span>{copied ? 'Copied to clipboard!' : 'Copy text'}</span>
                 </button>
               </>
             )}
 
-            <div className="h-px bg-slate-100 my-1" />
+            <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
             {/* Star Favorite */}
             <button
               type="button"
               onClick={handleToggleFavorite}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
               <Star
                 className={cn(
                   'w-4 h-4 shrink-0 transition-colors',
                   isFavorite
                     ? 'fill-amber-400 text-amber-400'
-                    : 'text-slate-500'
+                    : 'text-slate-500 dark:text-slate-400'
                 )}
               />
               <span>{isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</span>
@@ -554,21 +554,21 @@ export const ContextMenu: React.FC = () => {
             <button
               type="button"
               onClick={handleOpenDetails}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 hover:bg-[#F1F5F9] rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-slate-700 dark:text-slate-200 hover:bg-[#F1F5F9] dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <Info className="w-4 h-4 text-blue-600 shrink-0" />
+              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>Details</span>
             </button>
 
-            <div className="h-px bg-slate-100 my-1" />
+            <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
             {/* Move to Trash */}
             <button
               type="button"
               onClick={handleDelete}
-              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-rose-600 hover:bg-rose-50 rounded-xl cursor-pointer transition-colors text-left"
+              className="w-full flex items-center gap-2.5 px-3 py-2 font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl cursor-pointer transition-colors text-left"
             >
-              <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+              <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
               <span>Move to Trash</span>
             </button>
           </div>

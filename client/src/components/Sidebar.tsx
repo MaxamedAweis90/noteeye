@@ -38,7 +38,7 @@ export const Sidebar: React.FC = () => {
   const isTrashActive = location.pathname === '/trash';
 
   const sidebarNavContent = (
-    <div className="flex flex-col h-full bg-[#F8FAFD] text-[#1F1F1F] select-none">
+    <div className="flex flex-col h-full bg-[#F8FAFD] dark:bg-[#0B0F17] text-[#1F1F1F] dark:text-slate-100 select-none transition-colors duration-200">
       {/* 1. Google Drive-Style Elevated + Create Button (Reusable Component) */}
       <div className="mb-6">
         <CreateButton onActionSelected={() => toggleMobileSidebar(false)} />
@@ -57,8 +57,8 @@ export const Sidebar: React.FC = () => {
           }}
           className={`flex items-center gap-4 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
             isHomeActive
-              ? 'bg-[#C2E7FF] text-[#001D35] font-semibold'
-              : 'text-[#444746] hover:bg-[#E8EDF4] hover:text-[#1F1F1F]'
+              ? 'bg-[#C2E7FF] dark:bg-sky-950/80 text-[#001D35] dark:text-sky-200 font-semibold dark:border dark:border-sky-800/50'
+              : 'text-[#444746] dark:text-slate-400 hover:bg-[#E8EDF4] dark:hover:bg-slate-800/70 hover:text-[#1F1F1F] dark:hover:text-slate-100'
           }`}
         >
           <span className="material-symbols-outlined text-[22px]">
@@ -78,8 +78,8 @@ export const Sidebar: React.FC = () => {
           }}
           className={`flex items-center gap-4 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
             isRecentsActive
-              ? 'bg-[#C2E7FF] text-[#001D35] font-semibold'
-              : 'text-[#444746] hover:bg-[#E8EDF4] hover:text-[#1F1F1F]'
+              ? 'bg-[#C2E7FF] dark:bg-sky-950/80 text-[#001D35] dark:text-sky-200 font-semibold dark:border dark:border-sky-800/50'
+              : 'text-[#444746] dark:text-slate-400 hover:bg-[#E8EDF4] dark:hover:bg-slate-800/70 hover:text-[#1F1F1F] dark:hover:text-slate-100'
           }`}
         >
           <span className="material-symbols-outlined text-[22px]">
@@ -99,8 +99,8 @@ export const Sidebar: React.FC = () => {
           }}
           className={`flex items-center gap-4 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
             isFavoritesActive
-              ? 'bg-[#C2E7FF] text-[#001D35] font-semibold'
-              : 'text-[#444746] hover:bg-[#E8EDF4] hover:text-[#1F1F1F]'
+              ? 'bg-[#C2E7FF] dark:bg-sky-950/80 text-[#001D35] dark:text-sky-200 font-semibold dark:border dark:border-sky-800/50'
+              : 'text-[#444746] dark:text-slate-400 hover:bg-[#E8EDF4] dark:hover:bg-slate-800/70 hover:text-[#1F1F1F] dark:hover:text-slate-100'
           }`}
         >
           <span className="material-symbols-outlined text-[22px]">
@@ -119,8 +119,8 @@ export const Sidebar: React.FC = () => {
           }}
           className={`flex items-center gap-3.5 px-5 py-2.5 rounded-full text-sm font-medium transition-colors cursor-pointer group ${
             isTrashActive
-              ? 'bg-[#C2E7FF] text-[#001D35] font-semibold'
-              : 'text-[#444746] hover:bg-[#E8EDF4] hover:text-[#1F1F1F]'
+              ? 'bg-[#C2E7FF] dark:bg-sky-950/80 text-[#001D35] dark:text-sky-200 font-semibold dark:border dark:border-sky-800/50'
+              : 'text-[#444746] dark:text-slate-400 hover:bg-[#E8EDF4] dark:hover:bg-slate-800/70 hover:text-[#1F1F1F] dark:hover:text-slate-100'
           }`}
         >
           <span className="material-symbols-outlined text-[22px] shrink-0">
@@ -131,11 +131,11 @@ export const Sidebar: React.FC = () => {
             className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full min-w-[20px] text-center transition-all ${
               trashCount > 0
                 ? isTrashActive
-                  ? 'bg-[#001D35] text-white shadow-2xs'
-                  : 'bg-slate-200/90 text-slate-700 group-hover:bg-slate-300'
+                  ? 'bg-[#001D35] dark:bg-sky-900 text-white shadow-2xs'
+                  : 'bg-slate-200/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-slate-300 dark:group-hover:bg-slate-700'
                 : isTrashActive
-                ? 'bg-[#001D35]/10 text-[#001D35]'
-                : 'text-slate-400 bg-slate-100 group-hover:bg-slate-200/60'
+                ? 'bg-[#001D35]/10 dark:bg-sky-900/40 text-[#001D35] dark:text-sky-300'
+                : 'text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/50 group-hover:bg-slate-200/60 dark:group-hover:bg-slate-700/60'
             }`}
           >
             {trashCount}
@@ -148,7 +148,7 @@ export const Sidebar: React.FC = () => {
   return (
     <>
       {/* Desktop Persistent Left Rail (Fixed top-16, w-64, seamless bg-#F8FAFD) */}
-      <aside className="hidden md:flex fixed left-0 top-16 bottom-0 w-64 bg-[#F8FAFD] z-30 flex-col px-4 py-3 select-none">
+      <aside className="hidden md:flex fixed left-0 top-16 bottom-0 w-64 bg-[#F8FAFD] dark:bg-[#0B0F17] border-r border-transparent dark:border-slate-800/60 z-30 flex-col px-4 py-3 select-none transition-colors duration-200">
         {sidebarNavContent}
       </aside>
 
@@ -159,13 +159,13 @@ export const Sidebar: React.FC = () => {
             className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
             onClick={() => toggleMobileSidebar(false)}
           />
-          <div className="relative w-72 max-w-[80vw] h-full bg-[#F8FAFD] shadow-2xl p-4 flex flex-col z-10 animate-fade-in">
-            <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200/60">
-              <span className="font-bold text-base text-[#1F1F1F]">Menu</span>
+          <div className="relative w-72 max-w-[80vw] h-full bg-[#F8FAFD] dark:bg-slate-900 border-r border-transparent dark:border-slate-800 shadow-2xl p-4 flex flex-col z-10 animate-fade-in transition-colors duration-200">
+            <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200/60 dark:border-slate-800">
+              <span className="font-bold text-base text-[#1F1F1F] dark:text-slate-100">Menu</span>
               <button
                 type="button"
                 onClick={() => toggleMobileSidebar(false)}
-                className="p-1.5 text-[#444746] hover:text-[#1F1F1F] rounded-full"
+                className="p-1.5 text-[#444746] dark:text-slate-400 hover:text-[#1F1F1F] dark:hover:text-slate-100 rounded-full"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>

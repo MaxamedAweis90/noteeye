@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Sora', sans-serif;
@@ -40,14 +42,32 @@
   color-scheme: light;
 }
 
+.dark {
+  color-scheme: dark;
+  --color-canvas: #0b0f17;
+  --color-workspace: #111827;
+  --color-search-bg: #1e293b;
+  --color-search-hover: #334155;
+  --color-nav-active-bg: #1e293b;
+  --color-nav-active-text: #93c5fd;
+  --color-nav-hover: #1e293b;
+  --color-primary-google: #3b82f6;
+  --color-text-main: #f9fafb;
+  --color-text-muted: #9ca3af;
+  --color-border-subtle: #1f2937;
+  --color-banner-warn: #450a0a;
+  --color-banner-warn-text: #fca5a5;
+}
+
 html, body {
   min-height: 100%;
   width: 100%;
   font-family: 'Outfit', var(--font-sans);
-  background-color: #f8fafd;
-  color: #1f1f1f;
+  background-color: var(--color-canvas);
+  color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* Explicit typography utilities */
@@ -155,6 +175,10 @@ html, body {
   scrollbar-color: #cbd5e1 transparent;
 }
 
+.dark .custom-scrollbar {
+  scrollbar-color: #334155 transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -169,8 +193,16 @@ html, body {
   border-radius: 9999px;
 }
 
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 /* Word / Canva Style Rich Text Editorial Canvas */
@@ -249,6 +281,28 @@ html, body {
 .rich-editor td:focus {
   outline: 2px solid #0b57d0;
   outline-offset: -1px;
+}
+
+.dark .rich-editor h1,
+.dark .rich-editor h2,
+.dark .rich-editor p,
+.dark .rich-editor li {
+  color: #f1f5f9;
+}
+.dark .rich-editor hr {
+  border-top-color: #334155;
+}
+.dark .rich-editor table {
+  border-color: #334155;
+}
+.dark .rich-editor th {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+.dark .rich-editor td {
+  border-color: #334155;
+  color: #e2e8f0;
 }
 
 /* Microsoft Word / Google Docs style Table Cell Multi-Selection */

@@ -37,7 +37,7 @@ const NAV_LINKS = [
 /**
  * Noteeye Landing Page Floating Pill Navbar & Top Session Indicator
  * Styled with ultra-clean rounded capsule geometry, translucent backdrop blur,
- * and seamless conditional session awareness.
+ * and seamless conditional session awareness. Strictly light mode.
  */
 export const LandingNavbar: React.FC<LandingNavbarProps> = ({
   authNotice,
@@ -244,7 +244,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
             damping: 28,
             stiffness: 260,
           }}
-          className="w-full bg-white/70 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full px-5 sm:px-6 py-2.5 flex items-center justify-between"
+          className="w-full bg-white/70 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full px-5 sm:px-6 py-2.5 flex items-center justify-between transition-colors"
         >
           {/* 1. Left Brand Logo */}
           <a
@@ -278,7 +278,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
             ))}
           </nav>
 
-          {/* 3. Right Auth Controls */}
+          {/* 3. Right Controls (Auth) */}
           <div className="flex items-center gap-2 sm:gap-3">
             {isLoggedIn ? (
               /* Authenticated State */

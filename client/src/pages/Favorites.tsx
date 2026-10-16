@@ -419,23 +419,23 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
       {/* 1. Header Bar Area (Sticky at Top of Workspace Island) */}
       <div
         className={cn(
-          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4',
+          'sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3.5 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md rounded-t-2xl md:rounded-t-[24px] transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4',
           isScrolled
-            ? 'border-b border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.03)]'
-            : 'border-b border-slate-100/60 shadow-none'
+            ? 'border-b border-slate-100 dark:border-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3)]'
+            : 'border-b border-slate-100/60 dark:border-slate-800/60 shadow-none'
         )}
       >
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] tracking-tight flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-[#1F1F1F] dark:text-slate-100 tracking-tight flex items-center gap-2.5">
               <span>Favorites</span>
               <Star className="w-6 h-6 fill-amber-400 text-amber-400 shrink-0" />
             </h1>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#C2E7FF] text-[#001D35]">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#C2E7FF] dark:bg-sky-950/80 text-[#001D35] dark:text-sky-300">
               {totalFavoritesCount} {totalFavoritesCount === 1 ? 'Starred' : 'Starred'}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Quick access to your pinned notes and folders.
           </p>
         </div>
@@ -443,7 +443,7 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
         {/* Right Controls Dock */}
         <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
           {/* View Mode Toggle (Grid / List) */}
-          <div className="bg-slate-100 p-1 rounded-full flex items-center gap-0.5 border border-black/[0.04]">
+          <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-full flex items-center gap-0.5 border border-black/[0.04] dark:border-slate-700">
             <button
               type="button"
               onClick={() => setViewMode('grid')}
@@ -451,8 +451,8 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
               className={cn(
                 'flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer',
                 viewMode === 'grid'
-                  ? 'bg-white text-[#0B57D0] shadow-xs font-semibold'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-slate-700 text-[#0B57D0] dark:text-sky-400 shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -464,8 +464,8 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
               className={cn(
                 'flex items-center justify-center w-8 h-8 rounded-full transition-all cursor-pointer',
                 viewMode === 'list'
-                  ? 'bg-white text-[#0B57D0] shadow-xs font-semibold'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-slate-700 text-[#0B57D0] dark:text-sky-400 shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
               <List className="w-4 h-4" />
@@ -476,15 +476,15 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
           <DetailsToggleButton />
 
           {/* Filter Pills (All, Folders, Notes) */}
-          <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-full border border-black/[0.04] text-xs">
+          <div className="flex items-center gap-1 bg-slate-100/90 dark:bg-slate-800/90 p-1 rounded-full border border-black/[0.04] dark:border-slate-700 text-xs">
             <button
               type="button"
               onClick={() => setFilterType('all')}
               className={cn(
                 'px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer',
                 filterType === 'all'
-                  ? 'bg-white text-[#1F1F1F] shadow-xs font-semibold'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-slate-700 text-[#1F1F1F] dark:text-slate-100 shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
               All ({totalFavoritesCount})
@@ -495,8 +495,8 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
               className={cn(
                 'px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer',
                 filterType === 'folders'
-                  ? 'bg-white text-[#1F1F1F] shadow-xs font-semibold'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-slate-700 text-[#1F1F1F] dark:text-slate-100 shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
               Folders ({favoriteFolders.length})
@@ -507,8 +507,8 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
               className={cn(
                 'px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer',
                 filterType === 'notes'
-                  ? 'bg-white text-[#1F1F1F] shadow-xs font-semibold'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-slate-700 text-[#1F1F1F] dark:text-slate-100 shadow-xs font-semibold'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
               )}
             >
               Notes ({favoriteNotes.length})
@@ -519,9 +519,9 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
           <button
             type="button"
             onClick={() => setSortOrder((prev) => (prev === 'recent' ? 'name' : 'recent'))}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/70 text-slate-700 text-xs font-medium border border-black/[0.04] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium border border-black/[0.04] dark:border-slate-700 transition-colors cursor-pointer"
           >
-            <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+            <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             <span>
               {sortOrder === 'recent' ? 'Recently updated' : 'Alphabetical (A-Z)'}
             </span>
@@ -533,13 +533,13 @@ export const Favorites: React.FC<FavoritesProps> = ({ isLoading = false }) => {
       {isCurrentFilterEmpty ? (
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-20 text-center select-none animate-fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-4 shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400 flex items-center justify-center mb-4 shadow-xs">
             <Star className="w-7 h-7 fill-amber-400 text-amber-400" />
           </div>
-          <h2 className="text-lg font-bold text-[#1F1F1F]">
+          <h2 className="text-lg font-bold text-[#1F1F1F] dark:text-slate-100">
             {isOverallEmpty ? 'No favorites yet' : 'No favorites in this category'}
           </h2>
-          <p className="text-sm text-slate-500 max-w-sm mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1">
             {isOverallEmpty
               ? 'Click the star icon on any note, or use the menu on a folder to pin your favorites here for quick access.'
               : 'Try selecting "All" to view all your starred folders and notes.'}
