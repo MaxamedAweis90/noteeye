@@ -2,6 +2,7 @@ import React, { useState, useId } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, Loader2, AlertCircle } from '@/components/ui/icons';
 import { Logo } from '../../components/Logo';
+import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 import { authApi } from '../../api';
 import { useAuthStore } from '../../store/authStore';
 import { useUserStore } from '../../store/userStore';
@@ -118,6 +119,21 @@ export const Login: React.FC = () => {
             <span>{errorMessage}</span>
           </div>
         )}
+
+        {/* Google Authentication */}
+        <div className="flex flex-col gap-4">
+          <GoogleAuthButton
+            mode="signin"
+            onError={(err) => setErrorMessage(err)}
+          />
+
+          <div className="relative flex items-center justify-center">
+            <div className="w-full border-t border-slate-200/80" />
+            <span className="absolute bg-white px-3 text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+              or continue with email
+            </span>
+          </div>
+        </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">

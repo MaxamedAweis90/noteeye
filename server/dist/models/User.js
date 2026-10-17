@@ -20,7 +20,21 @@ const userSchema = new Schema({
     },
     passwordHash: {
         type: String,
-        required: [true, 'Password hash is required'],
+        default: '',
+        required: function () {
+            return this.authProvider === 'local';
+        },
+    },
+    googleId: {
+        type: String,
+        default: null,
+        sparse: true,
+        unique: true,
+    },
+    authProvider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local',
     },
     avatarUrl: {
         type: String,

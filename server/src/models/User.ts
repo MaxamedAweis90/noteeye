@@ -18,7 +18,9 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
-  passwordHash: string;
+  passwordHash?: string;
+  googleId?: string | null;
+  authProvider: 'local' | 'google';
   avatarUrl?: string;
   avatar?: string;
   avatarBlobUrl?: string;
@@ -56,7 +58,21 @@ const userSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password hash is required'],
+      default: '',
+      required: function (this: any) {
+        return this.authProvider === 'local';
+      },
+    },
+    googleId: {
+      type: String,
+      default: null,
+      sparse: true,
+      unique: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
     },
     avatarUrl: {
       type: String,

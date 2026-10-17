@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { register, login, logout, getMe, updateProfile, changePassword, } from '../controllers/authController.js';
+import { register, login, googleAuth, logout, getMe, updateProfile, changePassword, } from '../controllers/authController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 const router = Router();
 router.post('/register', register);
 router.post('/login', login);
+router.post('/google', googleAuth);
 router.post('/logout', authMiddleware, logout);
 router.get('/me', authMiddleware, getMe);
 router.patch('/update-profile', authMiddleware, updateProfile);

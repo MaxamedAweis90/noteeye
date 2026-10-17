@@ -36,6 +36,14 @@ export const authApi = {
   },
 
   /**
+   * Authenticate or auto-register via Google OAuth credential ID token
+   */
+  loginWithGoogle: async (credential: string): Promise<AuthResponse> => {
+    const res = await apiClient.post<AuthResponse>('/auth/google', { credential });
+    return res.data;
+  },
+
+  /**
    * Retrieve current authenticated user profile and stats
    */
   getMe: async (): Promise<MeResponse> => {

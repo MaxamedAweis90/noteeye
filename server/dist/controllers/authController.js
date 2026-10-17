@@ -1,11 +1,13 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/User.js';
 import { Session } from '../models/Session.js';
 import { Note } from '../models/Note.js';
 import { Folder } from '../models/Folder.js';
 import { hashToken, getClientIp, parseUserAgent } from '../utils/userAgent.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-noteeye-2026';
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 /**
  * Seed initial user if not already existing
  * Specified by user:
@@ -136,6 +138,107 @@ export const login = async (req, res, next) => {
         }
         res.status(200).json({
             message: 'Welcome back to Noteeye',
+            token,
+            user,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+/**
+ * Authenticate with Google ID Token (One Tap or Standard Sign-in)
+ * POST /api/auth/google
+ */
+export const googleAuth = async (req, res, next) => {
+    try {
+        const { credential } = req.body;
+        if (!credential) {
+            res.status(400).json({ message: 'Google credential ID token is required' });
+            return;
+        }
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        let payload = null;
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: credential,
+                audience: clientId || undefined,
+            });
+            payload = ticket.getPayload();
+        }
+        catch (verifyErr) {
+            console.error('[authController] Google verifyIdToken error:', verifyErr?.message);
+            res.status(401).json({
+                message: 'Invalid or expired Google credential token',
+                error: verifyErr?.message,
+            });
+            return;
+        }
+        if (!payload || !payload.email) {
+            res.status(400).json({ message: 'Invalid Google token payload: email missing' });
+            return;
+        }
+        const googleId = payload.sub;
+        const email = payload.email.toLowerCase().trim();
+        const name = payload.name || payload.given_name || email.split('@')[0] || 'User';
+        const avatar = payload.picture || '';
+        // Check if user exists by googleId or email
+        let user = await User.findOne({
+            $or: [{ googleId }, { email }],
+        });
+        if (user) {
+            let isModified = false;
+            if (!user.googleId) {
+                user.googleId = googleId;
+                isModified = true;
+            }
+            if (!user.avatarUrl && avatar) {
+                user.avatarUrl = avatar;
+                isModified = true;
+            }
+            if (!user.isEmailVerified) {
+                user.isEmailVerified = true;
+                isModified = true;
+            }
+            if (isModified) {
+                await user.save();
+            }
+        }
+        else {
+            user = new User({
+                name: name.trim(),
+                email,
+                googleId,
+                authProvider: 'google',
+                avatarUrl: avatar,
+                isEmailVerified: true,
+                passwordHash: '',
+            });
+            await user.save();
+        }
+        const token = jwt.sign({ id: user._id.toString(), email: user.email }, JWT_SECRET, {
+            expiresIn: '30d',
+        });
+        // Record new active login session in MongoDB
+        try {
+            const tokenHash = hashToken(token);
+            const ipAddress = getClientIp(req);
+            const { deviceType, browserName, osName } = parseUserAgent(req.headers['user-agent']);
+            await Session.create({
+                userId: user._id,
+                tokenHash,
+                ipAddress,
+                deviceType,
+                browserName,
+                osName,
+                lastActiveAt: new Date(),
+            });
+        }
+        catch (sessionErr) {
+            console.warn('[authController] Failed to record google session:', sessionErr?.message);
+        }
+        res.status(200).json({
+            message: 'Successfully authenticated with Google',
             token,
             user,
         });

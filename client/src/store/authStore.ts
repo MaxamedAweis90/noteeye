@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import type { UserProfile } from '../types';
-import { authApi, type UserStats } from '../api';
+import { authApi, type UserStats, type AuthResponse } from '../api';
 import { useUIStore } from './uiStore';
 import { handleSessionEndRedirect } from '../utils/sessionNavigation';
 
@@ -16,6 +16,7 @@ export interface AuthState {
   // Actions
   login: (token: string, user: UserProfile) => void;
   register: (token: string, user: UserProfile) => void;
+  loginWithGoogle: (credential: string) => Promise<AuthResponse>;
   logout: (callServer?: boolean) => void;
   updateUser: (updates: Partial<UserProfile>) => void;
   checkAuth: () => Promise<boolean>;
@@ -62,6 +63,28 @@ export const useAuthStore = create<AuthState>()(
           try {
             window.dispatchEvent(new CustomEvent('noteeye:login'));
           } catch {}
+        },
+
+        loginWithGoogle: async (credential: string) => {
+          set({ isLoading: true });
+          try {
+            const data = await authApi.loginWithGoogle(credential);
+            localStorage.setItem('noteeye_auth_token', data.token);
+            set({
+              token: data.token,
+              user: data.user,
+              isAuthenticated: true,
+              isLoading: false,
+              isCheckingAuth: false,
+            });
+            try {
+              window.dispatchEvent(new CustomEvent('noteeye:login'));
+            } catch {}
+            return data;
+          } catch (err) {
+            set({ isLoading: false });
+            throw err;
+          }
         },
 
         logout: (callServer = true) => {

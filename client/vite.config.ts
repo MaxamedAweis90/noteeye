@@ -48,6 +48,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       injectRegister: null, // Managed conditionally in src/pwa/registerSW.ts
       manifestFilename: "manifest.webmanifest",
+      devOptions: {
+        enabled: true,
+      },
       includeAssets: [
         "favicon.ico",
         "favicon-16x16.png",

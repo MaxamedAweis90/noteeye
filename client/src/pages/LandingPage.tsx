@@ -25,6 +25,7 @@ import {
 import { APP_URL } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { LandingNavbar, type AuthNotice } from '../components/landing/LandingNavbar';
+import { GoogleOneTap } from '../components/auth/GoogleOneTap';
 
 /* ═════════════════════════════════════════════════════════════
    DATA
@@ -646,6 +647,9 @@ export const LandingPage: React.FC = () => {
       id="home"
       className="min-h-screen bg-white text-[#1F1F1F] font-sans antialiased overflow-x-hidden selection:bg-sky-200 selection:text-sky-950"
     >
+      {/* ───────────── GOOGLE ONE TAP FLOATING PROMPT ───────────── */}
+      <GoogleOneTap />
+
       {/* ───────────── 1. FLOATING PILL NAVBAR & SESSION BAR ───────────── */}
       <LandingNavbar
         authNotice={authNotice}
