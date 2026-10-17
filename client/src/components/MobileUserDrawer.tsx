@@ -100,7 +100,7 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
             </div>
 
             {/* User Greeting & Identity Section */}
-            <div className="p-5 flex flex-col gap-4 bg-[#F8FAFD] dark:bg-slate-850/80 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-5 flex flex-col gap-4 bg-[#F8FAFD] dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
                 <div
                   className="relative group cursor-pointer w-14 h-14 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-slate-700 shadow-sm overflow-hidden flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 text-sm shrink-0"

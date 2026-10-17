@@ -147,32 +147,32 @@ export const FeedbackModal: React.FC = () => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-50 bg-[#F8FAFD] flex flex-col overflow-y-auto custom-scrollbar select-none"
+        className="fixed inset-0 z-50 bg-[#F8FAFD] dark:bg-[#0B0F17] flex flex-col overflow-y-auto custom-scrollbar select-none text-slate-800 dark:text-slate-100 transition-colors duration-200"
       >
         {/* Sticky Top Header Bar: Close 'X' + Esc Hint on TOP-LEFT, Title on TOP-RIGHT */}
-        <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-[#F8FAFD]/95 dark:bg-[#0B0F17]/95 backdrop-blur-sm px-6 sm:px-10 py-4 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800">
           {/* Top-Left: Close X Button + Desktop Esc Hint */}
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={closeFeedbackModal}
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer border border-slate-200/60 bg-white shadow-2xs"
+              className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer border border-slate-200/60 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xs"
               aria-label="Close Feedback screen"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
-            <span className="hidden sm:inline text-xs text-slate-400 font-normal select-none">
+            <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-500 font-normal select-none">
               Press Esc to close
             </span>
           </div>
 
           {/* Top-Right: Title */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Help
             </span>
-            <h1 className="text-lg sm:text-xl font-bold text-[#1F1F1F] tracking-tight">
+            <h1 className="text-lg sm:text-xl font-bold text-[#1F1F1F] dark:text-white tracking-tight">
               Feedback
             </h1>
           </div>
@@ -181,8 +181,8 @@ export const FeedbackModal: React.FC = () => {
         {/* Minimalist Centered Container */}
         <div className="flex-1 max-w-lg mx-auto w-full px-5 sm:px-6 py-8 sm:py-12 flex flex-col gap-6">
           <div>
-            <h2 className="text-base font-semibold text-[#1F1F1F]">Send Feedback</h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <h2 className="text-base font-semibold text-[#1F1F1F] dark:text-white">Send Feedback</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Let us know about an issue, request a feature, or share your thoughts.
             </p>
           </div>
@@ -190,11 +190,11 @@ export const FeedbackModal: React.FC = () => {
           {/* Minimalist Form Card */}
           <form
             onSubmit={handleSubmit}
-            className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6 flex flex-col gap-4.5 select-text"
+            className="bg-white dark:bg-[#111827] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs p-5 sm:p-6 flex flex-col gap-4.5 select-text"
           >
             {/* 1. Category Dropdown */}
             <div className="flex flex-col gap-1.5 select-none">
-              <label htmlFor="feedback-category" className="text-xs font-medium text-slate-700">
+              <label htmlFor="feedback-category" className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 Category
               </label>
               <div className="relative">
@@ -204,22 +204,22 @@ export const FeedbackModal: React.FC = () => {
                   onChange={(e) => {
                     setFeedbackType(e.target.value as FeedbackType);
                   }}
-                  className="w-full h-10 px-3.5 pr-8 rounded-xl bg-slate-50/80 border border-slate-200 text-sm text-[#1F1F1F] font-medium focus:outline-none focus:border-slate-400 focus:bg-white transition-colors cursor-pointer appearance-none"
+                  className="w-full h-10 px-3.5 pr-8 rounded-xl bg-slate-50/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-[#1F1F1F] dark:text-slate-100 font-medium focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-colors cursor-pointer appearance-none"
                 >
                   {FEEDBACK_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
+                    <option key={opt.value} value={opt.value} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
                       {opt.label}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
+                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
               </div>
             </div>
 
             {/* 2. Custom Subject Input (ONLY shown when Custom Message is selected) */}
             {feedbackType === 'custom' && (
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="feedback-subject" className="text-xs font-medium text-slate-700 select-none">
+                <label htmlFor="feedback-subject" className="text-xs font-medium text-slate-700 dark:text-slate-300 select-none">
                   Subject
                 </label>
                 <input
@@ -228,7 +228,7 @@ export const FeedbackModal: React.FC = () => {
                   value={customSubject}
                   onChange={(e) => setCustomSubject(e.target.value)}
                   placeholder="Enter message subject..."
-                  className="w-full h-10 px-3.5 rounded-xl bg-slate-50/80 border border-slate-200 text-sm text-[#1F1F1F] placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors font-medium"
+                  className="w-full h-10 px-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-[#1F1F1F] dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-colors font-medium"
                   required
                 />
               </div>
@@ -236,7 +236,7 @@ export const FeedbackModal: React.FC = () => {
 
             {/* 3. Message Textarea with Non-Editable Disappearing Tip */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="feedback-message" className="text-xs font-medium text-slate-700 select-none">
+              <label htmlFor="feedback-message" className="text-xs font-medium text-slate-700 dark:text-slate-300 select-none">
                 Message
               </label>
               <div className="relative">
@@ -245,7 +245,7 @@ export const FeedbackModal: React.FC = () => {
                   rows={7}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50/80 border border-slate-200 text-sm text-[#1F1F1F] focus:outline-none focus:border-slate-400 focus:bg-white transition-colors leading-relaxed resize-y custom-scrollbar"
+                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-[#1F1F1F] dark:text-slate-100 focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-colors leading-relaxed resize-y custom-scrollbar"
                   required
                 />
 
@@ -253,7 +253,7 @@ export const FeedbackModal: React.FC = () => {
                 {!message && (
                   <div
                     aria-hidden="true"
-                    className="absolute top-3 left-3.5 right-3.5 pointer-events-none text-xs sm:text-sm text-slate-400 whitespace-pre-line leading-relaxed select-none"
+                    className="absolute top-3 left-3.5 right-3.5 pointer-events-none text-xs sm:text-sm text-slate-400 dark:text-slate-500 whitespace-pre-line leading-relaxed select-none"
                   >
                     {FEEDBACK_TIPS[feedbackType]}
                   </div>
@@ -263,8 +263,8 @@ export const FeedbackModal: React.FC = () => {
 
             {/* 4. Reply Email Field */}
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="feedback-email" className="text-xs font-medium text-slate-700 select-none">
-                Your Email <span className="text-slate-400 font-normal">(optional, for replies)</span>
+              <label htmlFor="feedback-email" className="text-xs font-medium text-slate-700 dark:text-slate-300 select-none">
+                Your Email <span className="text-slate-400 dark:text-slate-500 font-normal">(optional, for replies)</span>
               </label>
               <input
                 id="feedback-email"
@@ -272,7 +272,7 @@ export const FeedbackModal: React.FC = () => {
                 value={userEmail}
                 onChange={(e) => setUserEmail(e.target.value)}
                 placeholder={isAuthenticated ? 'Your account email' : 'you@example.com'}
-                className="w-full h-10 px-3.5 rounded-xl bg-slate-50/80 border border-slate-200 text-sm text-[#1F1F1F] placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition-colors"
+                className="w-full h-10 px-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-[#1F1F1F] dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 focus:bg-white dark:focus:bg-slate-800 transition-colors"
               />
             </div>
 
@@ -281,7 +281,7 @@ export const FeedbackModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleOpenEmailApp}
-                className="text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer underline-offset-2 hover:underline"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer underline-offset-2 hover:underline"
               >
                 or send via email client
               </button>
@@ -289,7 +289,7 @@ export const FeedbackModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#1F1F1F] hover:bg-black text-white text-xs font-semibold shadow-xs active:scale-98 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#1F1F1F] hover:bg-black dark:bg-blue-600 dark:hover:bg-blue-500 text-white text-xs font-semibold shadow-xs active:scale-98 transition-all cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
