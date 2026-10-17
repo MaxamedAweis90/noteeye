@@ -23,9 +23,35 @@ export const getBaseUrl = (): string => {
 
 export const BASE_URL = getBaseUrl();
 
-export const APP_URL =
-  import.meta.env.VITE_APP_URL ||
-  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173');
+export const getAppUrl = (): string => {
+  const envUrl = import.meta.env.VITE_APP_URL;
+  if (
+    envUrl &&
+    envUrl !== 'https://noteeye.vercel.app' &&
+    envUrl !== 'http://noteeye.vercel.app'
+  ) {
+    return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+  }
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname.toLowerCase();
+    // If on production marketing domain, app workspace is strictly app-noteeye.vercel.app
+    if (
+      hostname === 'noteeye.vercel.app' ||
+      hostname === 'noteeye.com' ||
+      hostname === 'www.noteeye.com' ||
+      hostname.includes('marketing')
+    ) {
+      return 'https://app-noteeye.vercel.app';
+    }
+    // If on localhost development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `${window.location.protocol}//${window.location.host}`;
+    }
+  }
+  return 'https://app-noteeye.vercel.app';
+};
+
+export const APP_URL = getAppUrl();
 
 export const MARKETING_URL =
   import.meta.env.VITE_MARKETING_URL ||

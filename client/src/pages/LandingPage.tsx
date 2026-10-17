@@ -561,6 +561,15 @@ export const LandingPage: React.FC = () => {
 
     if (authToken) {
       localStorage.setItem('noteeye_auth_token', authToken);
+      const hostname = window.location.hostname.toLowerCase();
+      if (
+        hostname === 'noteeye.vercel.app' ||
+        hostname === 'noteeye.com' ||
+        hostname === 'www.noteeye.com'
+      ) {
+        window.location.replace(`https://app-noteeye.vercel.app/?auth_token=${encodeURIComponent(authToken)}`);
+        return;
+      }
       useAuthStore.getState().checkAuth().catch(() => {});
     } else if (localStorage.getItem('noteeye_auth_token')) {
       useAuthStore.getState().checkAuth().catch(() => {});

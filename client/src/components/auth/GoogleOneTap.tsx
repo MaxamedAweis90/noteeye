@@ -50,7 +50,7 @@ export const GoogleOneTap: React.FC<GoogleOneTapProps> = ({ onSuccess, onError }
           const separator = targetAppUrl.includes('?') ? '&' : '?';
           const redirectUrl = `${targetAppUrl.replace(/\/+$/, '')}/${separator}auth_token=${encodeURIComponent(data.token)}`;
 
-          window.location.replace(redirectUrl);
+          window.location.href = redirectUrl;
         }
       } catch (err: any) {
         console.error('[GoogleOneTap] Authentication error:', err);
