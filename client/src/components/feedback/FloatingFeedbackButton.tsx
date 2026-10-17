@@ -17,7 +17,7 @@ export const FloatingFeedbackButton: React.FC = () => {
   if (isFeedbackOpen) return null;
 
   return (
-    <div className="fixed bottom-[74px] right-4 sm:bottom-6 sm:right-6 z-40 select-none">
+    <div className="hidden md:block fixed bottom-6 right-6 z-40 select-none">
       <button
         type="button"
         onClick={openFeedbackModal}

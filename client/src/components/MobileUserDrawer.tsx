@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock, Camera, Loader2, Laptop, Sun, Moon } from '@/components/ui/icons';
+import { User, Settings, LogOut, X, Cloud, CheckCircle2, AlertCircle, Clock, Camera, Loader2, Laptop, Sun, Moon, MessageSquarePlus } from '@/components/ui/icons';
 import { useUserStore } from '../store/userStore';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
@@ -26,6 +26,7 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
   const openProfileModal = useUIStore((state) => state.openProfileModal);
   const openSettingsModal = useUIStore((state) => state.openSettingsModal);
   const openSessionsModal = useUIStore((state) => state.openSessionsModal);
+  const openFeedbackModal = useUIStore((state) => state.openFeedbackModal);
   const showToast = useUIStore((state) => state.showToast);
   const triggerLogoutSplash = useSplashStore((state) => state.triggerLogoutSplash);
   const theme = useThemeStore((state) => state.theme);
@@ -274,6 +275,20 @@ export const MobileUserDrawer: React.FC<MobileUserDrawerProps> = ({ isOpen, onCl
                   <Laptop className="w-4 h-4" />
                 </div>
                 <span>Active Sessions & Devices</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  openFeedbackModal();
+                }}
+                className="w-full p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-3 text-sm font-medium text-slate-800 dark:text-slate-200 transition-colors cursor-pointer text-left"
+              >
+                <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">
+                  <MessageSquarePlus className="w-4 h-4" />
+                </div>
+                <span>Feedback & Report</span>
               </button>
             </div>
 
