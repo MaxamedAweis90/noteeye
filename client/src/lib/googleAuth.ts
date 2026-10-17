@@ -47,6 +47,8 @@ export const initGoogleIdentity = (clientId: string): boolean => {
       auto_select: false,
       cancel_on_tap_outside: false,
       context: 'signin',
+      use_fedcm_for_prompt: true,
+      itp_support: true,
     });
 
     isGisInitialized = true;
