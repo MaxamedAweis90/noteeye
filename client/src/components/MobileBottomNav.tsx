@@ -98,13 +98,13 @@ export const MobileBottomNav: React.FC = () => {
       <div className="md:hidden fixed bottom-3 inset-x-3 sm:bottom-5 sm:inset-x-6 max-w-md mx-auto z-40 select-none">
         <nav
           aria-label="Mobile Navigation"
-          className="relative bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-[28px] sm:rounded-[32px] px-2 pt-2 pb-2 shadow-[0_12px_36px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.55)] grid grid-cols-5 items-end justify-items-center transition-colors duration-200"
+          className="relative bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-[28px] sm:rounded-[32px] px-2 py-1.5 h-[62px] shadow-[0_12px_36px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.55)] grid grid-cols-5 items-end justify-items-center transition-colors duration-200"
         >
           {/* Tab 1: Home */}
           <NavLink
             to="/"
             onClick={(e) => handleNavClick(e, '/')}
-            className="flex flex-col items-center justify-center w-full py-1 text-center cursor-pointer select-none group"
+            className="flex flex-col items-center justify-center w-full pb-1 text-center cursor-pointer select-none group"
           >
             <Home
               className={cn(
@@ -116,7 +116,7 @@ export const MobileBottomNav: React.FC = () => {
             />
             <span
               className={cn(
-                'text-[10px] tracking-tight mt-1 transition-colors',
+                'text-[10px] tracking-tight mt-1 transition-colors leading-none',
                 isHomeActive
                   ? 'font-semibold text-slate-900 dark:text-white'
                   : 'font-medium text-slate-400 dark:text-slate-400/80'
@@ -125,7 +125,7 @@ export const MobileBottomNav: React.FC = () => {
               Home
             </span>
             {/* Active Pill Indicator */}
-            <div className="h-1 flex items-center justify-center mt-0.5">
+            <div className="h-1 flex items-center justify-center mt-1">
               {isHomeActive ? (
                 <motion.div
                   layoutId="mobileNavActiveIndicator"
@@ -142,7 +142,7 @@ export const MobileBottomNav: React.FC = () => {
           <NavLink
             to="/recents"
             onClick={(e) => handleNavClick(e, '/recents')}
-            className="flex flex-col items-center justify-center w-full py-1 text-center cursor-pointer select-none group"
+            className="flex flex-col items-center justify-center w-full pb-1 text-center cursor-pointer select-none group"
           >
             <Clock
               className={cn(
@@ -154,7 +154,7 @@ export const MobileBottomNav: React.FC = () => {
             />
             <span
               className={cn(
-                'text-[10px] tracking-tight mt-1 transition-colors',
+                'text-[10px] tracking-tight mt-1 transition-colors leading-none',
                 isRecentsActive
                   ? 'font-semibold text-slate-900 dark:text-white'
                   : 'font-medium text-slate-400 dark:text-slate-400/80'
@@ -163,7 +163,7 @@ export const MobileBottomNav: React.FC = () => {
               Recents
             </span>
             {/* Active Pill Indicator */}
-            <div className="h-1 flex items-center justify-center mt-0.5">
+            <div className="h-1 flex items-center justify-center mt-1">
               {isRecentsActive ? (
                 <motion.div
                   layoutId="mobileNavActiveIndicator"
@@ -176,22 +176,17 @@ export const MobileBottomNav: React.FC = () => {
             </div>
           </NavLink>
 
-          {/* Center Column: Morphing Creation Action Button */}
-          <div className="relative -top-3.5 flex flex-col items-center justify-end w-full pb-0.5">
-            {/* Ghost placeholder when expanded to preserve flex layout balance */}
-            {isCreateMenuOpen && (
-              <div className="w-12 h-12 invisible pointer-events-none" aria-hidden="true" />
-            )}
-
+          {/* Center Column: Morphing Creation Action Button (Centered 50% on top rim) */}
+          <div className="relative flex flex-col items-center justify-end w-full h-full pb-1 select-none">
             <motion.div
               layout
               transition={springTransition}
               style={{ transformOrigin: 'bottom center' }}
               className={cn(
-                'select-none overflow-hidden cursor-pointer transition-colors duration-200',
+                'select-none overflow-hidden cursor-pointer transition-colors duration-200 z-30',
                 isCreateMenuOpen
-                  ? 'absolute bottom-0 w-56 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 rounded-2xl p-2 shadow-2xl z-50 flex flex-col text-[#1F1F1F] dark:text-slate-100'
-                  : 'w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-[0_6px_20px_rgba(37,99,235,0.45)] dark:shadow-[0_0_22px_rgba(37,99,235,0.6)] active:scale-95'
+                  ? 'absolute bottom-1 left-1/2 -translate-x-1/2 w-56 bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 rounded-2xl p-2 shadow-2xl z-50 flex flex-col text-[#1F1F1F] dark:text-slate-100 text-left'
+                  : 'absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-[0_6px_20px_rgba(37,99,235,0.45)] dark:shadow-[0_0_22px_rgba(37,99,235,0.6)] active:scale-95'
               )}
               onClick={!isCreateMenuOpen ? () => setIsCreateMenuOpen(true) : undefined}
             >
@@ -306,18 +301,18 @@ export const MobileBottomNav: React.FC = () => {
               </AnimatePresence>
             </motion.div>
 
-            <span className="text-[10px] font-medium tracking-tight text-slate-400 dark:text-slate-400/80 mt-1">
+            <span className="text-[10px] font-medium tracking-tight text-slate-400 dark:text-slate-400/80 leading-none">
               Create
             </span>
             {/* Matching spacer so baseline aligns with sibling tabs */}
-            <div className="h-1 w-5 opacity-0 mt-0.5 pointer-events-none" />
+            <div className="h-1 w-5 opacity-0 mt-1 pointer-events-none" />
           </div>
 
           {/* Tab 3: Favorites */}
           <NavLink
             to="/favorites"
             onClick={(e) => handleNavClick(e, '/favorites')}
-            className="flex flex-col items-center justify-center w-full py-1 text-center cursor-pointer select-none group"
+            className="flex flex-col items-center justify-center w-full pb-1 text-center cursor-pointer select-none group"
           >
             <Star
               className={cn(
@@ -329,7 +324,7 @@ export const MobileBottomNav: React.FC = () => {
             />
             <span
               className={cn(
-                'text-[10px] tracking-tight mt-1 transition-colors',
+                'text-[10px] tracking-tight mt-1 transition-colors leading-none',
                 isFavoritesActive
                   ? 'font-semibold text-slate-900 dark:text-white'
                   : 'font-medium text-slate-400 dark:text-slate-400/80'
@@ -338,7 +333,7 @@ export const MobileBottomNav: React.FC = () => {
               Favorites
             </span>
             {/* Active Pill Indicator */}
-            <div className="h-1 flex items-center justify-center mt-0.5">
+            <div className="h-1 flex items-center justify-center mt-1">
               {isFavoritesActive ? (
                 <motion.div
                   layoutId="mobileNavActiveIndicator"
@@ -355,7 +350,7 @@ export const MobileBottomNav: React.FC = () => {
           <NavLink
             to="/trash"
             onClick={(e) => handleNavClick(e, '/trash')}
-            className="flex flex-col items-center justify-center w-full py-1 text-center cursor-pointer select-none group"
+            className="flex flex-col items-center justify-center w-full pb-1 text-center cursor-pointer select-none group"
           >
             <Trash2
               className={cn(
@@ -367,7 +362,7 @@ export const MobileBottomNav: React.FC = () => {
             />
             <span
               className={cn(
-                'text-[10px] tracking-tight mt-1 transition-colors',
+                'text-[10px] tracking-tight mt-1 transition-colors leading-none',
                 isTrashActive
                   ? 'font-semibold text-slate-900 dark:text-white'
                   : 'font-medium text-slate-400 dark:text-slate-400/80'
@@ -376,7 +371,7 @@ export const MobileBottomNav: React.FC = () => {
               Trash
             </span>
             {/* Active Pill Indicator */}
-            <div className="h-1 flex items-center justify-center mt-0.5">
+            <div className="h-1 flex items-center justify-center mt-1">
               {isTrashActive ? (
                 <motion.div
                   layoutId="mobileNavActiveIndicator"
