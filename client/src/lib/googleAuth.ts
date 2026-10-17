@@ -76,6 +76,16 @@ export const renderGoogleButton = (
   if (!window.google?.accounts?.id) return false;
 
   try {
+    const containerWidth = Math.floor(
+      container.getBoundingClientRect().width ||
+      container.clientWidth ||
+      container.parentElement?.clientWidth ||
+      320
+    );
+    const resolvedWidth = options.width
+      ? Math.min(Math.max(Number(options.width), 200), 400)
+      : Math.min(Math.max(containerWidth, 200), 400);
+
     container.innerHTML = '';
     window.google.accounts.id.renderButton(container, {
       type: 'standard',
@@ -84,7 +94,7 @@ export const renderGoogleButton = (
       text: options.text || 'signin_with',
       shape: options.shape || 'rectangular',
       logo_alignment: 'left',
-      width: options.width || 380,
+      width: resolvedWidth,
     });
     return true;
   } catch (err) {

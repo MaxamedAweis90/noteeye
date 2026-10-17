@@ -95,6 +95,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
     });
 
     let pollInterval: any = null;
+    let resizeTimer: any = null;
 
     const setupButton = () => {
       if (!window.google?.accounts?.id || !btnContainerRef.current) return false;
@@ -102,13 +103,21 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
       // Initialize singleton
       initGoogleIdentity(clientId);
 
+      const measuredWidth = Math.floor(
+        btnContainerRef.current.getBoundingClientRect().width ||
+        btnContainerRef.current.clientWidth ||
+        btnContainerRef.current.parentElement?.clientWidth ||
+        300
+      );
+      const targetWidth = Math.min(Math.max(measuredWidth, 200), 400);
+
       // Render official Google button into container
       const ok = renderGoogleButton(btnContainerRef.current, {
         text: mode === 'signup' ? 'signup_with' : 'signin_with',
         theme: 'outline',
         size: 'large',
         shape: 'rectangular',
-        width: 380,
+        width: targetWidth,
       });
 
       if (ok) {
@@ -125,9 +134,20 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
       }, 150);
     }
 
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        setupButton();
+      }, 250);
+    };
+
+    window.addEventListener('resize', handleResize);
+
     return () => {
       unregister();
       if (pollInterval) clearInterval(pollInterval);
+      if (resizeTimer) clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
     };
   }, [clientId, mode, onSuccess, onError, loginWithGoogle, fetchUserProfile, navigate, showToast, triggerLoginSplash]);
 
@@ -140,11 +160,13 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   };
 
   return (
-    <div className={`w-full flex flex-col items-center justify-center ${className}`}>
+    <div className={`w-full max-w-full flex flex-col items-center justify-center ${className}`}>
       {/* Container for Google's official button */}
       <div
         ref={btnContainerRef}
-        className={`w-full flex justify-center min-h-[44px] ${isRendered ? 'block' : 'hidden'}`}
+        className={`w-full max-w-full overflow-hidden flex justify-center min-h-[44px] rounded-xl ${
+          isRendered ? 'flex' : 'hidden'
+        }`}
       />
 
       {/* Fallback button shown while Google SDK loads or if not yet rendered */}

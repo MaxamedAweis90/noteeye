@@ -1,7 +1,6 @@
 import React, { useState, useId } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, User, Loader2, AlertCircle, CheckCircle2 } from '@/components/ui/icons';
-import { Logo } from '../../components/Logo';
 import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 import { authApi } from '../../api';
 import { useAuthStore } from '../../store/authStore';
@@ -137,14 +136,28 @@ export const Register: React.FC = () => {
     }
   };
 
+  const landingHref =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? '/landing'
+      : (import.meta.env.VITE_MARKETING_URL || 'https://noteeye.vercel.app');
+
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFD] flex flex-col justify-center items-center px-4 py-12 select-none">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-6">
+    <div className="min-h-screen w-full bg-[#F8FAFD] flex flex-col justify-center items-center px-4 py-6 sm:py-12 select-none">
+      <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-4 sm:gap-6 my-auto">
         {/* Top Header & Brand Mark */}
         <div className="flex flex-col items-center text-center gap-3">
-          <div className="scale-105">
-            <Logo />
-          </div>
+          <a
+            href={landingHref}
+            title="Noteeye Home"
+            className="inline-block hover:scale-105 transition-transform cursor-pointer"
+          >
+            <img
+              src="/noteeye_logo.png"
+              alt="Noteeye"
+              className="w-11 h-11 sm:w-12 sm:h-12 object-contain drop-shadow-xs"
+            />
+          </a>
           <div className="flex flex-col gap-1 mt-1">
             <h1 className="text-xl sm:text-2xl font-display font-bold text-[#1F1F1F] tracking-tight">
               Create your Noteeye account
@@ -179,7 +192,7 @@ export const Register: React.FC = () => {
         </div>
 
         {/* Registration Form */}
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3.5">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3 sm:gap-3.5">
           {/* Full Name */}
           <div className="flex flex-col gap-1.5">
             <label
@@ -371,12 +384,12 @@ export const Register: React.FC = () => {
             </Link>
           </div>
 
-          <Link
-            to="/"
-            className="text-[11px] text-slate-400 hover:text-slate-600 transition-colors"
+          <a
+            href={landingHref}
+            className="text-xs font-medium text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
           >
-            ← Return to workspace
-          </Link>
+            ← Return to home
+          </a>
         </div>
       </div>
     </div>

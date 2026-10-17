@@ -499,7 +499,7 @@ export const LandingPage: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     const hasToken = Boolean(localStorage.getItem('noteeye_auth_token'));
-    return hasToken && authStoreIsAuth;
+    return hasToken || authStoreIsAuth;
   });
 
   // Keep isLoggedIn strictly in sync with storage & store events
@@ -508,7 +508,7 @@ export const LandingPage: React.FC = () => {
       if (typeof window === 'undefined') return;
       const hasToken = Boolean(localStorage.getItem('noteeye_auth_token'));
       const isAuth = useAuthStore.getState().isAuthenticated;
-      setIsLoggedIn(hasToken && isAuth);
+      setIsLoggedIn(hasToken || isAuth);
     };
 
     syncAuthState();
@@ -519,7 +519,7 @@ export const LandingPage: React.FC = () => {
 
     const unsubscribe = useAuthStore.subscribe((state) => {
       const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('noteeye_auth_token'));
-      setIsLoggedIn(hasToken && state.isAuthenticated);
+      setIsLoggedIn(hasToken || state.isAuthenticated);
     });
 
     return () => {
@@ -732,7 +732,7 @@ export const LandingPage: React.FC = () => {
             className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <DarkButton href={primaryHref} className="px-8 py-3.5 text-base">
-              {isLoggedIn ? 'Open Noteeye' : 'Try For Free'}
+              {isLoggedIn ? 'Open Workspace' : 'Try For Free'}
               <ArrowRight className="w-4 h-4 ml-0.5" />
             </DarkButton>
             <GhostButton href={GITHUB_URL} external className="px-7 py-3.5 text-base">

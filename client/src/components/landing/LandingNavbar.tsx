@@ -369,13 +369,30 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({
                     className="flex md:hidden items-center"
                   >
                     {isLoggedIn ? (
-                      <a
-                        href={workspaceHref}
-                        className="bg-[#18181B] text-white font-semibold px-3 py-1.5 rounded-full hover:bg-black flex items-center gap-1 transition-all shadow-xs active:scale-95 cursor-pointer text-xs"
-                      >
-                        <span>App</span>
-                        <ArrowRight className="w-3 h-3 stroke-[2.2]" />
-                      </a>
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={workspaceHref}
+                          title={`Signed in as ${displayName} — Open workspace`}
+                          className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200/90 text-xs font-semibold flex items-center justify-center text-slate-700 overflow-hidden shrink-0 select-none shadow-xs hover:ring-2 hover:ring-slate-300 transition-all"
+                        >
+                          {avatarSrc ? (
+                            <img
+                              src={avatarSrc}
+                              alt={displayName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            userInitial
+                          )}
+                        </a>
+                        <a
+                          href={workspaceHref}
+                          className="bg-[#18181B] text-white font-medium px-2.5 py-1.5 rounded-full hover:bg-black flex items-center gap-1 transition-all shadow-xs active:scale-95 cursor-pointer text-xs"
+                        >
+                          <span>Workspace</span>
+                          <ArrowRight className="w-3 h-3 stroke-[2.2]" />
+                        </a>
+                      </div>
                     ) : (
                       <a
                         href={registerUrl}

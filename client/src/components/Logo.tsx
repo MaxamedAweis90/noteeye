@@ -10,6 +10,7 @@ interface LogoProps {
   showMobileTrigger?: boolean;
   onClick?: () => void;
   disabled?: boolean;
+  showText?: boolean;
 }
 
 /**
@@ -26,6 +27,7 @@ export const Logo: React.FC<LogoProps> = ({
   className = '',
   onClick,
   disabled = false,
+  showText = true,
 }) => {
   let navigate: ReturnType<typeof useNavigate> | null = null;
   try {
@@ -104,9 +106,11 @@ export const Logo: React.FC<LogoProps> = ({
           alt="Noteeye Logo"
           className="w-10 h-10 object-contain drop-shadow-xs group-hover:scale-105 transition-transform"
         />
-        <span className="text-[22px] font-display font-bold tracking-tight text-[#1F1F1F] dark:text-white transition-colors">
-          Noteeye
-        </span>
+        {showText && (
+          <span className="text-[22px] font-display font-bold tracking-tight text-[#1F1F1F] dark:text-white transition-colors">
+            Noteeye
+          </span>
+        )}
       </div>
     </div>
   );
