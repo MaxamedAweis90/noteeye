@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Noteeye Session Relay</title>
+  </head>
+  <body>
+    <script>
+      (function() {
+        var allowedOrigins = [
+          'https://noteeye.vercel.app',
+          'https://app-noteeye.vercel.app',
+          'https://noteeye.com',
+          'https://www.noteeye.com',
+          'http://localhost:5173',
+          'http://127.0.0.1:5173'
+        ];
+
+        function sendSessionToken(targetOrigin) {
+          try {
+            var token = localStorage.getItem('noteeye_auth_token');
+            if (token && window.parent && window.parent !== window) {
+              window.parent.postMessage(
+                { type: 'NOTEEYE_PONG_SESSION', token: token },
+                targetOrigin
+              );
+            }
+          } catch (e) {}
+        }
+
+        window.addEventListener('message', function(event) {
+          if (!event || !event.origin) return;
+          var isAllowed = allowedOrigins.some(function(origin) {
+            return event.origin === origin || event.origin.indexOf('noteeye') !== -1;
+          });
+          if (!isAllowed) return;
+
+          if (event.data && event.data.type === 'NOTEEYE_PING_SESSION') {
+            sendSessionToken(event.origin);
+          }
+        });
+
+        // Proactively broadcast on load to allowed origins
+        allowedOrigins.forEach(function(origin) {
+          sendSessionToken(origin);
+        });
+      })();
+    </script>
+  </body>
+</html>

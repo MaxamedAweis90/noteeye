@@ -83,7 +83,9 @@ export const Logo: React.FC<LogoProps> = ({
     // If on Auth pages in normal web browser (outside PWA), logo links to marketing main domain
     const isAuthPage = pathname === '/login' || pathname === '/register';
     if (isAuthPage && !isPWAMode() && (hostname === 'app-noteeye.vercel.app' || hostname.includes('app-noteeye'))) {
-      window.location.href = MARKETING_URL;
+      const token = localStorage.getItem('noteeye_auth_token');
+      const tokenQuery = token ? `?auth_token=${encodeURIComponent(token)}` : '';
+      window.location.href = `${MARKETING_URL.replace(/\/+$/, '')}/${tokenQuery}`;
       return;
     }
 

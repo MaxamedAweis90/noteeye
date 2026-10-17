@@ -561,15 +561,7 @@ export const LandingPage: React.FC = () => {
 
     if (authToken) {
       localStorage.setItem('noteeye_auth_token', authToken);
-      const hostname = window.location.hostname.toLowerCase();
-      if (
-        hostname === 'noteeye.vercel.app' ||
-        hostname === 'noteeye.com' ||
-        hostname === 'www.noteeye.com'
-      ) {
-        window.location.replace(`https://app-noteeye.vercel.app/?auth_token=${encodeURIComponent(authToken)}`);
-        return;
-      }
+      setIsLoggedIn(true);
       useAuthStore.getState().checkAuth().catch(() => {});
     } else if (localStorage.getItem('noteeye_auth_token')) {
       useAuthStore.getState().checkAuth().catch(() => {});
@@ -585,6 +577,51 @@ export const LandingPage: React.FC = () => {
         `${window.location.pathname}${cleanSearch}${window.location.hash}`
       );
     }
+  }, []);
+
+  // Cross-origin background session bridge: probe app-noteeye.vercel.app if no local token on marketing domain
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasLocalToken = Boolean(localStorage.getItem('noteeye_auth_token'));
+    if (hasLocalToken) return;
+
+    const hostname = window.location.hostname.toLowerCase();
+    const isMarketing =
+      hostname === 'noteeye.vercel.app' ||
+      hostname === 'noteeye.com' ||
+      hostname === 'www.noteeye.com';
+
+    if (!isMarketing) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (!event.origin || (!event.origin.includes('app-noteeye') && !event.origin.includes('noteeye'))) return;
+      if (event.data?.type === 'NOTEEYE_PONG_SESSION' && event.data?.token) {
+        localStorage.setItem('noteeye_auth_token', event.data.token);
+        setIsLoggedIn(true);
+        useAuthStore.getState().checkAuth().catch(() => {});
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Create hidden sync iframe to query app-noteeye.vercel.app session
+    const iframe = document.createElement('iframe');
+    iframe.src = 'https://app-noteeye.vercel.app/session-sync.html';
+    iframe.style.display = 'none';
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow?.postMessage({ type: 'NOTEEYE_PING_SESSION' }, 'https://app-noteeye.vercel.app');
+      } catch {}
+    };
+    document.body.appendChild(iframe);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+    };
   }, []);
 
   const loginUrl = `${APP_URL}/login`;

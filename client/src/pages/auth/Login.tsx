@@ -93,11 +93,19 @@ export const Login: React.FC = () => {
     }
   };
 
-  const landingHref =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? '/landing'
-      : (import.meta.env.VITE_MARKETING_URL || 'https://noteeye.vercel.app');
+  const getLandingHref = () => {
+    if (typeof window === 'undefined') return '/';
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const token = localStorage.getItem('noteeye_auth_token');
+    const tokenQuery = token ? `?auth_token=${encodeURIComponent(token)}` : '';
+    if (isLocal) {
+      return `/landing${tokenQuery}`;
+    }
+    const baseMarketing = import.meta.env.VITE_MARKETING_URL || 'https://noteeye.vercel.app';
+    return `${baseMarketing.replace(/\/+$/, '')}/${tokenQuery}`;
+  };
+
+  const landingHref = getLandingHref();
 
   return (
     <div className="min-h-screen w-full bg-[#F8FAFD] flex flex-col justify-center items-center px-4 py-8 sm:py-12 select-none">

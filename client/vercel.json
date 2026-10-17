@@ -11,7 +11,20 @@
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/session-sync.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://noteeye.vercel.app https://app-noteeye.vercel.app https://noteeye.com https://www.noteeye.com http://localhost:5173 http://127.0.0.1:5173"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/((?!session-sync\\.html).*)",
       "headers": [
         {
           "key": "X-Content-Type-Options",
